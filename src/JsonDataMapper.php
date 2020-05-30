@@ -35,7 +35,7 @@ class JsonDataMapper extends AbstractService
      * @return Document
      * @throws Exception
      */
-    private function read(EntityDocument $document, DataWrapper $wrapper) : Document
+    private function read(EntityDocument $document, DataWrapper $wrapper) : array
     {
         $documentFactory = new DocumentFactory($this->services);
         $data = $wrapper->loadData();
@@ -48,7 +48,7 @@ class JsonDataMapper extends AbstractService
      * @return DataWrapperFactory
      * @throws Exception
      */
-    private function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
+    public function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
     {
         return new DataWrapperFactory($this->services, $entityName);
     }
@@ -60,7 +60,7 @@ class JsonDataMapper extends AbstractService
      * @return Document
      * @throws Exception
      */
-    public function readSimple(string $entityName, string $fieldName, $fieldValue) : Document
+    public function readSimple(string $entityName, string $fieldName, $fieldValue) : array
     {
         $wrapperFactory = $this->generateDataWrapperFactory($entityName);
         $entityDocument = $wrapperFactory->getEntityDocument();
@@ -77,7 +77,7 @@ class JsonDataMapper extends AbstractService
      * @return Document
      * @throws Exception
      */
-    public function readCustom(string $entityName, string $tableName, string $customFunction, array $parameters=[]) : Document
+    public function readCustom(string $entityName, string $tableName, string $customFunction, array $parameters=[]) : array
     {
 
         $wrapperFactory = $this->generateDataWrapperFactory($entityName);

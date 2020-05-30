@@ -48,7 +48,7 @@ class DataWrapperFactory
 
         $response->setIsSingle($field->isPrimaryKey());
         $response->setTableName($field->getTable());
-        $response->setFunction('loadById');
+        $response->setFunction('loadFromId');
         $response->setParameters([$fieldValue]);
 
         return $response;

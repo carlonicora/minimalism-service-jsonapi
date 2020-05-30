@@ -4,6 +4,8 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
 use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
+use Exception;
 
 class DocumentFactory
 {
@@ -12,29 +14,30 @@ class DocumentFactory
 
     public function __construct(ServicesFactory $services)
     {
+        $this->services = $services;
     }
 
     /**
      * @param EntityDocument $document
      * @param array $data
-     * @return Document
+     * @return array
+     * @throws Exception
      */
-    public function build(EntityDocument $document, array $data) : Document
+    public function build(EntityDocument $document, array $data) : array
     {
-        $response = new Document();
+        $response = [];
 
         $resourceObjectFactory = new ResourceObjectFactory($this->services);
+        $resourceObjectFactory->setDocument($document);
 
-        if (array_key_exists($document->getResource()->getId()->getName(), $data)){
-            $response->addResource(
-                $resourceObjectFactory->build($document->getResource(), $data)
-            );
+        if (array_key_exists($document->getResource()->getId()->getDatabaseField(), $data)){
+            $response[] = $resourceObjectFactory->build($document->getResource(), $data);
         } else {
             foreach ($data ?? [] as $resourceData){
-                $response->addResource(
-                    $resourceObjectFactory->build($document->getResource(), $resourceData)
-                );
+                $response[] = $resourceObjectFactory->build($document->getResource(), $resourceData);
             }
         }
+
+        return $response;
     }
 }

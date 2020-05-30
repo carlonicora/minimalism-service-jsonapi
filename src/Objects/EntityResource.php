@@ -38,6 +38,14 @@ class EntityResource
     }
 
     /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
      * @param string $fieldName
      * @return EntityField|null
      */
@@ -71,5 +79,13 @@ class EntityResource
     public function getId(): EntityField
     {
         return $this->id;
+    }
+
+    /**
+     * @return array|null|EntityField[]
+     */
+    public function getAttributes(): ?array
+    {
+        return $this->attributes;
     }
 }

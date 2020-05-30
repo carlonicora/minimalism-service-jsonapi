@@ -30,6 +30,12 @@ class EntityField
     /** @var string|null  */
     private ?string $validator=null;
 
+    /** @var string|null  */
+    private ?string $transformClass=null;
+
+    /** @var string|null  */
+    private ?string $transformFunction=null;
+
     /**
      * EntityField constructor.
      * @param EntityResource $resource
@@ -66,6 +72,29 @@ class EntityField
         if (array_key_exists('$validator', $field)){
             $this->validator = $field['$validator'];
         }
+
+        if (array_key_exists('$transformClass', $field)
+            && array_key_exists('$transformFunction', $field)
+            && !empty($field['$transformClass'])
+            && !empty($field['$transformFunction'])
+        ){
+            $this->transformClass = $field['$transformClass'];
+            $this->transformFunction = $field['$transformFunction'];
+        }
+    }
+
+    /**
+     * @param $originalValue
+     * @return mixed
+     */
+    public function getTransformedValue($originalValue)
+    {
+        if ($this->transformClass === null){
+            return $originalValue;
+        }
+
+        $transformer = new $this->transformClass();
+        return $transformer->{$this->transformFunction}($originalValue);
     }
 
     /**
@@ -90,5 +119,13 @@ class EntityField
     public function isPrimaryKey() : bool
     {
         return $this->isPrimaryKey;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDatabaseField(): ?string
+    {
+        return $this->databaseField;
     }
 }

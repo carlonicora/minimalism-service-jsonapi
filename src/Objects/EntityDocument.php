@@ -51,7 +51,7 @@ class EntityDocument
                 $this->relationships = [];
                 foreach ($document['relationships'] ?? [] as $relationships) {
                     foreach ($relationships ?? [] as $relationshipName=>$relationship) {
-                        $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship['data']);
+                        $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship);
                     }
                 }
             }
@@ -106,5 +106,13 @@ class EntityDocument
     public function getResource(): EntityResource
     {
         return $this->resource;
+    }
+
+    /**
+     * @return array|null|EntityRelationship[]
+     */
+    public function getRelationships(): ?array
+    {
+        return $this->relationships;
     }
 }
