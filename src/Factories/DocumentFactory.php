@@ -21,7 +21,7 @@ class DocumentFactory
      * @return array
      * @throws Exception
      */
-    public function build(EntityDocument $document, array $data) : array
+    public function buildDocument(EntityDocument $document, array $data) : array
     {
         $response = [];
 
@@ -29,10 +29,10 @@ class DocumentFactory
         $resourceObjectFactory->setDocument($document);
 
         if (array_key_exists($document->getResource()->getId()->getDatabaseField(), $data)){
-            $response[] = $resourceObjectFactory->build($document->getResource(), $data);
+            $response[] = $resourceObjectFactory->buildResourceObject($document->getResource(), $data);
         } else {
             foreach ($data ?? [] as $resourceData){
-                $response[] = $resourceObjectFactory->build($document->getResource(), $resourceData);
+                $response[] = $resourceObjectFactory->buildResourceObject($document->getResource(), $resourceData);
             }
         }
 

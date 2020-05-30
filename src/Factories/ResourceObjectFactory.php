@@ -77,7 +77,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
      * @return ResourceObject
      * @throws Exception
      */
-    public function build(EntityResource $resource, array $data) : ResourceObject
+    public function buildResourceObject(EntityResource $resource, array $data) : ResourceObject
     {
         $response = new ResourceObject(
             $resource->getType(),
@@ -116,7 +116,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
 
         if ($this->document !== null) {
             foreach ($this->document->getRelationships() ?? [] as $relationship) {
-                $dataWrapperFactory = $this->mapper->generateDataWrapperFactory($relationship->getResource()->getType());
+                $dataWrapperFactory = new DataWrapperFactory($this->services, $relationship->getResource()->getType());
                 $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
                 $resourceObjectFactory = new ResourceObjectFactory($this->services);
 
@@ -126,7 +126,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
                     $response->relationship($relationship->getRelationshipName())
                         ->resourceLinkage
                         ->add(
-                            $resourceObjectFactory->build($entityResource, $resourceData)
+                            $resourceObjectFactory->buildResourceObject($entityResource, $resourceData)
                         );
                 } elseif ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
                     $table = $this->mysql->create($relationship->getTableName());
@@ -148,7 +148,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
                         $response->relationship($relationship->getRelationshipName())
                             ->resourceLinkage
                             ->add(
-                                $resourceObjectFactory->build($entityResource, $singleResourceData)
+                                $resourceObjectFactory->buildResourceObject($entityResource, $singleResourceData)
                             );
                     }
                 }

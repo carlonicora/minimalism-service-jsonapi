@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper;
 
+use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
@@ -44,30 +45,6 @@ class JsonDataMapper extends AbstractService
     }
 
     /**
-     * @param EntityDocument $document
-     * @param DataWrapper $wrapper
-     * @return array
-     * @throws Exception
-     */
-    private function read(EntityDocument $document, DataWrapper $wrapper) : array
-    {
-        $documentFactory = new DocumentFactory($this->services);
-        $data = $wrapper->loadData();
-
-        return $documentFactory->build($document, $data);
-    }
-
-    /**
-     * @param string $entityName
-     * @return DataWrapperFactory
-     * @throws Exception
-     */
-    public function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
-    {
-        return new DataWrapperFactory($this->services, $entityName);
-    }
-
-    /**
      * @param string $entityName
      * @param string $fieldName
      * @param $fieldValue
@@ -101,6 +78,15 @@ class JsonDataMapper extends AbstractService
     }
 
     /**
+     * @param string $entityName
+     * @param Document $document
+     * @throws Exception
+     */
+    public function write(string $entityName, Document $document) : void
+    {
+    }
+
+    /**
      * @param EncrypterInterface|null $defaultEncrypter
      */
     public function setDefaultEncrypter(?EncrypterInterface $defaultEncrypter): void
@@ -130,5 +116,29 @@ class JsonDataMapper extends AbstractService
     public function setLinkBuilder(?LinkBuilderInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
+    }
+
+    /**
+     * @param EntityDocument $document
+     * @param DataWrapper $wrapper
+     * @return array
+     * @throws Exception
+     */
+    private function read(EntityDocument $document, DataWrapper $wrapper) : array
+    {
+        $documentFactory = new DocumentFactory($this->services);
+        $data = $wrapper->loadData();
+
+        return $documentFactory->buildDocument($document, $data);
+    }
+
+    /**
+     * @param string $entityName
+     * @return DataWrapperFactory
+     * @throws Exception
+     */
+    private function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
+    {
+        return new DataWrapperFactory($this->services, $entityName);
     }
 }

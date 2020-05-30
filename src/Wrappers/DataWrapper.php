@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataCallersFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
 use Exception;
 
 class DataWrapper
@@ -37,12 +37,12 @@ class DataWrapper
      */
     public function loadData() : ?array
     {
-        $dataCallersFactory = new DataCallersFactory($this->services);
+        $dataReadersFactory = new DataReadersFactory($this->services);
 
         /**
          * TODO Add the cacher
          */
-        $function = $dataCallersFactory->create($this->tableName, $this->function, $this->parameters);
+        $function = $dataReadersFactory->create($this->tableName, $this->function, $this->parameters);
         if ($this->isSingle) {
             $response = $function->getSingle();
         } else {

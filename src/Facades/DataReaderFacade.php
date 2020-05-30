@@ -5,14 +5,14 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataCallerInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
 
-class DataCallerFacade implements DataCallerInterface
+class DataReaderFacade implements DataReaderInterface
 {
     /** @var ServicesFactory  */
     protected ServicesFactory $services;
@@ -39,7 +39,7 @@ class DataCallerFacade implements DataCallerInterface
     public ?CacheFactoryInterface $dataCache;
 
     /**
-     * DataCallerFacade constructor.
+     * DataReaderFacade constructor.
      * @param ServicesFactory $services
      * @param TableInterface $table
      * @param string $functionName

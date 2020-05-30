@@ -6,10 +6,10 @@ use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 
-interface DataCallerInterface
+interface DataReaderInterface
 {
     /**
-     * DataCallerInterface constructor.
+     * DataReaderInterface constructor.
      * @param ServicesFactory $services
      * @param TableInterface $table
      * @param string $functionName
