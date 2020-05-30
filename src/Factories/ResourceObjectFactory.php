@@ -65,7 +65,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
                 );
             }
         } else {
-            $response = $field->getTransformedValue($data[$field->getDatabaseField()]);
+            $response = $field->getTransformedValue($this->services, $data[$field->getDatabaseField()]);
         }
 
         return $response;

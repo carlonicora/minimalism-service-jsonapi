@@ -1,6 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Objects;
 
+use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
+
 class EntityField
 {
     /** @var EntityResource  */
@@ -67,8 +70,12 @@ class EntityField
             $this->transformFunction = $field['$transformFunction'];
         }
 
-        if (array_key_exists('$databaseRelationshipField', $field)){
-            $this->databaseRelationshipField = $field['$databaseRelationshipField'];
+        if ($isId) {
+            if (array_key_exists('$databaseRelationshipField', $field)) {
+                $this->databaseRelationshipField = $field['$databaseRelationshipField'];
+            } else {
+                $this->databaseRelationshipField = $this->databaseField;
+            }
         }
 
         if (array_key_exists('$encrypted', $field)){
@@ -94,17 +101,19 @@ class EntityField
     }
 
     /**
+     * @param ServicesFactory $services
      * @param $originalValue
      * @return mixed
      */
-    public function getTransformedValue($originalValue)
+    public function getTransformedValue(ServicesFactory $services, $originalValue)
     {
         if ($this->transformClass === null){
             return $originalValue;
         }
 
-        $transformer = new $this->transformClass();
-        return $transformer->{$this->transformFunction}($originalValue);
+        /** @var TransformatorInterface $transformer */
+        $transformer = new $this->transformClass($services);
+        return $transformer->transform($this->transformFunction, $originalValue);
     }
 
     /**
