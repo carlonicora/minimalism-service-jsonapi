@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper;
 
-use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;

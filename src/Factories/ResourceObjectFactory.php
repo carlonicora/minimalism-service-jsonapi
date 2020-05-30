@@ -52,9 +52,13 @@ class ResourceObjectFactory
 
         foreach ($resource->getAttributes() ?? [] as $entityField) {
             if ($entityField->isEncrypted()){
-                $fieldValue = $this->mapper->getDefaultEncrypter()->encryptId(
-                    $data[$entityField->getDatabaseField()]
-                );
+                if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
+                    $fieldValue = $encrypter->encryptId(
+                        $data[$entityField->getDatabaseField()]
+                    );
+                } else {
+                    $fieldValue = $data[$entityField->getDatabaseField()];
+                }
             } else {
                 $fieldValue = $entityField->getTransformedValue($data[$entityField->getDatabaseField()]);
             }
