@@ -99,4 +99,12 @@ class EntityDocument
             . $entityName . '.json';
         return file_get_contents($documentFile);
     }
+
+    /**
+     * @return EntityResource
+     */
+    public function getResource(): EntityResource
+    {
+        return $this->resource;
+    }
 }

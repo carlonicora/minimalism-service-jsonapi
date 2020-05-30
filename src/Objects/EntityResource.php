@@ -64,4 +64,12 @@ class EntityResource
     {
         return $this->tableName;
     }
+
+    /**
+     * @return EntityField
+     */
+    public function getId(): EntityField
+    {
+        return $this->id;
+    }
 }

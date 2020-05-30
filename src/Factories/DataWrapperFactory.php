@@ -13,17 +13,21 @@ class DataWrapperFactory
     private ServicesFactory $services;
 
     /** @var EntityDocument  */
-    private EntityDocument $parameterDocument;
+    private EntityDocument $entityDocument;
 
     /**
      * Parameter constructor.
      * @param ServicesFactory $services
-     * @param EntityDocument $parameterDocument
+     * @param string $entityName
+     * @throws Exception
      */
-    public function __construct(ServicesFactory $services, EntityDocument $parameterDocument)
+    public function __construct(ServicesFactory $services, string $entityName)
     {
         $this->services = $services;
-        $this->parameterDocument = $parameterDocument;
+
+
+        $this->entityDocument = new EntityDocument($services);
+        $this->entityDocument->loadEntity($entityName);
     }
 
     /**
@@ -36,9 +40,9 @@ class DataWrapperFactory
     {
         $response = new DataWrapper($this->services);
 
-        if (($field = $this->parameterDocument->getField($fieldName)) === null) {
+        if (($field = $this->entityDocument->getField($fieldName)) === null) {
             $this->services->logger()->error()->log(
-                JsonDataMapperErrorEvents::LOADER_FIELD_NOT_FOUND($fieldName, $this->parameterDocument->getEntityName())
+                JsonDataMapperErrorEvents::LOADER_FIELD_NOT_FOUND($fieldName, $this->entityDocument->getEntityName())
             )->throw(Exception::class);
         }
 
@@ -64,5 +68,13 @@ class DataWrapperFactory
         $response->setParameters($parameters);
 
         return $response;
+    }
+
+    /**
+     * @return EntityDocument
+     */
+    public function getEntityDocument(): EntityDocument
+    {
+        return $this->entityDocument;
     }
 }
