@@ -133,18 +133,20 @@ class ResourceObjectFactory implements LinkBuilderInterface
     }
 
     /**
-     * @param string $link
+     * @param string $url
      * @param EntityResource $resource
      * @param array $data
      * @return string
      */
-    public function buildLink(string $link, EntityResource $resource, array $data) : string
+    public function buildLink(string $url, EntityResource $resource, array $data) : string
     {
-        $linkElements = explode('%', $link);
+        $linkElements = explode('%', $url);
 
-        for ($linkElementsCounter = 0, $linkElementsCounterMax = count($linkElements); $linkElementsCounter <= $linkElementsCounterMax; $linkElementsCounter += 2) {
+        for ($linkElementsCounter = 1, $linkElementsCounterMax = count($linkElements); $linkElementsCounter < $linkElementsCounterMax; $linkElementsCounter += 2) {
             if (($field = $resource->getField($linkElements[$linkElementsCounter])) !== null) {
                 $linkElements[$linkElementsCounter] = $this->getFieldValue($field, $data);
+            } else {
+                $linkElements[$linkElementsCounter] = '%'.$linkElements[$linkElementsCounter].'%';
             }
         }
 
