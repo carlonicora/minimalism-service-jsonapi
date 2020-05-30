@@ -25,7 +25,7 @@ class AbstractTransformator implements TransformatorInterface
      */
     public function transform(string $transformationFunction, $parameter)
     {
-        if (function_exists($transformationFunction)) {
+        if (method_exists($this, $transformationFunction)) {
             return $this->$transformationFunction($parameter);
         }
 
