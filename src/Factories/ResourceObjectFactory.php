@@ -11,6 +11,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityField;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityResource;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
 
 class ResourceObjectFactory implements LinkBuilderInterface
@@ -24,6 +25,9 @@ class ResourceObjectFactory implements LinkBuilderInterface
     /** @var JsonDataMapper  */
     private JsonDataMapper $mapper;
 
+    /** @var MySQL  */
+    private MySQL $mysql;
+
     /**
      * ResourceObjectFactory constructor.
      * @param ServicesFactory $services
@@ -34,6 +38,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
         $this->services = $services;
 
         $this->mapper = $services->service(JsonDataMapper::class);
+        $this->mysql = $services->service(MySQL::class);
     }
 
     /**
@@ -111,20 +116,41 @@ class ResourceObjectFactory implements LinkBuilderInterface
 
         if ($this->document !== null) {
             foreach ($this->document->getRelationships() ?? [] as $relationship) {
+                $dataWrapperFactory = $this->mapper->generateDataWrapperFactory($relationship->getResource()->getType());
+                $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
+                $resourceObjectFactory = new ResourceObjectFactory($this->services);
+
                 if ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE) {
-
-                    $dataWrapperFactory = $this->mapper->generateDataWrapperFactory($relationship->getResource()->getType());
-                    $dataWrapper = $dataWrapperFactory->generateSimpleLoader('id', $data[$relationship->getResource()->getId()->getDatabaseField()]);
-                    $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
-                    $resourceObjectFactory = new ResourceObjectFactory($this->services);
-
+                    $dataWrapper = $dataWrapperFactory->generateSimpleLoader('id', $data[$relationship->getResource()->getId()->getDatabaseRelationshipField()]);
                     $resourceData = $dataWrapper->loadData();
-
                     $response->relationship($relationship->getRelationshipName())
                         ->resourceLinkage
                         ->add(
                             $resourceObjectFactory->build($entityResource, $resourceData)
                         );
+                } elseif ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
+                    $table = $this->mysql->create($relationship->getTableName());
+
+                    $dataWrapper = $dataWrapperFactory->generateCustomLoader(
+                        $relationship->getResource()->getTable(),
+                        'getFirstLevelJoin',
+                        [
+                            $table->getTableName(),
+                            $resource->getId()->getDatabaseField(),
+                            $relationship->getResource()->getId()->getDatabaseField(),
+                            $data[$resource->getId()->getDatabaseField()]
+                        ]
+                    );
+
+                    $resourceData = $dataWrapper->loadData();
+
+                    foreach ($resourceData ?? [] as $singleResourceData){
+                        $response->relationship($relationship->getRelationshipName())
+                            ->resourceLinkage
+                            ->add(
+                                $resourceObjectFactory->build($entityResource, $singleResourceData)
+                            );
+                    }
                 }
             }
         }

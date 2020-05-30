@@ -12,9 +12,6 @@ class EntityRelationship
     /** @var string|null  */
     private ?string $tableName;
 
-    /** @var string|null  */
-    private ?string $databaseRelationshipField;
-
     /** @var EntityResource  */
     private EntityResource $resource;
 
@@ -28,9 +25,13 @@ class EntityRelationship
         $this->relationshipName = $relationshipName;
 
         $this->tableName = $entityResource['$databaseTable'] ?? null;
-        $this->databaseRelationshipField = $entityResource['$databaseRelationshipField'] ?? null;
 
-        $this->resource = new EntityResource($entityResource['data']);
+        if ($this->getType() === self::RELATIONSHIP_TYPE_ONE_TO_ONE){
+            $this->resource = new EntityResource($entityResource['data']);
+        } else {
+            $this->resource = new EntityResource($entityResource['data'][0]);
+        }
+
     }
 
     /**
@@ -55,14 +56,6 @@ class EntityRelationship
     public function getTableName(): ?string
     {
         return $this->tableName;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getDatabaseRelationshipField(): ?string
-    {
-        return $this->databaseRelationshipField;
     }
 
     /**

@@ -86,6 +86,14 @@ class EntityField
     }
 
     /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
      * @param $originalValue
      * @return mixed
      */
@@ -137,5 +145,29 @@ class EntityField
     public function getDatabaseField(): ?string
     {
         return $this->databaseField;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDatabaseRelationshipField(): ?string
+    {
+        return $this->databaseRelationshipField;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getValidator(): ?string
+    {
+        return $this->validator;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRequired(): bool
+    {
+        return $this->isRequired;
     }
 }
