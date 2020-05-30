@@ -5,6 +5,7 @@ use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
+use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataWrapperFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DocumentFactory;
@@ -16,6 +17,9 @@ class JsonDataMapper extends AbstractService
 {
     /** @var JsonDataMapperConfigurations|ServiceConfigurationsInterface  */
     protected JsonDataMapperConfigurations $configData;
+
+    /** @var EncrypterInterface|null  */
+    private ?EncrypterInterface $defaultEncrypter=null;
 
     /**
      * abstractApiCaller constructor.
@@ -32,7 +36,7 @@ class JsonDataMapper extends AbstractService
     /**
      * @param EntityDocument $document
      * @param DataWrapper $wrapper
-     * @return Document
+     * @return array
      * @throws Exception
      */
     private function read(EntityDocument $document, DataWrapper $wrapper) : array
@@ -57,7 +61,7 @@ class JsonDataMapper extends AbstractService
      * @param string $entityName
      * @param string $fieldName
      * @param $fieldValue
-     * @return Document
+     * @return array
      * @throws Exception
      */
     public function readSimple(string $entityName, string $fieldName, $fieldValue) : array
@@ -74,7 +78,7 @@ class JsonDataMapper extends AbstractService
      * @param string $tableName
      * @param string $customFunction
      * @param array $parameters
-     * @return Document
+     * @return array
      * @throws Exception
      */
     public function readCustom(string $entityName, string $tableName, string $customFunction, array $parameters=[]) : array
@@ -85,5 +89,21 @@ class JsonDataMapper extends AbstractService
         $wrapper = $wrapperFactory->generateCustomLoader($tableName, $customFunction, $parameters);
 
         return $this->read($entityDocument, $wrapper);
+    }
+
+    /**
+     * @param EncrypterInterface|null $defaultEncrypter
+     */
+    public function setDefaultEncrypter(?EncrypterInterface $defaultEncrypter): void
+    {
+        $this->defaultEncrypter = $defaultEncrypter;
+    }
+
+    /**
+     * @return EncrypterInterface|null
+     */
+    public function getDefaultEncrypter(): ?EncrypterInterface
+    {
+        return $this->defaultEncrypter;
     }
 }

@@ -1,10 +1,8 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
 
-use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
 use Exception;
 
 class DocumentFactory

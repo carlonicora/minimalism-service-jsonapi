@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
 
-use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
@@ -24,6 +23,7 @@ class ResourceObjectFactory
     /**
      * ResourceObjectFactory constructor.
      * @param ServicesFactory $services
+     * @throws Exception
      */
     public function __construct(ServicesFactory $services)
     {
@@ -51,9 +51,17 @@ class ResourceObjectFactory
         $response = new ResourceObject($resource->getType(), $data[$resource->getId()->getDatabaseField()]);
 
         foreach ($resource->getAttributes() ?? [] as $entityField) {
+            if ($entityField->isEncrypted()){
+                $fieldValue = $this->mapper->getDefaultEncrypter()->encryptId(
+                    $data[$entityField->getDatabaseField()]
+                );
+            } else {
+                $fieldValue = $entityField->getTransformedValue($data[$entityField->getDatabaseField()]);
+            }
+
             $response->attributes->add(
                 $entityField->getName(),
-                $entityField->getTransformedValue($data[$entityField->getDatabaseField()])
+                $fieldValue
             );
         }
 

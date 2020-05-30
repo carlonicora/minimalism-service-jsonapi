@@ -51,26 +51,11 @@ class EntityField
         $this->isPrimaryKey = $isId;
         $this->type = $field['$type'];
 
-        if (array_key_exists('$encrypted', $field)){
-            $this->isEncrypted = $field['$encrypted'];
-        }
-
-        if (array_key_exists('$required', $field)){
-            $this->isRequired = $field['$required'];
-        }
-
+        /** FIELDS USED DURING READ */
         if (array_key_exists('$databaseField', $field)){
             $this->databaseField = $field['$databaseField'];
         } else {
             $this->databaseField = $name;
-        }
-
-        if (array_key_exists('$databaseRelationshipField', $field)){
-            $this->databaseRelationshipField = $field['$databaseRelationshipField'];
-        }
-
-        if (array_key_exists('$validator', $field)){
-            $this->validator = $field['$validator'];
         }
 
         if (array_key_exists('$transformClass', $field)
@@ -80,6 +65,23 @@ class EntityField
         ){
             $this->transformClass = $field['$transformClass'];
             $this->transformFunction = $field['$transformFunction'];
+        }
+
+        if (array_key_exists('$databaseRelationshipField', $field)){
+            $this->databaseRelationshipField = $field['$databaseRelationshipField'];
+        }
+
+        if (array_key_exists('$encrypted', $field)){
+            $this->isEncrypted = $field['$encrypted'];
+        }
+
+        /** FIELDS USED DURING WRITE */
+        if (array_key_exists('$required', $field)){
+            $this->isRequired = $field['$required'];
+        }
+
+        if (array_key_exists('$validator', $field)){
+            $this->validator = $field['$validator'];
         }
     }
 
@@ -95,6 +97,14 @@ class EntityField
 
         $transformer = new $this->transformClass();
         return $transformer->{$this->transformFunction}($originalValue);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEncrypted(): bool
+    {
+        return $this->isEncrypted;
     }
 
     /**
