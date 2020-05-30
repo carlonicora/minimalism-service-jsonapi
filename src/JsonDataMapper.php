@@ -8,10 +8,19 @@ use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataWrapperFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DocumentFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers\DataWrapper;
 use Exception;
 
+/**
+ * Class JsonDataMapper
+ * @package CarloNicora\Minimalism\Services\JsonDataMapper
+ *
+ * TODO read one to many
+ * TODO write
+ *
+ */
 class JsonDataMapper extends AbstractService
 {
     /** @var JsonDataMapperConfigurations|ServiceConfigurationsInterface  */
@@ -19,6 +28,9 @@ class JsonDataMapper extends AbstractService
 
     /** @var EncrypterInterface|null  */
     private ?EncrypterInterface $defaultEncrypter=null;
+
+    /** @var LinkBuilderInterface|null  */
+    private ?LinkBuilderInterface $linkBuilder=null;
 
     /**
      * abstractApiCaller constructor.
@@ -82,7 +94,6 @@ class JsonDataMapper extends AbstractService
      */
     public function readCustom(string $entityName, string $tableName, string $customFunction, array $parameters=[]) : array
     {
-
         $wrapperFactory = $this->generateDataWrapperFactory($entityName);
         $entityDocument = $wrapperFactory->getEntityDocument();
         $wrapper = $wrapperFactory->generateCustomLoader($tableName, $customFunction, $parameters);
@@ -104,5 +115,21 @@ class JsonDataMapper extends AbstractService
     public function getDefaultEncrypter(): ?EncrypterInterface
     {
         return $this->defaultEncrypter;
+    }
+
+    /**
+     * @return LinkBuilderInterface|null
+     */
+    public function getLinkBuilder(): ?LinkBuilderInterface
+    {
+        return $this->linkBuilder;
+    }
+
+    /**
+     * @param LinkBuilderInterface|null $linkBuilder
+     */
+    public function setLinkBuilder(?LinkBuilderInterface $linkBuilder): void
+    {
+        $this->linkBuilder = $linkBuilder;
     }
 }

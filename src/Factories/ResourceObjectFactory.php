@@ -1,15 +1,19 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
 
+use CarloNicora\JsonApi\Objects\Link;
+use CarloNicora\JsonApi\Objects\Meta;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityField;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityResource;
 use Exception;
 
-class ResourceObjectFactory
+class ResourceObjectFactory implements LinkBuilderInterface
 {
     /** @var ServicesFactory  */
     private ServicesFactory $services;
@@ -41,6 +45,28 @@ class ResourceObjectFactory
     }
 
     /**
+     * @param EntityField $field
+     * @param array $data
+     * @return mixed|string
+     */
+    private function getFieldValue(EntityField $field, array $data)
+    {
+        $response = $data[$field->getDatabaseField()];
+
+        if ($field->isEncrypted()){
+            if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
+                $response = $encrypter->encryptId(
+                    $data[$field->getDatabaseField()]
+                );
+            }
+        } else {
+            $response = $field->getTransformedValue($data[$field->getDatabaseField()]);
+        }
+
+        return $response;
+    }
+
+    /**
      * @param EntityResource $resource
      * @param array $data
      * @return ResourceObject
@@ -48,24 +74,38 @@ class ResourceObjectFactory
      */
     public function build(EntityResource $resource, array $data) : ResourceObject
     {
-        $response = new ResourceObject($resource->getType(), $data[$resource->getId()->getDatabaseField()]);
+        $response = new ResourceObject(
+            $resource->getType(),
+            $this->getFieldValue($resource->getId(), $data)
+        );
 
         foreach ($resource->getAttributes() ?? [] as $entityField) {
-            if ($entityField->isEncrypted()){
-                if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
-                    $fieldValue = $encrypter->encryptId(
-                        $data[$entityField->getDatabaseField()]
-                    );
-                } else {
-                    $fieldValue = $data[$entityField->getDatabaseField()];
-                }
-            } else {
-                $fieldValue = $entityField->getTransformedValue($data[$entityField->getDatabaseField()]);
-            }
-
             $response->attributes->add(
                 $entityField->getName(),
-                $fieldValue
+                $this->getFieldValue($entityField, $data)
+            );
+        }
+
+        foreach ($resource->getLinks() ?? [] as $entityLink) {
+            $meta = null;
+
+            if ($entityLink->getMeta() !== null){
+                $meta = new Meta();
+                $meta->importArray($entityLink->getMeta());
+            }
+
+            $url = $this->buildLink($entityLink->getUrl(), $resource, $data);
+
+            if (($linkBuilder = $this->mapper->getLinkBuilder()) !== null){
+                $url = $linkBuilder->buildLink($url, $resource, $data);
+            }
+
+            $response->links->add(
+                new Link(
+                    $entityLink->getName(),
+                    $url,
+                    $meta
+                )
             );
         }
 
@@ -90,5 +130,24 @@ class ResourceObjectFactory
         }
 
         return $response;
+    }
+
+    /**
+     * @param string $link
+     * @param EntityResource $resource
+     * @param array $data
+     * @return string
+     */
+    public function buildLink(string $link, EntityResource $resource, array $data) : string
+    {
+        $linkElements = explode('%', $link);
+
+        for ($linkElementsCounter = 0, $linkElementsCounterMax = count($linkElements); $linkElementsCounter <= $linkElementsCounterMax; $linkElementsCounter += 2) {
+            if (($field = $resource->getField($linkElements[$linkElementsCounter])) !== null) {
+                $linkElements[$linkElementsCounter] = $this->getFieldValue($field, $data);
+            }
+        }
+
+        return implode('', $linkElements);
     }
 }

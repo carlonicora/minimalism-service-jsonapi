@@ -1,6 +1,8 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Objects;
 
+use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\EntityLink;
+
 class EntityResource
 {
     /** @var string  */
@@ -14,6 +16,9 @@ class EntityResource
 
     /** @var string|null  */
     private ?string $tableName=null;
+
+    /** @var array|null  */
+    private ?array $links=null;
 
     /**
      * EntityResource constructor.
@@ -33,6 +38,17 @@ class EntityResource
             $this->attributes = [];
             foreach ($resource['attributes'] ?? [] as $attributeName=>$attribute) {
                 $this->attributes[] = new EntityField($this, $attributeName, $attribute);
+            }
+        }
+
+        if (array_key_exists('links', $resource) && count($resource['links']) > 0){
+            $this->attributes = [];
+            foreach ($resource['links'] ?? [] as $linkName=>$link) {
+                if (is_array($link)){
+                    $this->links[] = new EntityLink($linkName, $link['href'], $link['meta']);
+                } else {
+                    $this->links[] = new EntityLink($linkName, $link);
+                }
             }
         }
     }
@@ -87,5 +103,13 @@ class EntityResource
     public function getAttributes(): ?array
     {
         return $this->attributes;
+    }
+
+    /**
+     * @return array|null|EntityLink[]
+     */
+    public function getLinks(): ?array
+    {
+        return $this->links;
     }
 }
