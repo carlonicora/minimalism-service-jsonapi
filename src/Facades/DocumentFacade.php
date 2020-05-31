@@ -88,7 +88,7 @@ class DocumentFacade
                 }
 
                 foreach ($resourceObject->relationship($relationshipName)->resourceLinkage->resources ?? [] as $resourceLink){
-                    if ($resourceLink->type !== $relationship->getType()){
+                    if ($resourceLink->type !== $relationship->getResource()->getType()){
                         $this->services->logger()->error()->log(
                             JsonDataMapperErrorEvents::RELATIONSHIP_RESOURCE_MISMATCH($resourceLink->type, $relationship->getType())
                         )->throw();

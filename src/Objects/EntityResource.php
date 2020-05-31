@@ -42,7 +42,7 @@ class EntityResource
         }
 
         if (array_key_exists('links', $resource) && count($resource['links']) > 0){
-            $this->attributes = [];
+            $this->links = [];
             foreach ($resource['links'] ?? [] as $linkName=>$link) {
                 if (is_array($link)){
                     $this->links[] = new EntityLink($linkName, $link['href'], $link['meta']);

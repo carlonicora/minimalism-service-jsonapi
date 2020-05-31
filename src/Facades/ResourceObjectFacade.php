@@ -107,10 +107,14 @@ class ResourceObjectFacade
 
         foreach ($data->relationships as $relationshipName=>$relationship){
             $relationshipResourceInfo = $this->document->getRelationship($relationshipName);
-            if ($relationshipResourceInfo !== null && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE){
+            if (
+                $relationshipResourceInfo !== null
+                && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE
+                && count($relationship->resourceLinkage->resources) === 1
+            ){
                 $response[
-                    $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()
-                ] = $relationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseField()];
+                $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()
+                ] = $relationship->resourceLinkage->resources[0]->id;
             }
         }
 

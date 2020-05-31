@@ -19,7 +19,8 @@ use Exception;
  * Class JsonDataMapper
  * @package CarloNicora\Minimalism\Services\JsonDataMapper
  *
- * TODO write
+ * TODO write new entity
+ * TODO write one to many
  * TODO caching
  *
  */
