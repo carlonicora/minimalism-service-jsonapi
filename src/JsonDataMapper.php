@@ -19,7 +19,6 @@ use Exception;
  * Class JsonDataMapper
  * @package CarloNicora\Minimalism\Services\JsonDataMapper
  *
- * TODO comparing jsonapi attributes in lowercase
  * TODO write one to many
  * TODO quality validation of data passed (typed)
  * TODO caching

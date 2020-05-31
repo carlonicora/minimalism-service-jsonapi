@@ -39,9 +39,6 @@ class DataWrapper
     {
         $dataReadersFactory = new DataReadersFactory($this->services);
 
-        /**
-         * TODO Add the cacher
-         */
         $function = $dataReadersFactory->create($this->tableName, $this->function, $this->parameters);
         if ($this->isSingle) {
             $response = $function->getSingle();
