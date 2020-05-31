@@ -12,6 +12,9 @@ class EntityRelationship
     /** @var string|null  */
     private ?string $tableName;
 
+    /** @var bool  */
+    private bool $isRequired;
+
     /** @var EntityResource  */
     private EntityResource $resource;
 
@@ -25,13 +28,21 @@ class EntityRelationship
         $this->relationshipName = $relationshipName;
 
         $this->tableName = $entityResource['$databaseTable'] ?? null;
+        $this->isRequired = $entityResource['$isRequired'] ?? false;
 
         if ($this->getType() === self::RELATIONSHIP_TYPE_ONE_TO_ONE){
             $this->resource = new EntityResource($entityResource['data']);
         } else {
             $this->resource = new EntityResource($entityResource['data'][0]);
         }
+    }
 
+    /**
+     * @return bool
+     */
+    public function isRequired(): bool
+    {
+        return $this->isRequired;
     }
 
     /**

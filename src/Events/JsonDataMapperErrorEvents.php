@@ -19,4 +19,24 @@ class JsonDataMapperErrorEvents extends AbstractErrorEvent
     {
         return new self(2, ResponseInterface::HTTP_STATUS_500, 'Entity field name %s not found in %s', [$fieldName, $entityName]);
     }
+
+    public static function REQUIRED_FIELD_MISSING(string $parameterName) : EventInterface
+    {
+        return new self(3, ResponseInterface::HTTP_STATUS_412, 'Document malformed: parameter %s missing', [$parameterName]);
+    }
+
+    public static function REQUIRED_RELATIONSHIP_MISSING(string $parameterName) : EventInterface
+    {
+        return new self(4, ResponseInterface::HTTP_STATUS_412, 'Document malformed: relationship %s missing', [$parameterName]);
+    }
+
+    public static function RELATIONSHIP_RESOURCE_MISMATCH(string $passedType, string $expectedType) : EventInterface
+    {
+        return new self(
+            4,
+            ResponseInterface::HTTP_STATUS_412,
+            'Document malformed: relationship type %s passed, but %s expected',
+            [$passedType, $expectedType]
+        );
+    }
 }
