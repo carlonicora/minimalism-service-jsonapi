@@ -53,7 +53,7 @@ class ResourceObjectFacade
         $table = $this->mysql->create($entity->getTable());
         $table->update($response);
 
-        $this->updateOneToMany($entity, $data, $response);
+        $this->updateOneToMany($entity, $data);
     }
 
     /**
@@ -113,48 +113,55 @@ class ResourceObjectFacade
     /**
      * @param EntityResource $entity
      * @param ResourceObject $data
-     * @param array $databaseData
      * @throws Exception
      */
-    private function updateOneToMany(EntityResource $entity, ResourceObject $data, array $databaseData) : void
+    private function updateOneToMany(EntityResource $entity, ResourceObject $data) : void
     {
-        foreach ($data->relationships as $relationshipName=>$relationship){
-            if (($relationshipResourceInfo = $entity->getRelationship($relationshipName)) !== null) {
-
+        foreach ($data->relationships as $relationshipName=>$relationship) {
+            if (
+                ($relationshipResourceInfo = $entity->getRelationship($relationshipName)) !== null
+                &&
+                $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY
+            ) {
                 /** @var TableInterface $table */
                 $table = $this->mysql->create($relationshipResourceInfo->getTableName());
 
                 $currentRelationshipArray = [];
                 $newRelationshipsId = [];
 
-                if ($relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
+                if ($data->id !== null) {
 
-                    if ($data->id !== null) {
-
-                        $currentRelationshipArray = $table->loadByField($entity->getId()->getDatabaseField(), $data->id);
-                    }
-
-                    foreach ($relationship->resourceLinkage->resources ?? [] as $resourceObject) {
-                        $newRelationshipsId[] = $resourceObject->id;
-                    }
+                    $currentRelationshipArray = $table->loadByField($entity->getId()->getDatabaseField(), $data->id);
                 }
 
+                foreach ($relationship->resourceLinkage->resources ?? [] as $resourceObject) {
+                    $newRelationshipsId[] = (int)$resourceObject->id;
+                }
+
+                $currentRelationshipsId = [];
                 foreach ($currentRelationshipArray as $currentRelationship) {
-                    if (!in_array($currentRelationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()], $newRelationshipsId, true)) {
+                    $id = $currentRelationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()];
+                    if (!in_array($id, $newRelationshipsId, true)) {
                         $table->delete($currentRelationship);
+                    } else {
+                        $currentRelationshipsId[] = $id;
                     }
                 }
 
-                /*
-                foreach ($newRelationshipsId as $newRelationshipId) {
-                    //Find the new ones and add
+                $newRelationships = [];
 
-                    //$newRelationship = [
-                    //    '' => ''
-                    //];
-                    //$table->update($newRelationship);
+                foreach ($newRelationshipsId as $newRelationshipId) {
+                    if (!in_array($newRelationshipId, $currentRelationshipsId, true)) {
+                        $newRelationships[] = [
+                            $entity->getId()->getDatabaseField() => $data->id,
+                            $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField() => $newRelationshipId
+                        ];
+                    }
                 }
-                */
+
+                if (!empty($newRelationships)) {
+                    $table->update($newRelationships);
+                }
             }
         }
     }
