@@ -68,7 +68,7 @@ class DocumentFacade
              * @var EntityField $attribute
              */
             foreach ($resourceObject->attributes as $attributeName=>$attribute){
-                if ($attribute->isRequired()) {
+                if ($resourceObject->id === null && $attribute->isRequired()) {
                     try {
                         $resourceObject->attributes->get($attributeName);
                     } catch (Exception $e) {
