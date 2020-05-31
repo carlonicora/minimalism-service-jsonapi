@@ -20,6 +20,9 @@ class EntityResource
     /** @var array|null  */
     private ?array $links=null;
 
+    /** @var array|null  */
+    private ?array $relationships=null;
+
     /**
      * EntityResource constructor.
      * @param array $resource
@@ -49,6 +52,13 @@ class EntityResource
                 } else {
                     $this->links[] = new EntityLink($linkName, $link);
                 }
+            }
+        }
+
+        if (array_key_exists('relationships', $resource) && count($resource['relationships']) > 0){
+            $this->relationships = [];
+            foreach ($resource['relationships'] ?? [] as $relationshipName=>$relationship) {
+                $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship);
             }
         }
     }
@@ -111,5 +121,45 @@ class EntityResource
     public function getLinks(): ?array
     {
         return $this->links;
+    }
+
+    /**
+     * @param string $relationshipName
+     * @param string $resourceName
+     * @return EntityResource|null
+     */
+    public function getRelationshipResource(string $relationshipName, string $resourceName) : ?EntityResource
+    {
+        if ($this->relationships !== null && array_key_exists($relationshipName, $this->relationships)){
+            /** @var EntityRelationship $relationship */
+            $relationship = $this->relationships[$relationshipName];
+
+            if ($relationship->getType() === $resourceName){
+                return $relationship->getResource();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $relationshipName
+     * @return EntityRelationship|null
+     */
+    public function getRelationship(string $relationshipName) : ?EntityRelationship
+    {
+        if ($this->relationships !== null && array_key_exists($relationshipName, $this->relationships)){
+            return $this->relationships[$relationshipName];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array|null|EntityRelationship[]
+     */
+    public function getRelationships(): ?array
+    {
+        return $this->relationships;
     }
 }

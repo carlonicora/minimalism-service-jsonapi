@@ -22,9 +22,6 @@ class EntityDocument
     /** @var EntityResource  */
     private ?EntityResource $resource=null;
 
-    /** @var array|null  */
-    private ?array $relationships=null;
-
     /**
      * ParameterDocument constructor.
      * @param ServicesFactory $services
@@ -52,13 +49,6 @@ class EntityDocument
                 JSON_THROW_ON_ERROR);
 
             $this->resource = new EntityResource($document['data']);
-
-            if (array_key_exists('relationships', $document) && count($document['relationships']) > 0){
-                $this->relationships = [];
-                foreach ($document['relationships'] ?? [] as $relationshipName=>$relationship) {
-                    $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship);
-                }
-            }
 
         } catch (JsonException $e) {
             $this->services->logger()->error()->log(
@@ -88,36 +78,8 @@ class EntityDocument
 
         [$relationshipName, $fieldName] = explode('.', $fieldName);
 
-        return $this->relationships[$relationshipName]->getField($fieldName);
-    }
-
-    /**
-     * @param string $relationshipName
-     * @param string $resourceName
-     * @return EntityResource|null
-     */
-    public function getRelationshipResource(string $relationshipName, string $resourceName) : ?EntityResource
-    {
-        if ($this->relationships !== null && array_key_exists($relationshipName, $this->relationships)){
-            /** @var EntityRelationship $relationship */
-            $relationship = $this->relationships[$relationshipName];
-
-            if ($relationship->getType() === $resourceName){
-                return $relationship->getResource();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param string $relationshipName
-     * @return EntityRelationship|null
-     */
-    public function getRelationship(string $relationshipName) : ?EntityRelationship
-    {
-        if ($this->relationships !== null && array_key_exists($relationshipName, $this->relationships)){
-            return $this->relationships[$relationshipName];
+        if (($relationship = $this->resource->getRelationship($relationshipName)) !== null){
+            return $relationship->getResource()->getField($fieldName);
         }
 
         return null;
@@ -149,13 +111,5 @@ class EntityDocument
     public function getResource(): EntityResource
     {
         return $this->resource;
-    }
-
-    /**
-     * @return array|null|EntityRelationship[]
-     */
-    public function getRelationships(): ?array
-    {
-        return $this->relationships;
     }
 }

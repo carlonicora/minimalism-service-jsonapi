@@ -115,7 +115,7 @@ class ResourceObjectFactory implements LinkBuilderInterface
         }
 
         if ($this->document !== null) {
-            foreach ($this->document->getRelationships() ?? [] as $relationship) {
+            foreach ($this->document->getResource()->getRelationships() ?? [] as $relationship) {
                 $dataWrapperFactory = new DataWrapperFactory($this->services, $relationship->getResource()->getType());
                 $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
                 $resourceObjectFactory = new ResourceObjectFactory($this->services);

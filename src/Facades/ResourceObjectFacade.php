@@ -4,7 +4,6 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Facades;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityResource;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
@@ -20,9 +19,6 @@ class ResourceObjectFacade
     /** @var MySQL  */
     private MySQL $mysql;
 
-    /** @var EntityDocument  */
-    private ?EntityDocument $document=null;
-
     /**
      * ResourceObjectFacade constructor.
      * @param ServicesFactory $services
@@ -32,14 +28,6 @@ class ResourceObjectFacade
     {
         $this->services = $services;
         $this->mysql = $services->service(MySQL::class);
-    }
-
-    /**
-     * @param EntityDocument $document
-     */
-    public function setDocument(EntityDocument $document): void
-    {
-        $this->document = $document;
     }
 
     /**
@@ -57,7 +45,7 @@ class ResourceObjectFacade
          */
         $response = $this->buildBaseEntity($entity, $data);
 
-        foreach ($this->buildOneToOne($data) as $additionalAttributeKey=>$additionalAttributeValue){
+        foreach ($this->buildOneToOne($entity, $data) as $additionalAttributeKey=>$additionalAttributeValue){
             $response[$additionalAttributeKey] = $additionalAttributeValue;
         }
 
@@ -65,7 +53,7 @@ class ResourceObjectFacade
         $table = $this->mysql->create($entity->getTable());
         $table->update($response);
 
-        //$this->updateOneToMany($data, $response);
+        $this->updateOneToMany($entity, $data, $response);
     }
 
     /**
@@ -98,15 +86,16 @@ class ResourceObjectFacade
     }
 
     /**
+     * @param EntityResource $entity
      * @param ResourceObject $data
      * @return array
      */
-    private function buildOneToOne(ResourceObject $data) : array
+    private function buildOneToOne(EntityResource $entity, ResourceObject $data) : array
     {
         $response = [];
 
         foreach ($data->relationships as $relationshipName=>$relationship){
-            $relationshipResourceInfo = $this->document->getRelationship($relationshipName);
+            $relationshipResourceInfo = $entity->getRelationship($relationshipName);
             if (
                 $relationshipResourceInfo !== null
                 && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE
@@ -122,31 +111,51 @@ class ResourceObjectFacade
     }
 
     /**
+     * @param EntityResource $entity
      * @param ResourceObject $data
      * @param array $databaseData
+     * @throws Exception
      */
-    private function updateOneToMany(ResourceObject $data, array $databaseData) : void
+    private function updateOneToMany(EntityResource $entity, ResourceObject $data, array $databaseData) : void
     {
-        /*
         foreach ($data->relationships as $relationshipName=>$relationship){
-            $relationshipResourceInfo = $this->document->getRelationship($relationshipName);
-            if ($relationshipResourceInfo !== null && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY){
-                //LOAD ALL THE MANY-TO-MANY
-            }
+            if (($relationshipResourceInfo = $entity->getRelationship($relationshipName)) !== null) {
 
-            foreach ($relationship->resourceLinkage->resources ?? [] as $resourceObject){
-                $responseRelationship = $this->writeResourceObject($relationshipResourceInfo->getResource(), $resourceObject);
+                /** @var TableInterface $table */
+                $table = $this->mysql->create($relationshipResourceInfo->getTableName());
 
-                if ($relationshipResourceInfo !== null && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY){
+                $currentRelationshipArray = [];
+                $newRelationshipsId = [];
 
-                    //Use $response and $relationshipResponse
+                if ($relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
+
+                    if ($data->id !== null) {
+
+                        $currentRelationshipArray = $table->loadByField($entity->getId()->getDatabaseField(), $data->id);
+                    }
+
+                    foreach ($relationship->resourceLinkage->resources ?? [] as $resourceObject) {
+                        $newRelationshipsId[] = $resourceObject->id;
+                    }
                 }
-            }
 
-            if ($relationshipResourceInfo !== null && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY){
-                //DELETE THE NON UPDATED AND UPDATE THE OTHERS
+                foreach ($currentRelationshipArray as $currentRelationship) {
+                    if (!in_array($currentRelationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()], $newRelationshipsId, true)) {
+                        $table->delete($currentRelationship);
+                    }
+                }
+
+                /*
+                foreach ($newRelationshipsId as $newRelationshipId) {
+                    //Find the new ones and add
+
+                    //$newRelationship = [
+                    //    '' => ''
+                    //];
+                    //$table->update($newRelationship);
+                }
+                */
             }
         }
-        */
     }
 }

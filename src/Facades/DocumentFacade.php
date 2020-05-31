@@ -43,7 +43,6 @@ class DocumentFacade
 
         foreach ($data->resources as $resource){
             $resourceObjectFacade = new ResourceObjectFacade($this->services);
-            $resourceObjectFacade->setDocument($entity);
 
             $resourceObjectFacade->writeResourceObject($entity->getResource(), $resource);
         }
@@ -80,7 +79,7 @@ class DocumentFacade
                 }
             }
 
-            foreach ($entity->getRelationships() ?? [] as $relationshipName=>$relationship){
+            foreach ($entity->getResource()->getRelationships() ?? [] as $relationshipName=>$relationship){
                 if ($isNewResource
                     && $relationship->isRequired()
                     &&
