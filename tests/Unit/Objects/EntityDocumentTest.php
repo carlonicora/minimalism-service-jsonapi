@@ -10,6 +10,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 
 class EntityDocumentTest extends AbstractTestCase
 {
+    /**
+     * @return EntityDocument
+     * @throws Exception
+     */
     public function testInitialisation() : EntityDocument
     {
         $response = new EntityDocument($this->getServices());

@@ -7,6 +7,7 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Facades\DocumentFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataWrapperFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DocumentFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkBuilderInterface;
@@ -19,6 +20,7 @@ use Exception;
  * @package CarloNicora\Minimalism\Services\JsonDataMapper
  *
  * TODO write
+ * TODO caching
  *
  */
 class JsonDataMapper extends AbstractService
@@ -31,6 +33,9 @@ class JsonDataMapper extends AbstractService
 
     /** @var LinkBuilderInterface|null  */
     private ?LinkBuilderInterface $linkBuilder=null;
+
+    /** @var string|null  */
+    private ?string $jsonEntitiesPath=null;
 
     /**
      * abstractApiCaller constructor.
@@ -84,6 +89,11 @@ class JsonDataMapper extends AbstractService
      */
     public function write(string $entityName, Document $document) : void
     {
+        $wrapperFactory = $this->generateDataWrapperFactory($entityName);
+        $entityDocument = $wrapperFactory->getEntityDocument();
+
+        $documentFacade = new DocumentFacade($this->services);
+        $documentFacade->writeDocument($entityDocument, $document);
     }
 
     /**
@@ -140,5 +150,21 @@ class JsonDataMapper extends AbstractService
     private function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
     {
         return new DataWrapperFactory($this->services, $entityName);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getJsonEntitiesPath(): ?string
+    {
+        return $this->jsonEntitiesPath;
+    }
+
+    /**
+     * @param string|null $jsonEntitiesPath
+     */
+    public function setJsonEntitiesPath(?string $jsonEntitiesPath): void
+    {
+        $this->jsonEntitiesPath = $jsonEntitiesPath;
     }
 }
