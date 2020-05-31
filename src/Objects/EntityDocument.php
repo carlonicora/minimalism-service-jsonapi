@@ -55,10 +55,8 @@ class EntityDocument
 
             if (array_key_exists('relationships', $document) && count($document['relationships']) > 0){
                 $this->relationships = [];
-                foreach ($document['relationships'] ?? [] as $relationships) {
-                    foreach ($relationships ?? [] as $relationshipName=>$relationship) {
-                        $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship);
-                    }
+                foreach ($document['relationships'] ?? [] as $relationshipName=>$relationship) {
+                    $this->relationships[$relationshipName] = new EntityRelationship($relationshipName, $relationship);
                 }
             }
 
