@@ -68,20 +68,28 @@ class DocumentFacade
              * @var string $attributeName
              * @var EntityField $attribute
              */
-            foreach ($resourceObject->attributes as $attributeName=>$attribute){
+            foreach ($entity->getResource()->getAttributes() ?? [] as $attribute){
                 if ($isNewResource && $attribute->isRequired()) {
                     try {
-                        $resourceObject->attributes->get($attributeName);
+                        $resourceObject->attributes->get($attribute->getName());
                     } catch (Exception $e) {
                         $this->services->logger()->error()->log(
-                            JsonDataMapperErrorEvents::REQUIRED_FIELD_MISSING($attributeName)
+                            JsonDataMapperErrorEvents::REQUIRED_FIELD_MISSING($attribute->getName())
                         )->throw();
                     }
                 }
             }
 
             foreach ($entity->getRelationships() ?? [] as $relationshipName=>$relationship){
-                if ($isNewResource && $relationship->isRequired() && count($resourceObject->relationship($relationshipName)->resourceLinkage->resources) === 0){
+                if ($isNewResource
+                    && $relationship->isRequired()
+                    &&
+                    (
+                        !array_key_exists($relationship->getRelationshipName(), $resourceObject->relationships)
+                        ||
+                        count($resourceObject->relationships[$relationship->getRelationshipName()]->resourceLinkage->resources) === 0
+                    )
+                ){
                     $this->services->logger()->error()->log(
                         JsonDataMapperErrorEvents::REQUIRED_RELATIONSHIP_MISSING($relationshipName)
                     )->throw();
