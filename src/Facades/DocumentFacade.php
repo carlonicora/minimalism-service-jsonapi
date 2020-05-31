@@ -57,6 +57,7 @@ class DocumentFacade
     private function validateAndDecryptDocument(EntityDocument $entity, Document $data) : void
     {
         foreach ($data->resources ?? [] as $resourceObject){
+            $isNewResource = $resourceObject->id === null;
             $field = $entity->getField('id');
 
             if ($field !== null && $this->encrypter !== null && $resourceObject->id !== null && $field->isEncrypted()) {
@@ -68,7 +69,7 @@ class DocumentFacade
              * @var EntityField $attribute
              */
             foreach ($resourceObject->attributes as $attributeName=>$attribute){
-                if ($resourceObject->id === null && $attribute->isRequired()) {
+                if ($isNewResource && $attribute->isRequired()) {
                     try {
                         $resourceObject->attributes->get($attributeName);
                     } catch (Exception $e) {
@@ -80,7 +81,7 @@ class DocumentFacade
             }
 
             foreach ($entity->getRelationships() ?? [] as $relationshipName=>$relationship){
-                if ($relationship->isRequired() && count($resourceObject->relationship($relationshipName)->resourceLinkage->resources) === 0){
+                if ($isNewResource && $relationship->isRequired() && count($resourceObject->relationship($relationshipName)->resourceLinkage->resources) === 0){
                     $this->services->logger()->error()->log(
                         JsonDataMapperErrorEvents::REQUIRED_RELATIONSHIP_MISSING($relationshipName)
                     )->throw();
