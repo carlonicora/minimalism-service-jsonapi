@@ -53,6 +53,10 @@ class ResourceObjectFacade
         $table = $this->mysql->create($entity->getTable());
         $table->update($response);
 
+        if ($data->id === null){
+            $data->id = $response[$entity->getId()->getDatabaseField()];
+        }
+
         $this->updateOneToMany($entity, $data);
     }
 
