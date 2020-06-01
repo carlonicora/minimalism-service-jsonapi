@@ -11,6 +11,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityField;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityRelationship;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityResource;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
 
@@ -122,12 +123,18 @@ class ResourceObjectFactory implements LinkBuilderInterface
 
                 if ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE) {
                     $dataWrapper = $dataWrapperFactory->generateSimpleLoader('id', $data[$relationship->getResource()->getId()->getDatabaseRelationshipField()]);
-                    $resourceData = $dataWrapper->loadData();
-                    $response->relationship($relationship->getRelationshipName())
-                        ->resourceLinkage
-                        ->add(
-                            $resourceObjectFactory->buildResourceObject($entityResource, $resourceData)
-                        );
+                    try {
+                        $resourceData = $dataWrapper->loadData();
+                        $response->relationship($relationship->getRelationshipName())
+                            ->resourceLinkage
+                            ->add(
+                                $resourceObjectFactory->buildResourceObject($entityResource, $resourceData)
+                            );
+                    } catch (DbRecordNotFoundException $e) {
+                        if ($relationship->isRequired()){
+                            throw $e;
+                        }
+                    }
                 } elseif ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
                     $table = $this->mysql->create($relationship->getTableName());
 
