@@ -86,10 +86,12 @@ class ResourceObjectFactory implements LinkBuilderInterface
         );
 
         foreach ($resource->getAttributes() ?? [] as $entityField) {
-            $response->attributes->add(
-                $entityField->getName(),
-                $this->getFieldValue($entityField, $data)
-            );
+            if (!$entityField->isWriteOnly()) {
+                $response->attributes->add(
+                    $entityField->getName(),
+                    $this->getFieldValue($entityField, $data)
+                );
+            }
         }
 
         foreach ($resource->getLinks() ?? [] as $entityLink) {

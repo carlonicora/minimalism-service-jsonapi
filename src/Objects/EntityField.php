@@ -21,6 +21,12 @@ class EntityField
     /** @var bool  */
     private bool $isRequired=false;
 
+    /** @var bool  */
+    private bool $isWriteOnly=false;
+
+    /** @var bool  */
+    private bool $isReadOnly=false;
+
     /** @var string|null  */
     private ?string $databaseField;
 
@@ -82,6 +88,14 @@ class EntityField
             $this->isEncrypted = $field['$encrypted'];
         }
 
+        if (array_key_exists('$isWriteOnly', $field)){
+            $this->isWriteOnly = $field['$isWriteOnly'];
+        }
+
+        if (array_key_exists('$isReadOnly', $field)){
+            $this->isReadOnly = $field['$isReadOnly'];
+        }
+
         /** FIELDS USED DURING WRITE */
         if (array_key_exists('$required', $field)){
             $this->isRequired = $field['$required'];
@@ -122,6 +136,22 @@ class EntityField
     public function isEncrypted(): bool
     {
         return $this->isEncrypted;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWriteOnly(): bool
+    {
+        return $this->isWriteOnly;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isReadOnly(): bool
+    {
+        return $this->isReadOnly;
     }
 
     /**

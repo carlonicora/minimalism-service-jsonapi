@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use Exception;
 
 class DataWrapper
@@ -33,7 +34,7 @@ class DataWrapper
 
     /**
      * @return array|null
-     * @throws Exception
+     * @throws Exception|DbRecordNotFoundException
      */
     public function loadData() : ?array
     {

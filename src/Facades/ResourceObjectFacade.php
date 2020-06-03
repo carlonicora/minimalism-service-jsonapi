@@ -80,7 +80,7 @@ class ResourceObjectFacade
 
         if ($data->attributes !== null){
             foreach ($data->attributes->prepare() as $fieldName=>$fieldValue){
-                if (($field = $entity->getField($fieldName)) !== null) {
+                if ((($field = $entity->getField($fieldName)) !== null) && !$field->isReadOnly()) {
                     $response[$field->getDatabaseField()] = $fieldValue;
                 }
             }
