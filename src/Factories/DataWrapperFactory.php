@@ -46,10 +46,21 @@ class DataWrapperFactory
             )->throw(Exception::class);
         }
 
-        $response->setIsSingle($field->isPrimaryKey());
-        $response->setTableName($field->getTable());
-        $response->setFunction('loadFromId');
-        $response->setParameters([$fieldValue]);
+        if (strpos($fieldName, '.') === false){
+            $response->setTableName($field->getTable());
+            $response->setIsSingle($field->isPrimaryKey());
+            if ($field->isPrimaryKey()) {
+                $response->setFunction('loadFromId');
+                $response->setParameters([$fieldValue]);
+            } else {
+                $response->setFunction('loadByField');
+                $response->setParameters([$field->getDatabaseField(), $fieldValue]);
+            }
+        } else {
+            $response->setTableName($this->entityDocument->getResource()->getTable());
+            $response->setFunction('loadByField');
+            $response->setParameters([$field->getDatabaseRelationshipField(), $fieldValue]);
+        }
 
         return $response;
     }

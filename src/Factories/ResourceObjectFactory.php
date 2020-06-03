@@ -94,7 +94,79 @@ class ResourceObjectFactory implements LinkBuilderInterface
             }
         }
 
-        foreach ($resource->getLinks() ?? [] as $entityLink) {
+        foreach ($this->addLinks($resource->getLinks(), $resource, $data) as $newLink){
+            $response->links->add($newLink);
+        }
+
+        if ($this->document !== null) {
+            foreach ($this->document->getResource()->getRelationships() ?? [] as $relationship) {
+                foreach ($this->addLinks($relationship->getLinks(), $resource, $data) as $newLink){
+                    $response->relationship($relationship->getRelationshipName())
+                        ->links->add($newLink);
+                }
+
+                if ($relationship->getResource() !== null) {
+                    $dataWrapperFactory = new DataWrapperFactory($this->services, $relationship->getResource()->getType());
+                    $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
+                    $resourceObjectFactory = new ResourceObjectFactory($this->services);
+
+                    if ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE) {
+                        $dataWrapper = $dataWrapperFactory->generateSimpleLoader('id', $data[$relationship->getResource()->getId()->getDatabaseRelationshipField()]);
+                        try {
+                            $resourceData = $dataWrapper->loadData();
+                            $response->relationship($relationship->getRelationshipName())
+                                ->resourceLinkage
+                                ->add(
+                                    $resourceObjectFactory->buildResourceObject($entityResource, $resourceData)
+                                );
+                        } catch (DbRecordNotFoundException $e) {
+                            if ($relationship->isRequired()) {
+                                throw $e;
+                            }
+                        }
+                    } elseif ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
+                        $table = $this->mysql->create($relationship->getTableName());
+
+                        $dataWrapper = $dataWrapperFactory->generateCustomLoader(
+                            $relationship->getResource()->getTable(),
+                            'getFirstLevelJoin',
+                            [
+                                $table->getTableName(),
+                                $resource->getId()->getDatabaseField(),
+                                $relationship->getResource()->getId()->getDatabaseField(),
+                                $data[$resource->getId()->getDatabaseField()]
+                            ]
+                        );
+
+                        $resourceData = $dataWrapper->loadData();
+
+                        foreach ($resourceData ?? [] as $singleResourceData) {
+                            $response->relationship($relationship->getRelationshipName())
+                                ->resourceLinkage
+                                ->add(
+                                    $resourceObjectFactory->buildResourceObject($entityResource, $singleResourceData)
+                                );
+                        }
+                    }
+                }
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param array|null $links
+     * @param EntityResource $resource
+     * @param array $data
+     * @return array|null
+     * @throws Exception
+     */
+    private function addLinks(?array $links, EntityResource $resource, array $data) : ?array
+    {
+        $response = [];
+
+        foreach ($links ?? [] as $entityLink) {
             $meta = null;
 
             if ($entityLink->getMeta() !== null){
@@ -108,64 +180,16 @@ class ResourceObjectFactory implements LinkBuilderInterface
                 $url = $linkBuilder->buildLink($url, $resource, $data);
             }
 
-            $response->links->add(
-                new Link(
+            $response[] = new Link(
                     $entityLink->getName(),
                     $url,
                     $meta
-                )
-            );
-        }
-
-        if ($this->document !== null) {
-            foreach ($this->document->getResource()->getRelationships() ?? [] as $relationship) {
-                $dataWrapperFactory = new DataWrapperFactory($this->services, $relationship->getResource()->getType());
-                $entityResource = $dataWrapperFactory->getEntityDocument()->getResource();
-                $resourceObjectFactory = new ResourceObjectFactory($this->services);
-
-                if ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE) {
-                    $dataWrapper = $dataWrapperFactory->generateSimpleLoader('id', $data[$relationship->getResource()->getId()->getDatabaseRelationshipField()]);
-                    try {
-                        $resourceData = $dataWrapper->loadData();
-                        $response->relationship($relationship->getRelationshipName())
-                            ->resourceLinkage
-                            ->add(
-                                $resourceObjectFactory->buildResourceObject($entityResource, $resourceData)
-                            );
-                    } catch (DbRecordNotFoundException $e) {
-                        if ($relationship->isRequired()){
-                            throw $e;
-                        }
-                    }
-                } elseif ($relationship->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_MANY) {
-                    $table = $this->mysql->create($relationship->getTableName());
-
-                    $dataWrapper = $dataWrapperFactory->generateCustomLoader(
-                        $relationship->getResource()->getTable(),
-                        'getFirstLevelJoin',
-                        [
-                            $table->getTableName(),
-                            $resource->getId()->getDatabaseField(),
-                            $relationship->getResource()->getId()->getDatabaseField(),
-                            $data[$resource->getId()->getDatabaseField()]
-                        ]
-                    );
-
-                    $resourceData = $dataWrapper->loadData();
-
-                    foreach ($resourceData ?? [] as $singleResourceData){
-                        $response->relationship($relationship->getRelationshipName())
-                            ->resourceLinkage
-                            ->add(
-                                $resourceObjectFactory->buildResourceObject($entityResource, $singleResourceData)
-                            );
-                    }
-                }
-            }
+                );
         }
 
         return $response;
     }
+
 
     /**
      * @param string $url

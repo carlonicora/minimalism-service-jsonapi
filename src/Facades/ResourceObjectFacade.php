@@ -104,9 +104,10 @@ class ResourceObjectFacade
                 $relationshipResourceInfo !== null
                 && $relationshipResourceInfo->getType() === EntityRelationship::RELATIONSHIP_TYPE_ONE_TO_ONE
                 && count($relationship->resourceLinkage->resources) === 1
+                && $relationshipResourceInfo->getResource() !== null
             ){
                 $response[
-                $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()
+                    $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()
                 ] = $relationship->resourceLinkage->resources[0]->id;
             }
         }
@@ -144,18 +145,20 @@ class ResourceObjectFacade
 
                 $currentRelationshipsId = [];
                 foreach ($currentRelationshipArray as $currentRelationship) {
-                    $id = $currentRelationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()];
-                    if (!in_array($id, $newRelationshipsId, true)) {
-                        $table->delete($currentRelationship);
-                    } else {
-                        $currentRelationshipsId[] = $id;
+                    if ($relationshipResourceInfo->getResource() !== null){
+                        $id = $currentRelationship[$relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField()];
+                        if (!in_array($id, $newRelationshipsId, true)) {
+                            $table->delete($currentRelationship);
+                        } else {
+                            $currentRelationshipsId[] = $id;
+                        }
                     }
                 }
 
                 $newRelationships = [];
 
                 foreach ($newRelationshipsId as $newRelationshipId) {
-                    if (!in_array($newRelationshipId, $currentRelationshipsId, true)) {
+                    if ($relationshipResourceInfo->getResource() !== null && !in_array($newRelationshipId, $currentRelationshipsId, true)) {
                         $newRelationships[] = [
                             $entity->getId()->getDatabaseField() => $data->id,
                             $relationshipResourceInfo->getResource()->getId()->getDatabaseRelationshipField() => $newRelationshipId

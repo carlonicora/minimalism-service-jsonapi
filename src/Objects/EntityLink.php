@@ -1,5 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
+namespace CarloNicora\Minimalism\Services\JsonDataMapper\Objects;
 
 class EntityLink
 {

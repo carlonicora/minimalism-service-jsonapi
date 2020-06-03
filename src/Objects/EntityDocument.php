@@ -78,7 +78,7 @@ class EntityDocument
 
         [$relationshipName, $fieldName] = explode('.', $fieldName);
 
-        if (($relationship = $this->resource->getRelationship($relationshipName)) !== null){
+        if (($relationship = $this->resource->getRelationship($relationshipName)) !== null && $relationship->getResource()){
             return $relationship->getResource()->getField($fieldName);
         }
 

@@ -95,13 +95,13 @@ class DocumentFacade
                 }
 
                 foreach ($resourceObject->relationship($relationshipName)->resourceLinkage->resources ?? [] as $resourceLink){
-                    if ($resourceLink->type !== $relationship->getResource()->getType()){
+                    if ($relationship->getResource() !== null && $resourceLink->type !== $relationship->getResource()->getType()){
                         $this->services->logger()->error()->log(
                             JsonDataMapperErrorEvents::RELATIONSHIP_RESOURCE_MISMATCH($resourceLink->type, $relationship->getType())
                         )->throw();
                     }
 
-                    if ($resourceLink->id === null && $relationship->getResource()->getId()->isRequired()){
+                    if ($resourceLink->id === null && $relationship->getResource() !== null && $relationship->getResource()->getId()->isRequired()){
                         $this->services->logger()->error()->log(
                             JsonDataMapperErrorEvents::REQUIRED_FIELD_MISSING($relationshipName . '.id')
                         )->throw();

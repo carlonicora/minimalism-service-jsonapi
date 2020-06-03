@@ -1,8 +1,12 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Objects;
 
+use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\Traits\LinksTrait;
+
 class EntityRelationship
 {
+    use LinksTrait;
+
     public const RELATIONSHIP_TYPE_ONE_TO_ONE=1;
     public const RELATIONSHIP_TYPE_ONE_TO_MANY=2;
 
@@ -16,7 +20,7 @@ class EntityRelationship
     private bool $isRequired;
 
     /** @var EntityResource  */
-    private EntityResource $resource;
+    private ?EntityResource $resource=null;
 
     /**
      * EntityRelationship constructor.
@@ -30,7 +34,13 @@ class EntityRelationship
         $this->tableName = $entityResource['$databaseTable'] ?? null;
         $this->isRequired = $entityResource['$isRequired'] ?? false;
 
-        $this->resource = new EntityResource($entityResource['data']);
+        if (array_key_exists('links', $entityResource) && count($entityResource['links']) > 0){
+            $this->addLinks($entityResource['links']);
+        }
+
+        if (array_key_exists('data', $entityResource)) {
+            $this->resource = new EntityResource($entityResource['data']);
+        }
     }
 
     /**
@@ -50,9 +60,9 @@ class EntityRelationship
     }
 
     /**
-     * @return EntityResource
+     * @return EntityResource|null
      */
-    public function getResource(): EntityResource
+    public function getResource(): ?EntityResource
     {
         return $this->resource;
     }
