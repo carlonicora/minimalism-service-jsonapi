@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityResource;
 
-interface LinkBuilderInterface
+interface LinkCreatorInterface
 {
     /**
      * LinkBuilderInterface constructor.

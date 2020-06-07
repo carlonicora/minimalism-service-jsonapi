@@ -5,7 +5,7 @@ use CarloNicora\JsonApi\Objects\Link;
 use CarloNicora\JsonApi\Objects\Meta;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityField;
@@ -15,7 +15,7 @@ use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
 
-class ResourceObjectFactory implements LinkBuilderInterface
+class ResourceObjectFactory implements LinkCreatorInterface
 {
     /** @var ServicesFactory  */
     private ServicesFactory $services;

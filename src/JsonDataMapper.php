@@ -10,7 +10,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapper
 use CarloNicora\Minimalism\Services\JsonDataMapper\Facades\DocumentFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataWrapperFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DocumentFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers\DataWrapper;
 use Exception;
@@ -31,8 +31,8 @@ class JsonDataMapper extends AbstractService
     /** @var EncrypterInterface|null  */
     private ?EncrypterInterface $defaultEncrypter=null;
 
-    /** @var LinkBuilderInterface|null  */
-    private ?LinkBuilderInterface $linkBuilder=null;
+    /** @var LinkCreatorInterface|null  */
+    private ?LinkCreatorInterface $linkBuilder=null;
 
     /** @var string|null  */
     private ?string $jsonEntitiesPath=null;
@@ -113,17 +113,17 @@ class JsonDataMapper extends AbstractService
     }
 
     /**
-     * @return LinkBuilderInterface|null
+     * @return LinkCreatorInterface|null
      */
-    public function getLinkBuilder(): ?LinkBuilderInterface
+    public function getLinkBuilder(): ?LinkCreatorInterface
     {
         return $this->linkBuilder;
     }
 
     /**
-     * @param LinkBuilderInterface|null $linkBuilder
+     * @param LinkCreatorInterface|null $linkBuilder
      */
-    public function setLinkBuilder(?LinkBuilderInterface $linkBuilder): void
+    public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
     }

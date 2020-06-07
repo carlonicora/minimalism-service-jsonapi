@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Abstracts;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
 
-class AbstractTransformator implements TransformatorInterface
+abstract class AbstractTransformator implements TransformatorInterface
 {
     /** @var ServicesFactory  */
     protected ServicesFactory $services;
