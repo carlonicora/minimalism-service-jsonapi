@@ -6,23 +6,16 @@ use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceReader;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Facades\DocumentFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataWrapperFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DocumentFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Objects\EntityDocument;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers\DataWrapper;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use Exception;
 
-/**
- * Class JsonDataMapper
- * @package CarloNicora\Minimalism\Services\JsonDataMapper
- *
- * TODO quality validation of data passed (typed)
- * TODO caching
- *
- */
 class JsonDataMapper extends AbstractService
 {
     /** @var JsonDataMapperConfigurations|ServiceConfigurationsInterface  */
@@ -34,66 +27,79 @@ class JsonDataMapper extends AbstractService
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
 
-    /** @var string|null  */
-    private ?string $jsonEntitiesPath=null;
+    /** @var CacheFacade  */
+    private CacheFacade $cache;
 
     /**
      * abstractApiCaller constructor.
      * @param ServiceConfigurationsInterface $configData
      * @param ServicesFactory $services
+     * @throws Exception
      */
     public function __construct(ServiceConfigurationsInterface $configData, ServicesFactory $services) {
         parent::__construct($configData, $services);
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
+
+        $this->cache = new CacheFacade();
     }
 
     /**
-     * @param string $entityName
-     * @param string $fieldName
-     * @param $fieldValue
-     * @return array
+     * @return CacheFacade
+     */
+    public function getCache(): CacheFacade
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param ServicesFactory $services
      * @throws Exception
      */
-    public function readSimple(string $entityName, string $fieldName, $fieldValue) : array
+    public function initialiseStatics(ServicesFactory $services): void
     {
-        $wrapperFactory = $this->generateDataWrapperFactory($entityName);
-        $entityDocument = $wrapperFactory->getEntityDocument();
-        $wrapper = $wrapperFactory->generateSimpleLoader($fieldName, $fieldValue);
-
-        return $this->read($entityDocument, $wrapper);
+        parent::initialiseStatics($services);
+        AbstractResourceBuilder::initialise($services);
     }
 
     /**
-     * @param string $entityName
-     * @param string $tableName
-     * @param string $customFunction
+     * @param string $builderName
+     * @param AttributeBuilderInterface $attribute
+     * @param $value
+     * @param bool $loadRelationships
+     * @return array
+     * @throws DbRecordNotFoundException|Exception
+     */
+    public function generateResourceObjectByFieldValue(string $builderName, AttributeBuilderInterface $attribute, $value, bool $loadRelationships=false) : array
+    {
+        $resourceReader = new ResourceReader($this->services);
+        return $resourceReader->generateResourceObjectByFieldValue($builderName, $attribute, $value, $loadRelationships);
+    }
+
+    /**
+     * @param string $builderName
+     * @param string $functionName
      * @param array $parameters
+     * @param bool $loadRelationships
      * @return array
-     * @throws Exception
+     * @throws DbRecordNotFoundException|Exception
      */
-    public function readCustom(string $entityName, string $tableName, string $customFunction, array $parameters=[]) : array
+    public function generateResourceObjectsByFunction(string $builderName, string $functionName, array $parameters=[], bool $loadRelationships=false) : array
     {
-        $wrapperFactory = $this->generateDataWrapperFactory($entityName);
-        $entityDocument = $wrapperFactory->getEntityDocument();
-        $wrapper = $wrapperFactory->generateCustomLoader($tableName, $customFunction, $parameters);
-
-        return $this->read($entityDocument, $wrapper);
+        $resourceReader = new ResourceReader($this->services);
+        return $resourceReader->generateResourceObjectsByFunction($builderName, $functionName, $parameters, $loadRelationships);
     }
 
     /**
-     * @param string $entityName
-     * @param Document $document
+     * @param Document $data
+     * @param string $resourceBuilderName
      * @throws Exception
      */
-    public function write(string $entityName, Document $document) : void
+    public function writeDocument(Document $data, string $resourceBuilderName) : void
     {
-        $wrapperFactory = $this->generateDataWrapperFactory($entityName);
-        $entityDocument = $wrapperFactory->getEntityDocument();
-
-        $documentFacade = new DocumentFacade($this->services);
-        $documentFacade->writeDocument($entityDocument, $document);
+        $resourceWriter = new ResourceWriter($this->services);
+        $resourceWriter->writeDocument($data, $resourceBuilderName);
     }
 
     /**
@@ -126,45 +132,5 @@ class JsonDataMapper extends AbstractService
     public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
-    }
-
-    /**
-     * @param EntityDocument $document
-     * @param DataWrapper $wrapper
-     * @return array
-     * @throws Exception
-     */
-    private function read(EntityDocument $document, DataWrapper $wrapper) : array
-    {
-        $documentFactory = new DocumentFactory($this->services);
-        $data = $wrapper->loadData();
-
-        return $documentFactory->buildDocument($document, $data);
-    }
-
-    /**
-     * @param string $entityName
-     * @return DataWrapperFactory
-     * @throws Exception
-     */
-    private function generateDataWrapperFactory(string $entityName) : DataWrapperFactory
-    {
-        return new DataWrapperFactory($this->services, $entityName);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getJsonEntitiesPath(): ?string
-    {
-        return $this->jsonEntitiesPath;
-    }
-
-    /**
-     * @param string|null $jsonEntitiesPath
-     */
-    public function setJsonEntitiesPath(?string $jsonEntitiesPath): void
-    {
-        $this->jsonEntitiesPath = $jsonEntitiesPath;
     }
 }

@@ -33,10 +33,20 @@ class JsonDataMapperErrorEvents extends AbstractErrorEvent
     public static function RELATIONSHIP_RESOURCE_MISMATCH(string $passedType, string $expectedType) : EventInterface
     {
         return new self(
-            4,
+            5,
             ResponseInterface::HTTP_STATUS_412,
             'Document malformed: relationship type %s passed, but %s expected',
             [$passedType, $expectedType]
+        );
+    }
+
+    public static function NO_ATTRIBUTE_FOUND(string $resourceBuilderName, string $attributeName) : EventInterface
+    {
+        return new self(
+            6,
+            ResponseInterface::HTTP_STATUS_500,
+            'Attribute %s not found in resource builder %s',
+            [$attributeName, $resourceBuilderName]
         );
     }
 }

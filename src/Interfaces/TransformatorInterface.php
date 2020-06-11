@@ -13,8 +13,9 @@ interface TransformatorInterface
 
     /**
      * @param string $transformationFunction
-     * @param $parameter
+     * @param array $data
+     * @param string|null $fieldName
      * @return mixed
      */
-    public function transform(string $transformationFunction, $parameter);
+    public function transform(string $transformationFunction, array $data, ?string $fieldName);
 }

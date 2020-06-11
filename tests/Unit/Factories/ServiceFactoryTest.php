@@ -5,6 +5,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapper
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\ServiceFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Tests\Unit\Abstracts\AbstractTestCase;
+use Exception;
 
 class ServiceFactoryTest extends AbstractTestCase
 {
@@ -23,6 +24,7 @@ class ServiceFactoryTest extends AbstractTestCase
     /**
      * @param ServiceFactory $service
      * @depends testServiceInitialisation
+     * @throws Exception
      */
     public function testServiceCreation(ServiceFactory $service) : void
     {

@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use Exception;
 
 class ServiceFactory extends AbstractServiceFactory
 {
@@ -24,6 +25,7 @@ class ServiceFactory extends AbstractServiceFactory
     /**
      * @param servicesFactory $services
      * @return JsonDataMapper
+     * @throws Exception
      */
     public function create(servicesFactory $services) : JsonDataMapper
     {

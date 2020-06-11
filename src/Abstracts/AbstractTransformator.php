@@ -20,15 +20,16 @@ abstract class AbstractTransformator implements TransformatorInterface
 
     /**
      * @param string $transformationFunction
-     * @param $parameter
+     * @param array $data
+     * @param string|null $fieldName
      * @return mixed|void
      */
-    public function transform(string $transformationFunction, $parameter)
+    public function transform(string $transformationFunction, array $data, ?string $fieldName=null)
     {
         if (method_exists($this, $transformationFunction)) {
-            return $this->$transformationFunction($parameter);
+            return $this->$transformationFunction($data, $fieldName);
         }
 
-        return $parameter;
+        return $data[$fieldName] ?? null;
     }
 }
