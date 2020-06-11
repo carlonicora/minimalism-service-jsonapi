@@ -153,7 +153,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
         $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
 
-        return $resourceBuilder->relationships[$relationshipName]->getAttribute();
+        return clone $resourceBuilder->relationships[$relationshipName]->getAttribute();
     }
 
     /**
