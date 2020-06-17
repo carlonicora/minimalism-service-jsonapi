@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits;
 
 use CarloNicora\JsonApi\Objects\Link;
 use CarloNicora\JsonApi\Objects\Links;
+use CarloNicora\JsonApi\Objects\Meta;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\BuilderLinksInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\LinkBuilderInterface;
@@ -65,10 +66,21 @@ trait LinkBuilderTrait
                 $url = $linkBuilder->buildLink($url, $rbi, $data);
             }
 
+            $meta = null;
+
+            if ($link->getMeta() !== null){
+                $meta = new Meta();
+
+                foreach ($link->getMeta() as $metaName=>$metaValue){
+                    $meta->add($metaName, $metaValue);
+                }
+            }
+
             $links->add(
                 new Link(
                     $link->getName(),
-                    $url
+                    $url,
+                    $meta
                 )
             );
         }
