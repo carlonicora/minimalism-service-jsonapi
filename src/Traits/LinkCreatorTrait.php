@@ -32,7 +32,7 @@ trait LinkCreatorTrait
 
                 $value = $data[$attribute->getDatabaseFieldName()];
 
-                if ($attribute->isEncrypted() && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null && is_int($value)){
+                if (is_int($value) && $attribute->isEncrypted() && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
                     $value = $encrypter->encryptId($value);
                 }
 
