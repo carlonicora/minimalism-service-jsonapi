@@ -290,10 +290,13 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             } else {
                 switch ($relationship->getType()) {
                     case RelationshipTypeInterface::RELATIONSHIP_ONE_TO_ONE:
+                        if ($data[$relationship->getAttribute()->getDatabaseFieldRelationship()] === null) {
+                            continue 2;
+                        }
                         $relation->resourceLinkage->resources = $this->mapper->generateResourceObjectByFieldValue(
                             $relationship->getResourceBuilderName(),
                             $relationship->getAttribute(),
-                            $data[$relationship->getAttribute()->getDatabaseFieldName()]
+                            $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
                         );
                         break;
                     case RelationshipTypeInterface::RELATIONSHIP_ONE_TO_MANY:
