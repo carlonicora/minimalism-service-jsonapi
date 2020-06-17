@@ -77,6 +77,25 @@ class ResourceReader
     }
 
     /**
+     * @param string $builderName
+     * @param array $dataList
+     * @param bool $loadRelationships
+     * @return array
+     * @throws Exception
+     */
+    public function generateResourceObjectByData(string $builderName, array $dataList, bool $loadRelationships=false): array
+    {
+        $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
+        $response = [];
+
+        foreach ($dataList as $data){
+            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationships);
+        }
+
+        return $response;
+    }
+
+    /**
      * @param ResourceBuilderInterface $resourceBuilder
      * @param string $tableName
      * @param string $functionName

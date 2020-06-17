@@ -92,6 +92,19 @@ class JsonDataMapper extends AbstractService
     }
 
     /**
+     * @param string $builderName
+     * @param array $dataList
+     * @param bool $loadRelationships
+     * @return array
+     * @throws Exception
+     */
+    public function generateResourceObjectByData(string $builderName, array $dataList, bool $loadRelationships=false): array
+    {
+        $resourceReader = new ResourceReader($this->services);
+        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationships);
+    }
+
+    /**
      * @param Document $data
      * @param string $resourceBuilderName
      * @throws Exception
