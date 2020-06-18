@@ -304,9 +304,13 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         foreach ($this->relationships as $relationship){
             $relation = new Relationship();
 
+            /** @var JsonDataMapper $mapper */
+            $mapper = $this->mapper;
+
             if ($relationship->getReadFunction() !== null) {
-                $relation->resourceLinkage->resources = $this->mapper->generateResourceObjectsByFunction(
+                $relation->resourceLinkage->resources = $mapper->generateResourceObjectsByFunction(
                     $relationship->getResourceBuilderName(),
+                    null,
                     $relationship->getReadFunction(),
                     [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]]
                 );
@@ -320,22 +324,25 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                         if ($data[$relationship->getAttribute()->getDatabaseFieldRelationship()] === null) {
                             continue 2;
                         }
-                        $relation->resourceLinkage->resources = $this->mapper->generateResourceObjectByFieldValue(
+                        $relation->resourceLinkage->resources = $mapper->generateResourceObjectByFieldValue(
                             $relationship->getResourceBuilderName(),
+                            null,
                             $relationship->getAttribute(),
                             $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
                         );
                         break;
                     case RelationshipTypeInterface::RELATIONSHIP_ONE_TO_MANY:
-                        $relation->resourceLinkage->resources = $this->mapper->generateResourceObjectByFieldValue(
+                        $relation->resourceLinkage->resources = $mapper->generateResourceObjectByFieldValue(
                             $relationship->getResourceBuilderName(),
+                            null,
                             $relationship->getAttribute(),
                             $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
                         );
                         break;
                     case RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY:
-                        $relation->resourceLinkage->resources = $this->mapper->generateResourceObjectsByFunction(
+                        $relation->resourceLinkage->resources = $mapper->generateResourceObjectsByFunction(
                             $relationship->getResourceBuilderName(),
+                            null,
                             'getFirstLevelJoin',
                             [
                                 $relationship->getManyToManyRelationshipTableName(),
