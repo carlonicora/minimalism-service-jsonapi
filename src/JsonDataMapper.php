@@ -70,15 +70,15 @@ class JsonDataMapper extends AbstractService
      * @param CacheFactoryInterface|null $cache
      * @param AttributeBuilderInterface $attribute
      * @param $value
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, bool $loadRelationships=false) : array
+    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, $value, $loadRelationships);
+        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, $value, $loadRelationshipsLevel);
     }
 
     /**
@@ -86,28 +86,28 @@ class JsonDataMapper extends AbstractService
      * @param CacheFactoryInterface|null $cache
      * @param string $functionName
      * @param array $parameters
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], bool $loadRelationships=false) : array
+    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], int $loadRelationshipsLevel=0) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectsByFunction($builderName, $cache, $functionName, $parameters, $loadRelationships);
+        return $resourceReader->generateResourceObjectsByFunction($builderName, $cache, $functionName, $parameters, $loadRelationshipsLevel);
     }
 
     /**
      * @param string $builderName
      * @param array $dataList
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws Exception
      */
-    public function generateResourceObjectByData(string $builderName, array $dataList, bool $loadRelationships=false): array
+    public function generateResourceObjectByData(string $builderName, array $dataList, int $loadRelationshipsLevel=0): array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationships);
+        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationshipsLevel);
     }
 
     /**

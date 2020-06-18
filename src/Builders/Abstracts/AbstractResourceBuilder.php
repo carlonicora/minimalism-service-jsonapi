@@ -18,6 +18,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEve
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use Exception;
 
 abstract class AbstractResourceBuilder implements ResourceBuilderInterface, LinkCreatorInterface
@@ -276,19 +277,19 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
     /**
      * @param array $data
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return ResourceObject
      * @throws Exception
      */
-    final public function buildResourceObject(array $data, bool $loadRelationships = false): ResourceObject
+    final public function buildResourceObject(array $data, int $loadRelationshipsLevel=0): ResourceObject
     {
         $response = new ResourceObject($this->type);
 
         $this->buildAttributes($response, $data);
         $this->buildLinks($this, $this, $response->links, $data);
 
-        if ($loadRelationships){
-            $this->buildRelationships($response, $data);
+        if ($loadRelationshipsLevel > 0){
+            $this->buildRelationships($response, $data, $loadRelationshipsLevel);
         }
 
         return $response;
@@ -297,9 +298,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /**
      * @param ResourceObject $response
      * @param array $data
+     * @param int $loadRelationshipsLevel
+     * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    private function buildRelationships(ResourceObject $response, array $data): void
+    private function buildRelationships(ResourceObject $response, array $data, int $loadRelationshipsLevel=0): void
     {
         foreach ($this->relationships as $relationship){
             $relation = new Relationship();
@@ -312,7 +315,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                     $relationship->getResourceBuilderName(),
                     null,
                     $relationship->getReadFunction(),
-                    [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]]
+                    [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]],
+                    $loadRelationshipsLevel-1
                 );
 
                 if ($relationship->getAttribute()->getDatabaseFieldRelationship() !== $relationship->getAttribute()->getDatabaseFieldName()){
@@ -328,7 +332,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                             $relationship->getResourceBuilderName(),
                             null,
                             $relationship->getAttribute(),
-                            $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
+                            $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
+                            $loadRelationshipsLevel-1
                         );
                         break;
                     case RelationshipTypeInterface::RELATIONSHIP_ONE_TO_MANY:
@@ -336,7 +341,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                             $relationship->getResourceBuilderName(),
                             null,
                             $relationship->getAttribute(),
-                            $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
+                            $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
+                            $loadRelationshipsLevel-1
                         );
                         break;
                     case RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY:
@@ -349,7 +355,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                                 $relationship->getAttribute()->getDatabaseFieldRelationship(),
                                 $relationship->getManyToManyRelationshipField(),
                                 $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
-                            ]
+                            ],
+                            $loadRelationshipsLevel-1
                         );
 
                         break;

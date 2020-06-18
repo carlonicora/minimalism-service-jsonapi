@@ -41,12 +41,12 @@ class ResourceReader
      * @param CacheFactoryInterface|null $cache
      * @param AttributeBuilderInterface $attribute
      * @param $value
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, bool $loadRelationships=false) : array
+    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
         $response = null;
 
@@ -71,10 +71,10 @@ class ResourceReader
             }
 
             if ($isMainTable && $attribute->getName() === 'id') {
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadFromId', [$value], $loadRelationships, true);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadFromId', [$value], $loadRelationshipsLevel, true);
             } else {
                 $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadByField', [$fieldName, $value], $loadRelationships);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadByField', [$fieldName, $value], $loadRelationshipsLevel);
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -90,12 +90,12 @@ class ResourceReader
      * @param CacheFactoryInterface|null $cache
      * @param string $functionName
      * @param array $parameters
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], bool $loadRelationships=false) : array
+    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], int $loadRelationshipsLevel=0) : array
     {
         $response = null;
 
@@ -115,7 +115,7 @@ class ResourceReader
             if (method_exists($resourceBuilder, $functionName)) {
                 $response = $resourceBuilder->$functionName(...$parameters);
             } else {
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $resourceBuilder->getTableName(), $functionName, $parameters, $loadRelationships);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $resourceBuilder->getTableName(), $functionName, $parameters, $loadRelationshipsLevel);
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -129,17 +129,17 @@ class ResourceReader
     /**
      * @param string $builderName
      * @param array $dataList
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @return array
      * @throws Exception
      */
-    public function generateResourceObjectByData(string $builderName, array $dataList, bool $loadRelationships=false): array
+    public function generateResourceObjectByData(string $builderName, array $dataList, int $loadRelationshipsLevel=0): array
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
         $response = [];
 
         foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationships);
+            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel);
         }
 
         return $response;
@@ -151,19 +151,19 @@ class ResourceReader
      * @param string $tableName
      * @param string $functionName
      * @param array $parameters
-     * @param bool $loadRelationships
+     * @param int $loadRelationshipsLevel
      * @param bool $iSingleRead
      * @return array
      * @throws DbRecordNotFoundException
      */
-    private function generateResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, bool $loadRelationships=false, bool $iSingleRead=false) : array
+    private function generateResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, int $loadRelationshipsLevel=0, bool $iSingleRead=false) : array
     {
         $dataList = $this->readResourceObjectData($cache, $tableName, $functionName, $parameters, $iSingleRead);
 
         $response = [];
 
         foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationships);
+            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel);
         }
 
         return $response;
