@@ -71,11 +71,15 @@ class ResourceReader
             }
 
             if ($isMainTable && $attribute->getName() === 'id') {
-                return $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadFromId', [$value], $loadRelationships, true);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadFromId', [$value], $loadRelationships, true);
+            } else {
+                $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadByField', [$fieldName, $value], $loadRelationships);
             }
 
-            $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
-            $response =  $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadByField', [$fieldName, $value], $loadRelationships);
+            if ($cache !== null && ($dataCache = $cache->generateCache())){
+                $this->cacher->create($dataCache, serialize($response));
+            }
         }
 
         return $response;
@@ -109,10 +113,14 @@ class ResourceReader
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
             if (method_exists($resourceBuilder, $functionName)) {
-                return $resourceBuilder->$functionName(...$parameters);
+                $response = $resourceBuilder->$functionName(...$parameters);
+            } else {
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $resourceBuilder->getTableName(), $functionName, $parameters, $loadRelationships);
             }
 
-            $response = $this->generateResourceObject($resourceBuilder, $cache, $resourceBuilder->getTableName(), $functionName, $parameters, $loadRelationships);
+            if ($cache !== null && ($dataCache = $cache->generateCache())){
+                $this->cacher->create($dataCache, serialize($response));
+            }
         }
 
         return $response;
