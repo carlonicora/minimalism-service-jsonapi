@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Commands;
 use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
@@ -12,6 +13,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceB
 use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEvents;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
@@ -49,28 +51,32 @@ class ResourceWriter
 
     /**
      * @param Document $data
+     * @param CacheFactoryInterface|null $cache
      * @param string $resourceBuilderName
+     * @throws DbSqlException
      * @throws Exception
      */
-    public function writeDocument(Document $data, string $resourceBuilderName) : void
+    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName) : void
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($resourceBuilderName);
         $this->validateAndDecryptDocument($data, $resourceBuilder);
 
         foreach ($data->resources ?? [] as $resourceObject) {
-            $this->writeResourceObject($resourceBuilder, $resourceObject);
+            $this->writeResourceObject($resourceBuilder, $cache, $resourceObject);
 
         }
     }
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
+     * @param CacheFactoryInterface|null $cache
      * @param ResourceObject $resourceObject
+     * @throws DbSqlException
      * @throws Exception
      */
-    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ResourceObject $resourceObject): void
+    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject): void
     {
-        $response = $this->buildBaseEntity($resourceBuilder, $resourceObject);
+        $response = $this->buildBaseEntity($resourceBuilder, $cache, $resourceObject);
 
         /** @var RelationshipBuilderInterface $relationship */
         foreach ($resourceBuilder->getRelationships() as $relationship){
@@ -154,16 +160,17 @@ class ResourceWriter
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
+     * @param CacheFactoryInterface|null $cache
      * @param ResourceObject $resourceObject
      * @return array
      * @throws Exception
      */
-    private function buildBaseEntity(ResourceBuilderInterface $resourceBuilder, ResourceObject $resourceObject) : array
+    private function buildBaseEntity(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject) : array
     {
         $response = [];
         if ($resourceObject->id !== null){
             try {
-                $response = $this->resourceReader->readResourceObjectData($resourceBuilder->getTableName(), 'loadFromId', [$resourceObject->id], true)[0];
+                $response = $this->resourceReader->readResourceObjectData($cache, $resourceBuilder->getTableName(), 'loadFromId', [$resourceObject->id], true)[0];
             } catch (DbRecordNotFoundException $e) {
                 $response = [];
             }

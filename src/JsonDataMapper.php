@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
@@ -14,6 +15,7 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use Exception;
 
 class JsonDataMapper extends AbstractService
@@ -65,30 +67,34 @@ class JsonDataMapper extends AbstractService
 
     /**
      * @param string $builderName
+     * @param CacheFactoryInterface|null $cache
      * @param AttributeBuilderInterface $attribute
      * @param $value
      * @param bool $loadRelationships
      * @return array
-     * @throws DbRecordNotFoundException|Exception
+     * @throws DbRecordNotFoundException
+     * @throws Exception
      */
-    public function generateResourceObjectByFieldValue(string $builderName, AttributeBuilderInterface $attribute, $value, bool $loadRelationships=false) : array
+    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, bool $loadRelationships=false) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByFieldValue($builderName, $attribute, $value, $loadRelationships);
+        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, $value, $loadRelationships);
     }
 
     /**
      * @param string $builderName
+     * @param CacheFactoryInterface|null $cache
      * @param string $functionName
      * @param array $parameters
      * @param bool $loadRelationships
      * @return array
-     * @throws DbRecordNotFoundException|Exception
+     * @throws DbRecordNotFoundException
+     * @throws Exception
      */
-    public function generateResourceObjectsByFunction(string $builderName, string $functionName, array $parameters=[], bool $loadRelationships=false) : array
+    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], bool $loadRelationships=false) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectsByFunction($builderName, $functionName, $parameters, $loadRelationships);
+        return $resourceReader->generateResourceObjectsByFunction($builderName, $cache, $functionName, $parameters, $loadRelationships);
     }
 
     /**
@@ -106,13 +112,15 @@ class JsonDataMapper extends AbstractService
 
     /**
      * @param Document $data
+     * @param CacheFactoryInterface|null $cache
      * @param string $resourceBuilderName
+     * @throws DbSqlException
      * @throws Exception
      */
-    public function writeDocument(Document $data, string $resourceBuilderName) : void
+    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName) : void
     {
         $resourceWriter = new ResourceWriter($this->services);
-        $resourceWriter->writeDocument($data, $resourceBuilderName);
+        $resourceWriter->writeDocument($data, $cache, $resourceBuilderName);
     }
 
     /**

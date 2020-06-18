@@ -12,7 +12,7 @@ class LinkBuilder implements LinkBuilderInterface
     private string $link;
 
     /** @var array|null  */
-    private ?array $meta=null;
+    private ?array $meta;
 
     /**
      * LinkBuilderInterface constructor.

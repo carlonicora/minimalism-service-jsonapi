@@ -55,6 +55,12 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var RelationshipBuilderFactory */
     private RelationshipBuilderFactory $relationshipBuilderFactory;
 
+    /** @var string|null  */
+    protected ?string $dataCache=null;
+
+    /** @var string|null  */
+    protected ?string $resourceCache=null;
+
     /**
      * @param ServicesFactory $services
      * @throws Exception
@@ -83,6 +89,23 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $this->setLinks();
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Links Created (' . get_class($this) . ')'));
     }
+
+    /**
+     * @return string|null
+     */
+    public function getDataCacheName(): ?string
+    {
+        return $this->dataCache;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getResourceCacheName(): ?string
+    {
+        return $this->resourceCache;
+    }
+
 
     /**
      * @return array|AttributeBuilderInterface[]

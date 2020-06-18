@@ -18,6 +18,16 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
     public function initialiseRelationships(): void;
 
     /**
+     * @return string|null
+     */
+    public function getDataCacheName(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function getResourceCacheName(): ?string;
+
+    /**
      * @return string
      */
     public function getType(): string;
