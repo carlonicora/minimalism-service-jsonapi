@@ -191,12 +191,17 @@ class ResourceReader
             $readerFactory = new DataReadersFactory($this->services);
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
 
+            $childCacheFactory = null;
+            if ($cacher !== null){
+                $childCacheFactory = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
+            }
+
             /** @var DataReaderInterface $reader */
             $reader = $readerFactory->create(
                 $tableName,
                 $functionName,
                 $parameters,
-                $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache())
+                $childCacheFactory
             );
 
             if ($iSingleRead) {
