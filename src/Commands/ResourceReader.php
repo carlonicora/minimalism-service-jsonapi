@@ -59,7 +59,7 @@ class ResourceReader
             }
         }
 
-        if ($response === null) {
+        if ($response === null || $response === false) {
             $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
@@ -174,11 +174,14 @@ class ResourceReader
     public function readResourceObjectData(?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, bool $iSingleRead): array
     {
         $response = null;
+        $cacher=null;
 
         if ($cache !== null && ($cacher = $cache->generateCache()) && ($dataCache = $cacher->getChildCache()) !== null) {
             try {
-                /** @noinspection UnserializeExploitsInspection */
-                $response = unserialize($this->cacher->read($dataCache));
+                $response = $this->cacher->readArray($dataCache);
+                if ($iSingleRead) {
+                    $response = [$response];
+                }
             } catch (CacheNotFoundException $e) {
                 $response = null;
             }
@@ -192,7 +195,8 @@ class ResourceReader
             $reader = $readerFactory->create(
                 $tableName,
                 $functionName,
-                $parameters
+                $parameters,
+                $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache())
             );
 
             if ($iSingleRead) {
