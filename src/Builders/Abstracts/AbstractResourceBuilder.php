@@ -311,11 +311,14 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             $mapper = $this->mapper;
 
             if ($relationship->getReadFunction() !== null) {
+                if (($values = $relationship->getReadValues()) === null){
+                    $values = [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]];
+                }
                 $relation->resourceLinkage->resources = $mapper->generateResourceObjectsByFunction(
                     $relationship->getResourceBuilderName(),
                     null,
                     $relationship->getReadFunction(),
-                    [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]],
+                    $values,
                     $loadRelationshipsLevel-1
                 );
 
