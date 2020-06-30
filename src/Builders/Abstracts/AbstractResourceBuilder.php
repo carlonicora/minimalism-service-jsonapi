@@ -5,6 +5,7 @@ use CarloNicora\JsonApi\Objects\Relationship;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -176,8 +177,10 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     {
         $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
         $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
+        /** @var RelationshipBuilderInterface $relationshipBuilder */
+        $relationshipBuilder = $resourceBuilder->relationships[$relationshipName];
 
-        return clone $resourceBuilder->relationships[$relationshipName]->getAttribute();
+        return clone $relationshipBuilder->getAttribute();
     }
 
     /**
@@ -403,6 +406,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = $data[$attribute->getDatabaseFieldName()] ?? null;
 
         if ($attribute->isEncrypted()){
+            /** @var EncrypterInterface $encrypter */
             if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
                 $response = $encrypter->encryptId(
                     $response
