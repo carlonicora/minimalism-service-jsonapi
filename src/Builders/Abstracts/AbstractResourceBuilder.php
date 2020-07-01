@@ -289,7 +289,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = new ResourceObject($this->type);
 
         $this->buildAttributes($response, $data);
-        $this->buildLinks($this, $this, $response->links, $data);
+        $this->buildLinks($this, $this, $response->links, $data, $response);
 
         if ($loadRelationshipsLevel > 0){
             $this->buildRelationships($response, $data, $loadRelationshipsLevel);
@@ -428,5 +428,4 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
         return $response;
     }
-
 }
