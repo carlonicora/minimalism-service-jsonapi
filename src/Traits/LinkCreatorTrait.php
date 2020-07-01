@@ -1,9 +1,11 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Traits;
 
+use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use Exception;
 
 trait LinkCreatorTrait
 {
@@ -17,9 +19,10 @@ trait LinkCreatorTrait
      * @param string $url
      * @param ResourceBuilderInterface $resource
      * @param array $data
+     * @param ResourceObject|null $resourceObject
      * @return string
      */
-    public function buildLink(string $url, ResourceBuilderInterface $resource, array $data) : string
+    public function buildLink(string $url, ResourceBuilderInterface $resource, array $data, ResourceObject $resourceObject=null) : string
     {
         if ($url[0] !== '%'){
             $url = $this->services->paths()->getUrl() . $url;
@@ -30,7 +33,11 @@ trait LinkCreatorTrait
         for ($linkElementsCounter = 1, $linkElementsCounterMax = count($linkElements); $linkElementsCounter < $linkElementsCounterMax; $linkElementsCounter += 2) {
             if (($attribute = $resource->getAttribute($linkElements[$linkElementsCounter])) !== null) {
 
-                $value = $data[$attribute->getDatabaseFieldName()];
+                try {
+                    $value = $data[$attribute->getDatabaseFieldName()] ?? ($resourceObject !== null ? $resourceObject->attributes->get($attribute->getDatabaseFieldName()) : '');
+                } catch (Exception $e) {
+                    $value = '';
+                }
 
                 if (is_int($value) && $attribute->isEncrypted() && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
                     $value = $encrypter->encryptId($value);

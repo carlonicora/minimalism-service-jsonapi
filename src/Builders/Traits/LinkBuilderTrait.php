@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits;
 use CarloNicora\JsonApi\Objects\Link;
 use CarloNicora\JsonApi\Objects\Links;
 use CarloNicora\JsonApi\Objects\Meta;
+use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\BuilderLinksInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\LinkBuilderInterface;
@@ -53,12 +54,13 @@ trait LinkBuilderTrait
      * @param ResourceBuilderInterface $resourceBuilder
      * @param Links $links
      * @param array $data
+     * @param ResourceObject|null $resourceObject
      * @throws Exception
      */
-    private function buildLinks(BuilderLinksInterface $builder, ResourceBuilderInterface $resourceBuilder, Links $links, array $data): void
+    private function buildLinks(BuilderLinksInterface $builder, ResourceBuilderInterface $resourceBuilder, Links $links, array $data, ResourceObject $resourceObject=null): void
     {
         foreach ($builder->getLinks() as $link) {
-            $url = $this->buildLink($link->getLink(), $resourceBuilder, $data);
+            $url = $this->buildLink($link->getLink(), $resourceBuilder, $data, $resourceObject);
 
             if (($linkBuilder = $this->mapper->getLinkBuilder()) !== null){
                 /** @var ResourceBuilderInterface $rbi */
