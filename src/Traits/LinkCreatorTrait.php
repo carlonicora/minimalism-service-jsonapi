@@ -35,9 +35,9 @@ trait LinkCreatorTrait
 
                 try {
                     $value = '';
-                    if ($data[$attribute->getDatabaseFieldName()] !== null){
+                    if (array_key_exists($attribute->getDatabaseFieldName(), $data) && $data[$attribute->getDatabaseFieldName()] !== null){
                         $value = $data[$attribute->getDatabaseFieldName()];
-                    } elseif ($data[$attribute->getDatabaseFieldRelationship()] !== null){
+                    } elseif (array_key_exists($attribute->getDatabaseFieldRelationship(), $data) && $data[$attribute->getDatabaseFieldRelationship()] !== null){
                         $value = $data[$attribute->getDatabaseFieldRelationship()];
                     } elseif ($resourceObject !== null) {
                         $value = $resourceObject->attributes->get($attribute->getDatabaseFieldName());
