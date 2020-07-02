@@ -82,11 +82,13 @@ class ResourceWriter
         foreach ($resourceBuilder->getRelationships() as $relationship){
             if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_ONE_TO_ONE) {
                 try {
-                    $relationshipValue = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources[0]->id;
-                    if ($this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute()->isEncrypted()) {
-                        $relationshipValue = $this->mapper->getDefaultEncrypter()->decryptId($relationshipValue);
+                    $relatedResources = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources;
+                    if (false === empty($relatedResources) &&  false === empty($relationshipValue = current($relatedResources)->id)) {
+                        if ($this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute()->isEncrypted()) {
+                            $relationshipValue = $this->mapper->getDefaultEncrypter()->decryptId($relationshipValue);
+                        }
+                        $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
                     }
-                    $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
                 } catch (Exception $e) {}
             }
         }
