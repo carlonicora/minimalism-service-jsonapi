@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Commands;
 
 use CarloNicora\JsonApi\Document;
+use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
@@ -17,6 +18,7 @@ use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
+use Throwable;
 
 class ResourceWriter
 {
@@ -198,6 +200,32 @@ class ResourceWriter
     {
         foreach ($data->resources ?? [] as $resourceObject){
             $isNewResource = $resourceObject->id === null;
+
+            /** @var JsonDataMapper $mapper */
+            $mapper = $this->services->service(JsonDataMapper::class);
+
+            if (!$isNewResource && $mapper->getDefaultEncrypter() !== null){
+                /** @var ResourceObject $dataResource */
+
+                try {
+                    $dataResource = current(
+                        $mapper->generateResourceObjectByFieldValue(
+                            get_class($resourceBuilder),
+                            null,
+                            $resourceBuilder->getAttribute('id'),
+                            $mapper->getDefaultEncrypter()->decryptId($resourceObject->id)
+                        )
+                    );
+
+                    /** @var Attributes $attribute */
+                    foreach ($dataResource->attributes->prepare() as $attributeName=>$attributeValue){
+                        if (!$resourceObject->attributes->has($attributeName)){
+                            $resourceObject->attributes->add($attributeName, $attributeValue);
+                        }
+                    }
+                } catch (Throwable $e) {
+                }
+            }
 
             $this->validateAndTranslateAttributes($isNewResource, $resourceObject, $resourceBuilder);
             $this->validateAndDecryptRelationships($isNewResource, $resourceObject, $resourceBuilder);
