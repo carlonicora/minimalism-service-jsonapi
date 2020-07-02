@@ -34,7 +34,14 @@ trait LinkCreatorTrait
             if (($attribute = $resource->getAttribute($linkElements[$linkElementsCounter])) !== null) {
 
                 try {
-                    $value = $data[$attribute->getDatabaseFieldName()] ?? ($resourceObject !== null ? $resourceObject->attributes->get($attribute->getDatabaseFieldName()) : '');
+                    $value = '';
+                    if ($data[$attribute->getDatabaseFieldName()] !== null){
+                        $value = $data[$attribute->getDatabaseFieldName()];
+                    } elseif ($data[$attribute->getDatabaseFieldRelationship()] !== null){
+                        $value = $data[$attribute->getDatabaseFieldRelationship()];
+                    } elseif ($resourceObject !== null) {
+                        $value = $resourceObject->attributes->get($attribute->getDatabaseFieldName());
+                    }
                 } catch (Exception $e) {
                     $value = '';
                 }
