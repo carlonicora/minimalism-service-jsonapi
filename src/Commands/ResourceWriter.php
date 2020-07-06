@@ -86,9 +86,6 @@ class ResourceWriter
                 try {
                     $relatedResources = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources;
                     if (false === empty($relatedResources) &&  false === empty($relationshipValue = current($relatedResources)->id)) {
-                        if ($this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute()->isEncrypted()) {
-                            $relationshipValue = $this->mapper->getDefaultEncrypter()->decryptId($relationshipValue);
-                        }
                         $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
                     }
                 } catch (Exception $e) {}
