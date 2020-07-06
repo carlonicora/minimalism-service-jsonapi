@@ -5,6 +5,7 @@ use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
@@ -65,7 +66,6 @@ class ResourceWriter
 
         foreach ($data->resources ?? [] as $resourceObject) {
             $this->writeResourceObject($resourceBuilder, $cache, $resourceObject);
-
         }
     }
 
@@ -104,6 +104,17 @@ class ResourceWriter
         foreach ($resourceBuilder->getRelationships() as $relationship) {
             if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY) {
                 $this->updateOneToMany($resourceBuilder, $resourceObject, $relationship->getName());
+            }
+        }
+
+        if ($cache !== null){
+            /** @var Cacher $cacher */
+            $cacher = $this->services->service(Cacher::class);
+
+            $finalCache = $cache->generateCache();
+
+            if ($finalCache !== null) {
+                $cacher->delete($finalCache);
             }
         }
     }
