@@ -407,7 +407,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
         if ($attribute->isEncrypted()){
             /** @var EncrypterInterface $encrypter */
-            if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
+            if ($response !== null && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null) {
                 $response = $encrypter->encryptId(
                     $response
                 );
