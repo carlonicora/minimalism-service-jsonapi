@@ -97,7 +97,11 @@ class ResourceWriter
         $table->update($response);
 
         if ($resourceObject->id === null && ($id = $resourceBuilder->getAttribute('id')) !== null){
-            $resourceObject->id = $response[$id->getDatabaseFieldName()];
+            if ($this->mapper->getDefaultEncrypter() !== null){
+                $resourceObject->id = $this->mapper->getDefaultEncrypter()->encryptId($response[$id->getDatabaseFieldName()]);
+            } else {
+                $resourceObject->id = $response[$id->getDatabaseFieldName()];
+            }
         }
 
         /** @var RelationshipBuilderInterface $relationship */
