@@ -326,7 +326,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                 );
 
                 if ($relationship->getAttribute()->getDatabaseFieldRelationship() !== $relationship->getAttribute()->getDatabaseFieldName()){
-                    $data[$relationship->getAttribute()->getDatabaseFieldName()] = $relation->resourceLinkage->resources[0]->id;
+                    $data[$relationship->getAttribute()->getDatabaseFieldName()] = $relation->resourceLinkage->resources[0]->id ?? null;
                 }
             } else {
                 switch ($relationship->getType()) {
