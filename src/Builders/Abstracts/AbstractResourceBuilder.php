@@ -313,20 +313,26 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             /** @var JsonDataMapper $mapper */
             $mapper = $this->mapper;
 
-            if ($relationship->getReadFunction() !== null) {
-                if (($values = $relationship->getReadValues()) === null){
-                    $values = [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]];
-                }
-                $relation->resourceLinkage->resources = $mapper->generateResourceObjectsByFunction(
-                    $relationship->getResourceBuilderName(),
-                    null,
-                    $relationship->getReadFunction(),
-                    $values,
-                    $loadRelationshipsLevel-1
-                );
+            $addRelationship = true;
 
-                if ($relationship->getAttribute()->getDatabaseFieldRelationship() !== $relationship->getAttribute()->getDatabaseFieldName()){
-                    $data[$relationship->getAttribute()->getDatabaseFieldName()] = $relation->resourceLinkage->resources[0]->id ?? null;
+            if ($relationship->getReadFunction() !== null) {
+                try {
+                    if (($values = $relationship->getReadValues()) === null) {
+                        $values = [$data[$relationship->getAttribute()->getDatabaseFieldRelationship()]];
+                    }
+                    $relation->resourceLinkage->resources = $mapper->generateResourceObjectsByFunction(
+                        $relationship->getResourceBuilderName(),
+                        null,
+                        $relationship->getReadFunction(),
+                        $values,
+                        $loadRelationshipsLevel - 1
+                    );
+
+                    if ($relationship->getAttribute()->getDatabaseFieldRelationship() !== $relationship->getAttribute()->getDatabaseFieldName()) {
+                        $data[$relationship->getAttribute()->getDatabaseFieldName()] = $relation->resourceLinkage->resources[0]->id ?? null;
+                    }
+                } catch (DbRecordNotFoundException $e) {
+                    $addRelationship = false;
                 }
             } else {
                 switch ($relationship->getType()) {
@@ -369,9 +375,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                 }
             }
 
-            $this->buildLinks($relationship, $this, $relation->links, $data);
+            if ($addRelationship) {
+                $this->buildLinks($relationship, $this, $relation->links, $data);
 
-            $response->relationships[$relationship->getName()] = $relation;
+                $response->relationships[$relationship->getName()] = $relation;
+            }
         }
     }
 
