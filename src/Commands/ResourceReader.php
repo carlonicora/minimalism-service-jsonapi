@@ -158,7 +158,12 @@ class ResourceReader
      */
     private function generateResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, int $loadRelationshipsLevel=0, bool $iSingleRead=false) : array
     {
-        $dataList = $this->readResourceObjectData($cache, $tableName, $functionName, $parameters, $iSingleRead);
+        $dataCache = null;
+        if ($cache !== null && ($cacher = $cache->generateCache()) !== null) {
+            $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
+        }
+
+        $dataList = $this->readResourceObjectData($dataCache, $tableName, $functionName, $parameters, $iSingleRead);
 
         $response = [];
 
@@ -170,7 +175,7 @@ class ResourceReader
     }
 
     /**
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheFactoryInterface|null $cacheFactory
      * @param string $tableName
      * @param string $functionName
      * @param array $parameters
@@ -179,47 +184,28 @@ class ResourceReader
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function readResourceObjectData(?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, bool $iSingleRead): array
+    public function readResourceObjectData(?CacheFactoryInterface $cacheFactory, string $tableName, string $functionName, array $parameters, bool $iSingleRead): array
     {
         $response = null;
-        $cacher=null;
 
-        if ($cache !== null && ($cacher = $cache->generateCache()) && ($dataCache = $cacher->getChildCache()) !== null) {
-            try {
-                $response = $this->cacher->readArray($dataCache);
-                if ($iSingleRead) {
-                    $response = [$response];
-                }
-            } catch (CacheNotFoundException $e) {
-                $response = null;
-            }
+        $readerFactory = new DataReadersFactory($this->services);
+        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
+
+        /** @var DataReaderInterface $reader */
+        $reader = $readerFactory->create(
+            $tableName,
+            $functionName,
+            $parameters,
+            $cacheFactory
+        );
+
+        if ($iSingleRead) {
+            $response = [];
+            $response[] = $reader->getSingle();
+        } else {
+            $response = $reader->getList();
         }
-
-        if ($response === null){
-            $readerFactory = new DataReadersFactory($this->services);
-            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
-
-            $childCacheFactory = null;
-            if ($cacher !== null){
-                $childCacheFactory = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
-            }
-
-            /** @var DataReaderInterface $reader */
-            $reader = $readerFactory->create(
-                $tableName,
-                $functionName,
-                $parameters,
-                $childCacheFactory
-            );
-
-            if ($iSingleRead) {
-                $response = [];
-                $response[] = $reader->getSingle();
-            } else {
-                $response = $reader->getList();
-            }
-            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $tableName . ' - ' . $functionName . ' )'));
-        }
+        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $tableName . ' - ' . $functionName . ' )'));
 
         return $response;
     }

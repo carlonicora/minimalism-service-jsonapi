@@ -182,7 +182,12 @@ class ResourceWriter
         $response = [];
         if ($resourceObject->id !== null){
             try {
-                $response = $this->resourceReader->readResourceObjectData($cache, $resourceBuilder->getTableName(), 'loadFromId', [$resourceObject->id], true)[0];
+                $dataCache = null;
+                if ($cache !== null && ($cacher = $cache->generateCache()) !== null) {
+                    $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
+                }
+
+                $response = $this->resourceReader->readResourceObjectData($dataCache, $resourceBuilder->getTableName(), 'loadFromId', [$resourceObject->id], true)[0];
             } catch (DbRecordNotFoundException $e) {
                 $response = [];
             }
