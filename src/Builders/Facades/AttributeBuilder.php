@@ -45,7 +45,7 @@ class AttributeBuilder implements AttributeBuilderInterface
     private ?string $databaseFieldRelationship=null;
 
     /** @var ServicesFactory */
-    private ServicesFactory $services;
+    private ?ServicesFactory $services=null;
 
     /** @var ResourceBuilderInterface  */
     private ResourceBuilderInterface $parent;
@@ -308,5 +308,19 @@ class AttributeBuilder implements AttributeBuilderInterface
     public function getRelationshipResource() : ?ResourceBuilderInterface
     {
         return $this->relationship;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function serialise(): ?string
+    {
+        $this->services->cleanNonPersistentVariables();
+
+        $response = serialize($this);
+
+        $this->services->initialiseStatics();
+
+        return $response;
     }
 }

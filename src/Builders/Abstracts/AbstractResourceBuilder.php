@@ -436,4 +436,18 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
         return $response;
     }
+
+    /**
+     * @return string|null
+     */
+    public function serialise(): ?string
+    {
+        $this->services->cleanNonPersistentVariables();
+
+        $response = serialize($this);
+
+        $this->services->initialiseStatics();
+
+        return $response;
+    }
 }
