@@ -62,7 +62,7 @@ class CacheFacade
     {
         $this->cache['resources'][get_class($resourceBuilder)] = $resourceBuilder;
         try {
-            $this->redis->set('minimalism-builder-resources-' . get_class($resourceBuilder), serialize($resourceBuilder));
+            $this->redis->set('minimalism-builder-resources-' . get_class($resourceBuilder), $resourceBuilder->serialise());
         } catch (RedisConnectionException $e) {
         }
     }
@@ -96,7 +96,7 @@ class CacheFacade
     {
         $this->cache['attributes'][get_class($attributeBuilder->getResourceBuilder())][$attributeBuilder->getName()] = $attributeBuilder;
         try {
-            $this->redis->set('minimalism-builder-resources-' . get_class($attributeBuilder->getResourceBuilder()) . '-' . $attributeBuilder->getName(), serialize($attributeBuilder));
+            $this->redis->set('minimalism-builder-resources-' . get_class($attributeBuilder->getResourceBuilder()) . '-' . $attributeBuilder->getName(), $attributeBuilder->serialise());
         } catch (RedisConnectionException $e) {
         }
     }
