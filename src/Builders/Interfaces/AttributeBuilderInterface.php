@@ -155,9 +155,4 @@ interface AttributeBuilderInterface
      * @return ResourceBuilderInterface|null
      */
     public function getRelationshipResource(): ?ResourceBuilderInterface;
-
-    /**
-     * @return string|null
-     */
-    public function serialise(): ?string;
 }

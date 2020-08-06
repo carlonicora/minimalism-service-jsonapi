@@ -65,9 +65,4 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
      * @return ResourceObject
      */
     public function buildResourceObject(array $data, int $loadRelationshipsLevel = 0): ResourceObject;
-
-    /**
-     * @return string|null
-     */
-    public function serialise(): ?string;
 }

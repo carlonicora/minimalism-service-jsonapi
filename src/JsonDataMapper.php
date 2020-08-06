@@ -29,8 +29,8 @@ class JsonDataMapper extends AbstractService
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
 
-    /** @var CacheFacade|null  */
-    private ?CacheFacade $cache=null;
+    /** @var CacheFacade  */
+    private CacheFacade $cache;
 
     /**
      * abstractApiCaller constructor.
@@ -43,6 +43,8 @@ class JsonDataMapper extends AbstractService
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
+
+        $this->cache = new CacheFacade();
     }
 
     /**
@@ -61,15 +63,6 @@ class JsonDataMapper extends AbstractService
     {
         parent::initialiseStatics($services);
         AbstractResourceBuilder::initialise($services);
-        $this->cache = new CacheFacade($services);
-    }
-
-    /**
-     *
-     */
-    public function destroyStatics(): void
-    {
-        $this->cache = null;
     }
 
     /**
