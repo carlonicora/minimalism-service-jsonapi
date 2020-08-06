@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperInfoEvents;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use Exception;
 
@@ -29,7 +30,11 @@ class ResourceBuilderFactory
     {
         /** @var JsonDataMapper $mapper */
         $mapper = $this->services->service(JsonDataMapper::class);
+        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('ResourceBuilderFactory createResourceBuilder initialised'));
+
         if (($response = $mapper->getCache()->getResourceBuilder($builderName)) === null) {
+            $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('ResourceBuilderFactory createResourceBuilder ResourceBuilder not found in cache'));
+
             /** @var ResourceBuilderInterface $response */
             $response = new $builderName($this->services);
 
@@ -44,6 +49,8 @@ class ResourceBuilderFactory
 
             $mapper->getCache()->setResourceBuilder($response);
         }
+
+        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('ResourceBuilderFactory createResourceBuilder Resource Builder initialised'));
 
         return $response;
     }
