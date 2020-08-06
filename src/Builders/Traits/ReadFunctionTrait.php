@@ -3,7 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits;
 
 trait ReadFunctionTrait
 {
-    /** @var string  */
+    /** @var string|null  */
     protected ?string $readFunction=null;
 
     /** @var array|null  */

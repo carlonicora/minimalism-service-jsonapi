@@ -50,7 +50,7 @@ class RelationshipBuilder implements RelationshipBuilderInterface
      * @param string $name
      * @param int $type
      * @param AttributeBuilderInterface $attribute
-     * @param string $fieldName
+     * @param string|null $fieldName
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
      * @throws Exception

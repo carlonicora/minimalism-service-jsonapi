@@ -50,7 +50,7 @@ class AttributeBuilder implements AttributeBuilderInterface
     /** @var ResourceBuilderInterface  */
     private ResourceBuilderInterface $parent;
 
-    /** @var ResourceBuilderInterface  */
+    /** @var ResourceBuilderInterface|null  */
     private ?ResourceBuilderInterface $relationship=null;
 
     /**

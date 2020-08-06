@@ -263,7 +263,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string $name
      * @param int $type
      * @param AttributeBuilderInterface $attribute
-     * @param string $fieldName
+     * @param string|null $fieldName
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
      * @return RelationshipBuilderInterface
