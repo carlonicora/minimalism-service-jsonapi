@@ -13,7 +13,6 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\Attribute
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceReader;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperInfoEvents;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
@@ -78,9 +77,7 @@ class JsonDataMapper extends AbstractService
      */
     public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
-        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('GenerateResourceObjectByFieldValue Initialised'));
         $resourceReader = new ResourceReader($this->services);
-        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('GenerateResourceObjectByFieldValue Resource reader initialised'));
         return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, $value, $loadRelationshipsLevel);
     }
 

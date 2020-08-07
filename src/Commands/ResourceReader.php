@@ -9,7 +9,6 @@ use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperInfoEvents;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
@@ -49,10 +48,7 @@ class ResourceReader
      */
     public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
-        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('generateResourceObjectByFieldValue ResourceReader initialised'));
         $response = null;
-
-        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('generateResourceObjectByFieldValue ResourceReader checking cache'));
 
         if ($cache !== null && ($dataCache = $cache->generateCache())){
             try {
@@ -62,8 +58,6 @@ class ResourceReader
                 $response = null;
             }
         }
-
-        $this->services->logger()->info()->log(JsonDataMapperInfoEvents::GENERIC('generateResourceObjectByFieldValue ResourceReader Cache checked'));
 
         if ($response === null || $response === false) {
             $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
