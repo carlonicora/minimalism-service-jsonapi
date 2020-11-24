@@ -165,6 +165,10 @@ class ResourceReader
 
         $dataList = $this->readResourceObjectData($dataCache, $tableName, $functionName, $parameters, $iSingleRead);
 
+        if (!array_key_exists(0, $dataList)){
+            $dataList = [$dataList];
+        }
+
         $response = [];
 
         foreach ($dataList as $data){
