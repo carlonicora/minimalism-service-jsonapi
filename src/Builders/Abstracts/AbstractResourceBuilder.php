@@ -221,11 +221,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     public function getRelationship(string $relationshipName): ?RelationshipBuilderInterface
     {
-        if (!array_key_exists($relationshipName, $this->relationships)) {
-            return null;
-        }
-
-        return $this->relationships[$relationshipName];
+        return $this->relationships[$relationshipName] ?? null;
     }
 
     /**
@@ -266,12 +262,13 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string|null $fieldName
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
+     * @param array|null $manyToManyAdditionalValues
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    final protected function generateRelationship(string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null): RelationshipBuilderInterface
+    final protected function generateRelationship(string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null, ?array $manyToManyAdditionalValues=null): RelationshipBuilderInterface
     {
-        $response = $this->relationshipBuilderFactory->create($name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField);
+        $response = $this->relationshipBuilderFactory->create($name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField, $manyToManyAdditionalValues);
 
         $this->relationships[$name] = $response;
 
@@ -366,7 +363,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                                     $relationship->getManyToManyRelationshipTableName(),
                                     $relationship->getAttribute()->getDatabaseFieldRelationship(),
                                     $relationship->getManyToManyRelationshipField(),
-                                    $data[$relationship->getAttribute()->getDatabaseFieldRelationship()]
+                                    $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
+                                    $relationship->getManyToManyAdditionalValues()
                                 ],
                                 $loadRelationshipsLevel - 1
                             );

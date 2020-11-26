@@ -18,7 +18,7 @@ class JsonDataMapperTest extends AbstractTestCase
             $this->getServices()
         );
 
-        $this->assertInstanceOf(JsonDataMapper::class, $response);
+        self::assertInstanceOf(JsonDataMapper::class, $response);
 
         return $response;
     }

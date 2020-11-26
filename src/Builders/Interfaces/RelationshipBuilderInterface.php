@@ -66,4 +66,9 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @return string|null
      */
     public function getManyToManyRelationshipTableClass(): ?string;
+
+    /**
+     * @return array|null
+     */
+    public function getManyToManyAdditionalValues(): ?array;
 }

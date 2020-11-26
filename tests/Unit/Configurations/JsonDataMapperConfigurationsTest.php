@@ -13,6 +13,6 @@ class JsonDataMapperConfigurationsTest extends AbstractTestCase
     {
         $config = new JsonDataMapperConfigurations();
 
-        $this->assertNotNull($config);
+        self::assertNotNull($config);
     }
 }

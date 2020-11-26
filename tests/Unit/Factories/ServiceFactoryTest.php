@@ -16,7 +16,7 @@ class ServiceFactoryTest extends AbstractTestCase
     {
         $response = new ServiceFactory($this->getServices());
 
-        $this->assertInstanceOf(ServiceFactory::class, $response);
+        self::assertInstanceOf(ServiceFactory::class, $response);
 
         return $response;
     }
@@ -32,6 +32,6 @@ class ServiceFactoryTest extends AbstractTestCase
         $services = $this->getServices();
         $jsondatamapper = new JsonDataMapper($config, $services);
 
-        $this->assertEquals($jsondatamapper, $service->create($services));
+        self::assertEquals($jsondatamapper, $service->create($services));
     }
 }

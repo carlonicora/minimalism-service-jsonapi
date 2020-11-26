@@ -41,6 +41,9 @@ class RelationshipBuilder implements RelationshipBuilderInterface
     /** @var string|null  */
     private ?string $manyToManyRelationshipField;
 
+    /** @var array|null  */
+    private ?array $manyToManyAdditionalValues=null;
+
     /** @var bool  */
     private bool $isRequired=false;
 
@@ -53,9 +56,10 @@ class RelationshipBuilder implements RelationshipBuilderInterface
      * @param string|null $fieldName
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
+     * @param array|null $manyToManyAdditionalValues
      * @throws Exception
      */
-    public function __construct(ServicesFactory $services, string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null)
+    public function __construct(ServicesFactory $services, string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null, ?array $manyToManyAdditionalValues=null)
     {
         $this->name = $name;
         $this->type = $type;
@@ -79,6 +83,7 @@ class RelationshipBuilder implements RelationshipBuilderInterface
             $mysql = $this->services->service(MySQL::class);
             $table = $mysql->create($manyToManyRelationshipTableName);
             $this->manyToManyRelationshipTableName = $table->getTableName();
+            $this->manyToManyAdditionalValues=$manyToManyAdditionalValues;
         }
     }
 
@@ -160,5 +165,13 @@ class RelationshipBuilder implements RelationshipBuilderInterface
     public function getManyToManyRelationshipTableClass(): ?string
     {
         return $this->manyToManyRelationshipTableClass;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getManyToManyAdditionalValues(): ?array
+    {
+        return $this->manyToManyAdditionalValues;
     }
 }
