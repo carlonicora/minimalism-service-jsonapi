@@ -15,7 +15,6 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use Exception;
 
 class JsonDataMapper extends AbstractService
@@ -114,13 +113,13 @@ class JsonDataMapper extends AbstractService
      * @param Document $data
      * @param CacheFactoryInterface|null $cache
      * @param string $resourceBuilderName
-     * @throws DbSqlException
+     * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName) : void
+    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
     {
         $resourceWriter = new ResourceWriter($this->services);
-        $resourceWriter->writeDocument($data, $cache, $resourceBuilderName);
+        $resourceWriter->writeDocument($data, $cache, $resourceBuilderName, $updateRelationships);
     }
 
     /**

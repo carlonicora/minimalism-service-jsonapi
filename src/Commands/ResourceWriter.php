@@ -15,7 +15,6 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceB
 use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEvents;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
@@ -56,16 +55,16 @@ class ResourceWriter
      * @param Document $data
      * @param CacheFactoryInterface|null $cache
      * @param string $resourceBuilderName
-     * @throws DbSqlException
+     * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName) : void
+    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($resourceBuilderName);
         $this->validateAndDecryptDocument($data, $resourceBuilder);
 
         foreach ($data->resources ?? [] as $resourceObject) {
-            $this->writeResourceObject($resourceBuilder, $cache, $resourceObject);
+            $this->writeResourceObject($resourceBuilder, $cache, $resourceObject, $updateRelationships);
         }
     }
 
@@ -73,22 +72,25 @@ class ResourceWriter
      * @param ResourceBuilderInterface $resourceBuilder
      * @param CacheFactoryInterface|null $cache
      * @param ResourceObject $resourceObject
-     * @throws DbSqlException
+     * @param bool $updateRelationships
      * @throws Exception
      */
-    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject): void
+    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject, bool $updateRelationships=false): void
     {
         $response = $this->buildBaseEntity($resourceBuilder, $cache, $resourceObject);
 
-        /** @var RelationshipBuilderInterface $relationship */
-        foreach ($resourceBuilder->getRelationships() as $relationship){
-            if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_ONE_TO_ONE) {
-                try {
-                    $relatedResources = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources;
-                    if (false === empty($relatedResources) &&  false === empty($relationshipValue = current($relatedResources)->id)) {
-                        $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
+        if ($updateRelationships) {
+            /** @var RelationshipBuilderInterface $relationship */
+            foreach ($resourceBuilder->getRelationships() as $relationship) {
+                if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_ONE_TO_ONE) {
+                    try {
+                        $relatedResources = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources;
+                        if (false === empty($relatedResources) && false === empty($relationshipValue = current($relatedResources)->id)) {
+                            $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
+                        }
+                    } catch (Exception $e) {
                     }
-                } catch (Exception $e) {}
+                }
             }
         }
 
@@ -100,10 +102,12 @@ class ResourceWriter
             $resourceObject->id = $response[$id->getDatabaseFieldName()];
         }
 
-        /** @var RelationshipBuilderInterface $relationship */
-        foreach ($resourceBuilder->getRelationships() as $relationship) {
-            if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY) {
-                $this->updateOneToMany($resourceBuilder, $resourceObject, $relationship->getName());
+        if ($updateRelationships) {
+            /** @var RelationshipBuilderInterface $relationship */
+            foreach ($resourceBuilder->getRelationships() as $relationship) {
+                if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY) {
+                    $this->updateOneToMany($resourceBuilder, $resourceObject, $relationship->getName());
+                }
             }
         }
 
