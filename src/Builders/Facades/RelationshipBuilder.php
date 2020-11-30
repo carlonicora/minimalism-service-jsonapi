@@ -24,6 +24,9 @@ class RelationshipBuilder implements RelationshipBuilderInterface
     private AttributeBuilderInterface $attribute;
 
     /** @var bool  */
+    private bool $loadChildren;
+
+    /** @var bool  */
     private bool $loadData=true;
 
     /** @var string  */
@@ -57,13 +60,25 @@ class RelationshipBuilder implements RelationshipBuilderInterface
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
      * @param array|null $manyToManyAdditionalValues
+     * @param bool $loadChildren
      * @throws Exception
      */
-    public function __construct(ServicesFactory $services, string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null, ?array $manyToManyAdditionalValues=null)
+    public function __construct(
+        ServicesFactory $services,
+        string $name,
+        int $type,
+        AttributeBuilderInterface $attribute,
+        string $fieldName=null,
+        string $manyToManyRelationshipTableName=null,
+        string $manyToManyRelationshipField=null,
+        ?array $manyToManyAdditionalValues=null,
+        bool $loadChildren=true
+    )
     {
         $this->name = $name;
         $this->type = $type;
         $this->services = $services;
+        $this->loadChildren = $loadChildren;
 
         $this->attribute = $attribute;
         if ($attribute->getRelationshipResource() !== null) {
@@ -173,5 +188,13 @@ class RelationshipBuilder implements RelationshipBuilderInterface
     public function getManyToManyAdditionalValues(): ?array
     {
         return $this->manyToManyAdditionalValues;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLoadChildren(): bool
+    {
+        return $this->loadChildren;
     }
 }

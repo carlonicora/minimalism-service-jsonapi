@@ -66,6 +66,8 @@ class ResourceWriter
         foreach ($data->resources ?? [] as $resourceObject) {
             $this->writeResourceObject($resourceBuilder, $cache, $resourceObject, $updateRelationships);
         }
+
+        $this->encryptDocument($data, $resourceBuilder);
     }
 
     /**
@@ -213,6 +215,34 @@ class ResourceWriter
      * @param ResourceBuilderInterface $resourceBuilder
      * @throws Exception
      */
+    private function encryptDocument(Document $data, ResourceBuilderInterface $resourceBuilder): void
+    {
+        foreach ($data->resources ?? [] as $resourceObject){
+            if ($this->mapper->getDefaultEncrypter() !== null) {
+                $resourceObject->id = $this->mapper->getDefaultEncrypter()->encryptId(
+                    $resourceObject->id
+                );
+            }
+
+            /** @var AttributeBuilderInterface $attribute */
+            foreach ($resourceBuilder->getAttributes() ?? [] as $attribute){
+                if ($attribute->getName() !== 'id' && $attribute->isEncrypted()){
+                    $resourceObject->attributes->update(
+                        $attribute->getName(),
+                        $this->mapper->getDefaultEncrypter()->decryptId(
+                            $resourceObject->attributes->get($attribute->getName())
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param Document $data
+     * @param ResourceBuilderInterface $resourceBuilder
+     * @throws Exception
+     */
     private function validateAndDecryptDocument(Document $data, ResourceBuilderInterface $resourceBuilder): void
     {
         foreach ($data->resources ?? [] as $resourceObject){
@@ -274,6 +304,10 @@ class ResourceWriter
                     $attributeValue = $resourceObject->attributes->get($attribute->getName());
 
                     $attributeValue = $attribute->getType()->transformValue($attributeValue);
+
+                    if ($attribute->isEncrypted()){
+                        $attributeValue = $this->mapper->getDefaultEncrypter()->decryptId($attributeValue);
+                    }
 
                     $resourceObject->attributes->update($attribute->getName(), $attributeValue);
                 } catch (Exception $e) {

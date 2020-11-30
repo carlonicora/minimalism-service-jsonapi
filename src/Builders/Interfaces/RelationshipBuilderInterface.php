@@ -71,4 +71,9 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @return array|null
      */
     public function getManyToManyAdditionalValues(): ?array;
+
+    /**
+     * @return bool
+     */
+    public function isLoadChildren(): bool;
 }

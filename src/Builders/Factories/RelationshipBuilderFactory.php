@@ -31,11 +31,31 @@ class RelationshipBuilderFactory
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
      * @param array|null $manyToManyAdditionalValues
+     * @param bool $loadChildren
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    public function create(string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null, ?array $manyToManyAdditionalValues=null) : RelationshipBuilderInterface
+    public function create(
+        string $name,
+        int $type,
+        AttributeBuilderInterface $attribute,
+        string $fieldName=null,
+        string $manyToManyRelationshipTableName=null,
+        string $manyToManyRelationshipField=null,
+        ?array $manyToManyAdditionalValues=null,
+        bool $loadChildren=true
+    ) : RelationshipBuilderInterface
     {
-        return new RelationshipBuilder($this->services, $name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField, $manyToManyAdditionalValues);
+        return new RelationshipBuilder(
+            $this->services,
+            $name,
+            $type,
+            $attribute,
+            $fieldName,
+            $manyToManyRelationshipTableName,
+            $manyToManyRelationshipField,
+            $manyToManyAdditionalValues,
+            $loadChildren
+        );
     }
 }

@@ -263,12 +263,22 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string|null $manyToManyRelationshipTableName
      * @param string|null $manyToManyRelationshipField
      * @param array|null $manyToManyAdditionalValues
+     * @param bool $loadChildren
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    final protected function generateRelationship(string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName=null, string $manyToManyRelationshipTableName=null, string $manyToManyRelationshipField=null, ?array $manyToManyAdditionalValues=null): RelationshipBuilderInterface
+    final protected function generateRelationship(
+        string $name,
+        int $type,
+        AttributeBuilderInterface $attribute,
+        string $fieldName=null,
+        string $manyToManyRelationshipTableName=null,
+        string $manyToManyRelationshipField=null,
+        ?array $manyToManyAdditionalValues=null,
+        bool $loadChildren=true
+    ): RelationshipBuilderInterface
     {
-        $response = $this->relationshipBuilderFactory->create($name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField, $manyToManyAdditionalValues);
+        $response = $this->relationshipBuilderFactory->create($name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField, $manyToManyAdditionalValues, $loadChildren);
 
         $this->relationships[$name] = $response;
 
@@ -322,7 +332,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                             null,
                             $relationship->getReadFunction(),
                             $values,
-                            $loadRelationshipsLevel - 1
+                            ($relationship->isLoadChildren() ? $loadRelationshipsLevel - 1 : 0)
                         );
 
                         if ($relationship->getAttribute()->getDatabaseFieldRelationship() !== $relationship->getAttribute()->getDatabaseFieldName()) {
@@ -342,7 +352,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                                 null,
                                 $relationship->getAttribute(),
                                 $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
-                                $loadRelationshipsLevel - 1
+                                ($relationship->isLoadChildren() ? $loadRelationshipsLevel - 1 : 0)
                             );
                             break;
                         case RelationshipTypeInterface::RELATIONSHIP_ONE_TO_MANY:
@@ -351,7 +361,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                                 null,
                                 $relationship->getAttribute(),
                                 $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
-                                $loadRelationshipsLevel - 1
+                                ($relationship->isLoadChildren() ? $loadRelationshipsLevel - 1 : 0)
                             );
                             break;
                         case RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY:
@@ -366,7 +376,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                                     $data[$relationship->getAttribute()->getDatabaseFieldRelationship()],
                                     $relationship->getManyToManyAdditionalValues()
                                 ],
-                                $loadRelationshipsLevel - 1
+                                ($relationship->isLoadChildren() ? $loadRelationshipsLevel - 1 : 0)
                             );
 
                             break;
