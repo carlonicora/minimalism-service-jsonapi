@@ -229,7 +229,7 @@ class ResourceWriter
                 if ($attribute->getName() !== 'id' && $attribute->isEncrypted()){
                     $resourceObject->attributes->update(
                         $attribute->getName(),
-                        $this->mapper->getDefaultEncrypter()->decryptId(
+                        $this->mapper->getDefaultEncrypter()->encryptId(
                             $resourceObject->attributes->get($attribute->getName())
                         )
                     );
