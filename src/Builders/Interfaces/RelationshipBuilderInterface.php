@@ -1,7 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
 
+use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
 
 interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
@@ -9,12 +11,51 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * RelationshipBuilderInterface constructor.
      * @param ServicesFactory $services
      * @param string $name
-     * @param int $type
-     * @param AttributeBuilderInterface $attribute
-     * @param string $fieldName
      */
-    public function __construct(ServicesFactory $services, string $name, int $type, AttributeBuilderInterface $attribute, string $fieldName);
+    public function __construct(
+        ServicesFactory $services, 
+        string $name
+    );
 
+    /**
+     * @param AttributeBuilderInterface $attribute
+     * @param string|null $fieldName
+     * @return RelationshipBuilderInterface
+     */
+    public function withTargetTable(
+        AttributeBuilderInterface $attribute,
+        string $fieldName=null
+    ): RelationshipBuilderInterface;
+
+    /**
+     * @param string $tableInterfaceClass
+     * @param string $fieldName
+     * @return RelationshipBuilderInterface
+     */
+    public function withHopTable(
+        string $tableInterfaceClass,
+        string $fieldName
+    ): RelationshipBuilderInterface;
+
+    /**
+     * @param string $tableClassName
+     * @param string|null $resourceBuilderClass
+     * @param string $tableFunction
+     * @param array $parameters
+     * @return RelationshipBuilderInterface
+     */
+    public function withTableFunction(
+        string $tableClassName,
+        ?string $resourceBuilderClass,
+        string $tableFunction,
+        array $parameters
+    ): RelationshipBuilderInterface;
+
+    /**
+     * @return RelationshipBuilderInterface
+     */
+    public function withoutChildren(): RelationshipBuilderInterface;
+    
     /**
      * @return string
      */
@@ -25,55 +66,24 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      */
     public function getType(): int;
 
-
+    /**
+     * @param LinkBuilder $link
+     * @return RelationshipBuilderInterface
+     */
+    public function withLink(LinkBuilder $link): RelationshipBuilderInterface;
 
     /**
-     * @return bool
+     * @param array $data
+     * @param int $loadRelationshipLevel
+     * @return array|ResourceObject[]|null
      */
-    public function isRequired(): bool;
+    public function loadResources(
+        array $data,
+        int $loadRelationshipLevel=0
+    ): ?array;
 
     /**
-     * @param bool $isRequired
+     * @return AttributeBuilderInterface|null
      */
-    public function setIsRequired(bool $isRequired): void;
-
-    /**
-     * @return string|null
-     */
-    public function getResourceBuilderName(): ?string;
-
-    /**
-     * @return AttributeBuilderInterface
-     */
-    public function getAttribute(): AttributeBuilderInterface;
-
-    /**
-     * @return string|null
-     */
-    public function getManyToManyRelationshipTableName(): ?string;
-
-    /**
-     * @return string|null
-     */
-    public function getManyToManyRelationshipField(): ?string;
-
-    /**
-     * @return string
-     */
-    public function getResourceObjectName(): string;
-
-    /**
-     * @return string|null
-     */
-    public function getManyToManyRelationshipTableClass(): ?string;
-
-    /**
-     * @return array|null
-     */
-    public function getManyToManyAdditionalValues(): ?array;
-
-    /**
-     * @return bool
-     */
-    public function isLoadChildren(): bool;
+    public function getAttribute(): ?AttributeBuilderInterface;
 }

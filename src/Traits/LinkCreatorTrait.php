@@ -13,7 +13,7 @@ trait LinkCreatorTrait
     protected ServicesFactory $services;
 
     /** @var JsonDataMapper */
-    private JsonDataMapper $mapper;
+    protected JsonDataMapper $mapper;
 
     /**
      * @param string $url

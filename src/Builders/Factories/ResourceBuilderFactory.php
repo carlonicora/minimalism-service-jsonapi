@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use Exception;
@@ -38,8 +39,11 @@ class ResourceBuilderFactory
             }
 
             $response->initialiseRelationships();
+            /** @var RelationshipBuilderInterface $relationship */
             foreach ($response->getRelationships() as $relationship) {
-                $relationship->getAttribute()->setRelationshipResource($response);
+                if ($relationship->getAttribute() !== null) {
+                    $relationship->getAttribute()->setRelationshipResource($response);
+                }
             }
 
             $mapper->getCache()->setResourceBuilder($response);

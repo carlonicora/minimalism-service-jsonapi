@@ -5,9 +5,9 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
@@ -17,11 +17,8 @@ class DataReaderFacade implements DataReaderInterface
     /** @var ServicesFactory  */
     protected ServicesFactory $services;
 
-    /** @var TableInterface  */
-    private TableInterface $table;
-
-    /** @var string  */
-    public string $functionName;
+    /** @var FunctionFacade  */
+    public FunctionFacade $function;
 
     /** @var array  */
     public array $functionParameters;
@@ -41,22 +38,19 @@ class DataReaderFacade implements DataReaderInterface
     /**
      * DataReaderFacade constructor.
      * @param ServicesFactory $services
-     * @param TableInterface $table
-     * @param string $functionName
+     * @param FunctionFacade $function
      * @param array $functionParameters
      * @param CacheFactoryInterface|null $dataCache
      * @throws Exception
      */
     public function __construct(
         ServicesFactory $services,
-        TableInterface $table,
-        string $functionName,
+        FunctionFacade $function,
         array $functionParameters = [],
         CacheFactoryInterface $dataCache = null
     ) {
         $this->services = $services;
-        $this->table = $table;
-        $this->functionName = $functionName;
+        $this->function = $function;
         $this->functionParameters = $functionParameters;
         $this->dataCache = $dataCache;
 
@@ -76,7 +70,7 @@ class DataReaderFacade implements DataReaderInterface
             try {
                 $response = $this->cacher->readArray($cache);
             } catch (CacheNotFoundException $e) {
-                $response = $this->table->{$this->functionName}(...$this->functionParameters);
+                $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
                 if (is_array($response)) {
                     $this->cacher->createArray($cache, $response);
                 } else {
@@ -84,7 +78,7 @@ class DataReaderFacade implements DataReaderInterface
                 }
             }
         } else {
-            $response = $this->table->{$this->functionName}(...$this->functionParameters);
+            $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
         }
 
         return $response;
@@ -99,13 +93,14 @@ class DataReaderFacade implements DataReaderInterface
             try {
                 $response = $this->cacher->readArray($cache);
             } catch (cacheNotFoundException $e) {
-                $response = $this->table->{$this->functionName}(...$this->functionParameters);
+                $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null) {
                     $this->cacher->createArray($cache, $response);
 
                     foreach ($response ?? [] as $record) {
-                        $primaryKey = $this->table->getPrimaryKey();
+                        $table = $this->function->getTable();
+                        $primaryKey = $table->getPrimaryKey();
 
                         if ($primaryKey !== null && count($primaryKey) === 1) {
                             $recordId = array_keys($primaryKey)[0];
@@ -119,7 +114,7 @@ class DataReaderFacade implements DataReaderInterface
                 }
             }
         } else {
-            $response = $this->table->{$this->functionName}(...$this->functionParameters);
+            $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
         }
 
         return $response;
@@ -134,14 +129,14 @@ class DataReaderFacade implements DataReaderInterface
             try {
                 $response = (int)$this->cacher->read($cache);
             } catch (cacheNotFoundException $e) {
-                $response = (int)$this->table->{$this->functionName}(...$this->functionParameters);
+                $response = (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null) {
                     $this->cacher->create($cache, $response);
                 }
             }
         } else {
-            $response = (int)$this->table->{$this->functionName}(...$this->functionParameters);
+            $response = (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
         }
 
         return $response;

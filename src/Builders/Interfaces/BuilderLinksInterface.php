@@ -12,6 +12,7 @@ interface BuilderLinksInterface
 
     /**
      * @param LinkBuilder $link
+     * @return void
      */
     public function addLink(LinkBuilder $link): void;
 }

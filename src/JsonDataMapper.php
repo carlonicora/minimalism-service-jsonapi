@@ -9,6 +9,7 @@ use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceReader;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
@@ -83,17 +84,29 @@ class JsonDataMapper extends AbstractService
     /**
      * @param string $builderName
      * @param CacheFactoryInterface|null $cache
-     * @param string $functionName
+     * @param FunctionFacade $function
      * @param array $parameters
      * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], int $loadRelationshipsLevel=0) : array
+    public function generateResourceObjectsByFunction(
+        string $builderName,
+        ?CacheFactoryInterface $cache,
+        FunctionFacade $function,
+        array $parameters=[],
+        int $loadRelationshipsLevel=0
+    ) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectsByFunction($builderName, $cache, $functionName, $parameters, $loadRelationshipsLevel);
+        return $resourceReader->generateResourceObjectsByFunction(
+            $builderName,
+            $cache,
+            $function,
+            $parameters,
+            $loadRelationshipsLevel
+        );
     }
 
     /**

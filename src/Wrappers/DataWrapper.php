@@ -2,6 +2,8 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use Exception;
@@ -11,11 +13,8 @@ class DataWrapper
     /** @var ServicesFactory  */
     private ServicesFactory $services;
 
-    /** @var string|null  */
-    private ?string $tableName=null;
-
-    /** @var string|null  */
-    private ?string $function=null;
+    /** @var FunctionFacade|null  */
+    private ?FunctionFacade $function=null;
 
     /** @var array|null  */
     private ?array $parameters=null;
@@ -40,7 +39,14 @@ class DataWrapper
     {
         $dataReadersFactory = new DataReadersFactory($this->services);
 
-        $function = $dataReadersFactory->create($this->tableName, $this->function, $this->parameters);
+        $function = $dataReadersFactory->create(
+            FunctionFactory::buildFromTableName(
+                $this->services,
+                $this->function->getTableName(),
+                null,
+                $this->function->getFunctionName()),
+            $this->parameters
+        );
         if ($this->isSingle) {
             $response = $function->getSingle();
         } else {
@@ -51,9 +57,9 @@ class DataWrapper
     }
 
     /**
-     * @param string|null $function
+     * @param FunctionFacade $function
      */
-    public function setFunction(?string $function): void
+    public function setFunction(FunctionFacade $function): void
     {
         $this->function = $function;
     }
@@ -64,14 +70,6 @@ class DataWrapper
     public function setParameters(?array $parameters): void
     {
         $this->parameters = $parameters;
-    }
-
-    /**
-     * @param string|null $tableName
-     */
-    public function setTableName(?string $tableName): void
-    {
-        $this->tableName = $tableName;
     }
 
     /**

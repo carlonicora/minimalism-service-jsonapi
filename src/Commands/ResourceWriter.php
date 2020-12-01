@@ -7,6 +7,7 @@ use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
@@ -84,10 +85,10 @@ class ResourceWriter
         if ($updateRelationships) {
             /** @var RelationshipBuilderInterface $relationship */
             foreach ($resourceBuilder->getRelationships() as $relationship) {
-                if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_ONE_TO_ONE) {
+                if ($relationship->getType() === RelationshipTypeInterface::ONE_TO_ONE) {
                     try {
                         $relatedResources = $resourceObject->relationship($relationship->getName())->resourceLinkage->resources;
-                        if (false === empty($relatedResources) && false === empty($relationshipValue = current($relatedResources)->id)) {
+                        if (false === empty($relatedResources) && false === empty($relationshipValue = current($relatedResources)->id) && $relationship->getAttribute() !== null) {
                             $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
                         }
                     } catch (Exception $e) {
@@ -107,7 +108,7 @@ class ResourceWriter
         if ($updateRelationships) {
             /** @var RelationshipBuilderInterface $relationship */
             foreach ($resourceBuilder->getRelationships() as $relationship) {
-                if ($relationship->getType() === RelationshipTypeInterface::RELATIONSHIP_MANY_TO_MANY) {
+                if ($relationship->getType() === RelationshipTypeInterface::MANY_TO_MANY) {
                     $this->updateOneToMany($resourceBuilder, $resourceObject, $relationship->getName());
                 }
             }
@@ -151,18 +152,20 @@ class ResourceWriter
 
             $currentRelationshipsId = [];
             foreach ($currentRelationshipArray as $currentRelationship) {
-                $id = $currentRelationship[$relationshipResourceInfo->getAttribute()->getDatabaseFieldName()];
-                if (!in_array($id, $newRelationshipsId, true)) {
-                    $table->delete($currentRelationship);
-                } else {
-                    $currentRelationshipsId[] = $id;
+                if ($relationshipResourceInfo->getAttribute() !== null) {
+                    $id = $currentRelationship[$relationshipResourceInfo->getAttribute()->getDatabaseFieldName()];
+                    if (!in_array($id, $newRelationshipsId, true)) {
+                        $table->delete($currentRelationship);
+                    } else {
+                        $currentRelationshipsId[] = $id;
+                    }
                 }
             }
 
             $newRelationships = [];
 
             foreach ($newRelationshipsId as $newRelationshipId) {
-                if (!in_array($newRelationshipId, $currentRelationshipsId, true) && ($id=$resourceBuilder->getAttribute('id')) !== null) {
+                if (!in_array($newRelationshipId, $currentRelationshipsId, true) && ($id=$resourceBuilder->getAttribute('id')) !== null && $relationshipResourceInfo->getAttribute() !== null) {
                     $newRelationships[] = [
                         $id->getDatabaseFieldName() => $resourceObject->id,
                         $relationshipResourceInfo->getAttribute()->getDatabaseFieldName() => $newRelationshipId
@@ -193,7 +196,17 @@ class ResourceWriter
                     $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
                 }
 
-                $response = $this->resourceReader->readResourceObjectData($dataCache, $resourceBuilder->getTableName(), 'loadFromId', [$resourceObject->id], true)[0];
+                $response = $this->resourceReader->readResourceObjectData(
+                    $dataCache,
+                    FunctionFactory::buildFromTableName(
+                        $this->services,
+                        $resourceBuilder->getTableName(),
+                        null,
+                        'loadFromId'
+                    ),
+                    [$resourceObject->id],
+                    true
+                )[0];
             } catch (DbRecordNotFoundException $e) {
                 $response = [];
             }
@@ -355,7 +368,7 @@ class ResourceWriter
                     )->throw();
                 }
 
-                if ($resourceLink->id !== null && $this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute()->isEncrypted()) {
+                if ($resourceLink->id !== null && $this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute() !== null && $relationship->getAttribute()->isEncrypted()) {
                     $resourceLink->id = $this->mapper->getDefaultEncrypter()->decryptId($resourceLink->id);
                 }
             }

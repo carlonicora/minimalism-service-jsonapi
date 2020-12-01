@@ -6,6 +6,8 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
@@ -46,7 +48,13 @@ class ResourceReader
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
+    public function generateResourceObjectByFieldValue(
+        string $builderName,
+        ?CacheFactoryInterface $cache,
+        AttributeBuilderInterface $attribute,
+        $value,
+        int $loadRelationshipsLevel=0
+    ) : array
     {
         $response = null;
 
@@ -71,10 +79,33 @@ class ResourceReader
             }
 
             if ($isMainTable && $attribute->getName() === 'id') {
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadFromId', [$value], $loadRelationshipsLevel, true);
+                $response = $this->generateResourceObject(
+                    $resourceBuilder,
+                    $cache,
+                    FunctionFactory::buildFromTableName(
+                        $this->services,
+                        $tableName,
+                        null,
+                        'loadFromId'
+                    ),
+                    [$value],
+                    $loadRelationshipsLevel,
+                    true
+                );
             } else {
                 $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $tableName, 'loadByField', [$fieldName, $value], $loadRelationshipsLevel);
+                $response = $this->generateResourceObject(
+                    $resourceBuilder,
+                    $cache,
+                    FunctionFactory::buildFromTableName(
+                        $this->services,
+                        $tableName,
+                        null,
+                        'loadByField'
+                    ),
+                    [$fieldName, $value],
+                    $loadRelationshipsLevel
+                );
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -88,14 +119,20 @@ class ResourceReader
     /**
      * @param string $builderName
      * @param CacheFactoryInterface|null $cache
-     * @param string $functionName
+     * @param FunctionFacade $function
      * @param array $parameters
      * @param int $loadRelationshipsLevel
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function generateResourceObjectsByFunction(string $builderName, ?CacheFactoryInterface $cache, string $functionName, array $parameters=[], int $loadRelationshipsLevel=0) : array
+    public function generateResourceObjectsByFunction(
+        string $builderName,
+        ?CacheFactoryInterface $cache,
+        FunctionFacade $function,
+        array $parameters=[],
+        int $loadRelationshipsLevel=0
+    ) : array
     {
         $response = null;
 
@@ -109,13 +146,14 @@ class ResourceReader
         }
 
         if ($response === null) {
-            $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
-            if (method_exists($resourceBuilder, $functionName)) {
-                $response = $resourceBuilder->$functionName(...$parameters);
+            if ($function->isResourceBuilder() && $function->getResourceBuilderClass() === $builderName && method_exists($function->getResourceBuilder(), $function->getFunctionName())) {
+                $callable = [$function->getResourceBuilder(), $function->getFunctionName()];
+                $response = $callable(...$parameters);
             } else {
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $resourceBuilder->getTableName(), $functionName, $parameters, $loadRelationshipsLevel);
+                $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $function, $parameters, $loadRelationshipsLevel);
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -133,7 +171,10 @@ class ResourceReader
      * @return array
      * @throws Exception
      */
-    public function generateResourceObjectByData(string $builderName, array $dataList, int $loadRelationshipsLevel=0): array
+    public function generateResourceObjectByData(
+        string $builderName,
+        array $dataList,
+        int $loadRelationshipsLevel=0): array
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
         $response = [];
@@ -148,22 +189,28 @@ class ResourceReader
     /**
      * @param ResourceBuilderInterface $resourceBuilder
      * @param CacheFactoryInterface|null $cache
-     * @param string $tableName
-     * @param string $functionName
+     * @param FunctionFacade $function
      * @param array $parameters
      * @param int $loadRelationshipsLevel
      * @param bool $iSingleRead
      * @return array
      * @throws DbRecordNotFoundException
      */
-    private function generateResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, string $tableName, string $functionName, array $parameters, int $loadRelationshipsLevel=0, bool $iSingleRead=false) : array
+    private function generateResourceObject(
+        ResourceBuilderInterface $resourceBuilder,
+        ?CacheFactoryInterface $cache,
+        FunctionFacade $function,
+        array $parameters,
+        int $loadRelationshipsLevel=0,
+        bool $iSingleRead=false
+    ) : array
     {
         $dataCache = null;
         if ($cache !== null && ($cacher = $cache->generateCache()) !== null) {
             $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
         }
 
-        $dataList = $this->readResourceObjectData($dataCache, $tableName, $functionName, $parameters, $iSingleRead);
+        $dataList = $this->readResourceObjectData($dataCache, $function, $parameters, $iSingleRead);
 
         if (!empty($dataList) && !array_key_exists(0, $dataList)){
             $dataList = [$dataList];
@@ -180,15 +227,19 @@ class ResourceReader
 
     /**
      * @param CacheFactoryInterface|null $cacheFactory
-     * @param string $tableName
-     * @param string $functionName
+     * @param FunctionFacade $function
      * @param array $parameters
      * @param bool $iSingleRead
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
-    public function readResourceObjectData(?CacheFactoryInterface $cacheFactory, string $tableName, string $functionName, array $parameters, bool $iSingleRead): array
+    public function readResourceObjectData(
+        ?CacheFactoryInterface $cacheFactory,
+        FunctionFacade $function,
+        array $parameters,
+        bool $iSingleRead
+    ): array
     {
         $response = null;
 
@@ -197,8 +248,7 @@ class ResourceReader
 
         /** @var DataReaderInterface $reader */
         $reader = $readerFactory->create(
-            $tableName,
-            $functionName,
+            $function,
             $parameters,
             $cacheFactory
         );
@@ -209,7 +259,9 @@ class ResourceReader
         } else {
             $response = $reader->getList();
         }
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $tableName . ' - ' . $functionName . ' )'));
+
+
+        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $function->getTableName() . ' - ' . $function->getFunctionName() . ' )'));
 
         return $response;
     }

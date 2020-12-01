@@ -7,11 +7,10 @@ use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderInterfaceFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipTypeInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\ReadFunctionTrait;
@@ -19,13 +18,15 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEve
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use Exception;
 
 abstract class AbstractResourceBuilder implements ResourceBuilderInterface, LinkCreatorInterface
 {
     use LinkBuilderTrait;
     use ReadFunctionTrait;
+
+    /** @var RelationshipBuilderInterfaceFactory  */
+    protected RelationshipBuilderInterfaceFactory $relationshipBuilderInterfaceFactory;
 
     /** @var ServicesFactory|null  */
     private static ?ServicesFactory $staticServices=null;
@@ -54,9 +55,6 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var AttributeBuilderFactory */
     private AttributeBuilderFactory $attributeBuilderFactory;
 
-    /** @var RelationshipBuilderFactory */
-    private RelationshipBuilderFactory $relationshipBuilderFactory;
-
     /** @var string|null  */
     protected ?string $dataCache=null;
 
@@ -81,7 +79,6 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     public function __construct(ServicesFactory $services)
     {
         $this->attributeBuilderFactory = new AttributeBuilderFactory($services, $this);
-        $this->relationshipBuilderFactory = new RelationshipBuilderFactory($services);
 
         $this->services = $services;
         $this->mapper = $services->service(JsonDataMapper::class);
@@ -90,6 +87,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Attributes Created (' . get_class($this) . ')'));
         $this->setLinks();
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Links Created (' . get_class($this) . ')'));
+
+        $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->services);
     }
 
     /**
@@ -142,6 +141,29 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     public static function attributeId() : AttributeBuilderInterface
     {
         return self::attribute('id');
+    }
+
+    /**
+     * @param string $tableName
+     */
+    final protected function setTableName(string $tableName): void
+    {
+        $this->tableName = $tableName;
+    }
+
+    /**
+     * @return string
+     */
+    final public static function tableName() : string
+    {
+        try {
+            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
+            $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
+
+            return $resourceBuilder->getTableName();
+        } catch (Exception $e) {
+            return '';
+        }
     }
 
     /**
@@ -256,33 +278,13 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     }
 
     /**
-     * @param string $name
-     * @param int $type
-     * @param AttributeBuilderInterface $attribute
-     * @param string|null $fieldName
-     * @param string|null $manyToManyRelationshipTableName
-     * @param string|null $manyToManyRelationshipField
-     * @param array|null $manyToManyAdditionalValues
-     * @param bool $loadChildren
-     * @return RelationshipBuilderInterface
-     * @throws Exception
+     * @param RelationshipBuilderInterface $relationshipBuilder
      */
-    final protected function generateRelationship(
-        string $name,
-        int $type,
-        AttributeBuilderInterface $attribute,
-        string $fieldName=null,
-        string $manyToManyRelationshipTableName=null,
-        string $manyToManyRelationshipField=null,
-        ?array $manyToManyAdditionalValues=null,
-        bool $loadChildren=true
-    ): RelationshipBuilderInterface
+    final protected function addRelationship(
+        RelationshipBuilderInterface $relationshipBuilder
+    ): void
     {
-        $response = $this->relationshipBuilderFactory->create($name, $type, $attribute, $fieldName, $manyToManyRelationshipTableName, $manyToManyRelationshipField, $manyToManyAdditionalValues, $loadChildren);
-
-        $this->relationships[$name] = $response;
-
-        return $response;
+        $this->relationships[$relationshipBuilder->getName()] = $relationshipBuilder;
     }
 
     /**
@@ -313,15 +315,30 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     private function buildRelationships(ResourceObject $response, array $data, int $loadRelationshipsLevel=0): void
     {
-        foreach ($this->relationships as $relationship){
+        /** @var RelationshipBuilderInterface $relationshipBuilder */
+        foreach ($this->relationships as $relationshipBuilder){
             try {
                 $relation = new Relationship();
 
-                /** @var JsonDataMapper $mapper */
-                $mapper = $this->mapper;
+                $resources = $relationshipBuilder->loadResources(
+                    $data,
+                    $loadRelationshipsLevel
+                );
 
-                $addRelationship = true;
+                if ($resources !== null) {
+                    $relation->resourceLinkage->resources = $resources;
 
+                    $this->buildLinks(
+                        $relationshipBuilder,
+                        $this,
+                        $relation->links,
+                        $data
+                    );
+
+                    $response->relationships[$relationshipBuilder->getName()] = $relation;
+                }
+
+                /*
                 if ($relationship->getReadFunction() !== null) {
                     try {
                         if (($values = $relationship->getReadValues()) === null) {
@@ -388,6 +405,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
                     $response->relationships[$relationship->getName()] = $relation;
                 }
+                */
             } catch (Exception $e) {}
         }
     }
