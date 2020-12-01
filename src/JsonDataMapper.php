@@ -78,7 +78,7 @@ class JsonDataMapper extends AbstractService
     public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, $value, $loadRelationshipsLevel);
+        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, [$value], $loadRelationshipsLevel);
     }
 
     /**
@@ -113,13 +113,19 @@ class JsonDataMapper extends AbstractService
      * @param string $builderName
      * @param array $dataList
      * @param int $loadRelationshipsLevel
+     * @param array $externalParameters
      * @return array
      * @throws Exception
      */
-    public function generateResourceObjectByData(string $builderName, array $dataList, int $loadRelationshipsLevel=0): array
+    public function generateResourceObjectByData(
+        string $builderName,
+        array $dataList,
+        int $loadRelationshipsLevel=0,
+        array $externalParameters=[]
+    ): array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationshipsLevel);
+        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationshipsLevel, $externalParameters);
     }
 
     /**

@@ -216,15 +216,20 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     /**
      * @param array $data
      * @param int $loadRelationshipLevel
+     * @param array $externalParameters
+     * @param array $position
      * @return array|ResourceObject[]|null
-     * @throws Exception
      */
     final public function loadResources(
         array $data,
-        int $loadRelationshipLevel=0
+        int $loadRelationshipLevel=0,
+        array $externalParameters=[],
+        array $position=[]
     ): ?array
     {
-        if (!$this->loadChildren){
+        if ($this->loadChildren && $loadRelationshipLevel > 0) {
+            $loadRelationshipLevel--;
+        } else {
             $loadRelationshipLevel = 0;
         }
 
@@ -241,6 +246,11 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                 }
             }
 
+            $additionalValues = ParametersFacade::prepareParameters($externalParameters, $position);
+            foreach ($additionalValues ?? [] as $additionalValue){
+                $values[] = $additionalValue;
+            }
+
             return $this->mapper->generateResourceObjectsByFunction(
                 $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                 null,
@@ -248,13 +258,6 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                 $values,
                 $loadRelationshipLevel
             );
-
-            /*
-            if ($this->targetBuilderAttribute->getDatabaseFieldRelationship() !== $this->targetBuilderAttribute->getDatabaseFieldName()) {
-                $data[$this->targetBuilderAttribute->getDatabaseFieldName()] = $response->resourceLinkage->resources[0]->id ?? null;
-            }
-            return $response;
-            */
         }
 
         return $this->loadSpecialisedResources(
@@ -272,4 +275,12 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         array $data,
         int $loadRelationshipLevel=0
     ): ?array;
+
+    /**
+     * @return string
+     */
+    public function getBuilder(): string
+    {
+        return $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass();
+    }
 }

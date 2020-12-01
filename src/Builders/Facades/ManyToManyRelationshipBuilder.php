@@ -63,7 +63,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
                 $this->services,
                 $this->manyToManyRelationshipTableName,
                 null,
-                'getFirstLevelJoi'
+                'getFirstLevelJoin'
             ),
             [
                 $this->manyToManyRelationshipTableName,

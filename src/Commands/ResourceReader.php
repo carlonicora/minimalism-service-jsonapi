@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -42,8 +43,9 @@ class ResourceReader
      * @param string $builderName
      * @param CacheFactoryInterface|null $cache
      * @param AttributeBuilderInterface $attribute
-     * @param $value
+     * @param array $parameters
      * @param int $loadRelationshipsLevel
+     * @param array $position
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
@@ -52,8 +54,9 @@ class ResourceReader
         string $builderName,
         ?CacheFactoryInterface $cache,
         AttributeBuilderInterface $attribute,
-        $value,
-        int $loadRelationshipsLevel=0
+        array $parameters,
+        int $loadRelationshipsLevel=0,
+        array $position=[]
     ) : array
     {
         $response = null;
@@ -78,6 +81,8 @@ class ResourceReader
                 $isMainTable = false;
             }
 
+            $values = ParametersFacade::prepareParameters($parameters, $position);
+
             if ($isMainTable && $attribute->getName() === 'id') {
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
@@ -88,7 +93,7 @@ class ResourceReader
                         null,
                         'loadFromId'
                     ),
-                    [$value],
+                    $values,
                     $loadRelationshipsLevel,
                     true
                 );
@@ -103,7 +108,7 @@ class ResourceReader
                         null,
                         'loadByField'
                     ),
-                    [$fieldName, $value],
+                    [$fieldName, $values[0]],
                     $loadRelationshipsLevel
                 );
             }
@@ -122,6 +127,7 @@ class ResourceReader
      * @param FunctionFacade $function
      * @param array $parameters
      * @param int $loadRelationshipsLevel
+     * @param array $position
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
@@ -131,7 +137,8 @@ class ResourceReader
         ?CacheFactoryInterface $cache,
         FunctionFacade $function,
         array $parameters=[],
-        int $loadRelationshipsLevel=0
+        int $loadRelationshipsLevel=0,
+        array $position=[]
     ) : array
     {
         $response = null;
@@ -149,11 +156,12 @@ class ResourceReader
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
             if ($function->isResourceBuilder() && $function->getResourceBuilderClass() === $builderName && method_exists($function->getResourceBuilder(), $function->getFunctionName())) {
+                $values = ParametersFacade::prepareParameters($parameters, $position);
                 $callable = [$function->getResourceBuilder(), $function->getFunctionName()];
-                $response = $callable(...$parameters);
+                $response = $callable(...$values);
             } else {
                 $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $function, $parameters, $loadRelationshipsLevel);
+                $response = $this->generateResourceObject($resourceBuilder, $cache, $function, $parameters, $loadRelationshipsLevel, false, $position);
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -168,19 +176,24 @@ class ResourceReader
      * @param string $builderName
      * @param array $dataList
      * @param int $loadRelationshipsLevel
+     * @param array $parameters
+     * @param array $position
      * @return array
      * @throws Exception
      */
     public function generateResourceObjectByData(
         string $builderName,
         array $dataList,
-        int $loadRelationshipsLevel=0): array
+        int $loadRelationshipsLevel=0,
+        array $parameters=[],
+        array $position=[]
+    ): array
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
         $response = [];
 
         foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel);
+            $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
         }
 
         return $response;
@@ -193,6 +206,7 @@ class ResourceReader
      * @param array $parameters
      * @param int $loadRelationshipsLevel
      * @param bool $iSingleRead
+     * @param array $position
      * @return array
      * @throws DbRecordNotFoundException
      */
@@ -202,7 +216,8 @@ class ResourceReader
         FunctionFacade $function,
         array $parameters,
         int $loadRelationshipsLevel=0,
-        bool $iSingleRead=false
+        bool $iSingleRead=false,
+        array $position=[]
     ) : array
     {
         $dataCache = null;
@@ -210,7 +225,8 @@ class ResourceReader
             $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
         }
 
-        $dataList = $this->readResourceObjectData($dataCache, $function, $parameters, $iSingleRead);
+        $values = ParametersFacade::prepareParameters($parameters, $position);
+        $dataList = $this->readResourceObjectData($dataCache, $function, $values, $iSingleRead);
 
         if (!empty($dataList) && !array_key_exists(0, $dataList)){
             $dataList = [$dataList];
@@ -219,7 +235,7 @@ class ResourceReader
         $response = [];
 
         foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel);
+            $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
         }
 
         return $response;

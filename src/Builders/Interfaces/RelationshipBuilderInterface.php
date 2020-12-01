@@ -67,6 +67,11 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
     public function getType(): int;
 
     /**
+     * @return string
+     */
+    public function getBuilder(): string;
+
+    /**
      * @param LinkBuilder $link
      * @return RelationshipBuilderInterface
      */
@@ -75,11 +80,15 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
     /**
      * @param array $data
      * @param int $loadRelationshipLevel
+     * @param array $externalParameters
+     * @param array $position
      * @return array|ResourceObject[]|null
      */
     public function loadResources(
         array $data,
-        int $loadRelationshipLevel=0
+        int $loadRelationshipLevel=0,
+        array $externalParameters=[],
+        array $position=[]
     ): ?array;
 
     /**
