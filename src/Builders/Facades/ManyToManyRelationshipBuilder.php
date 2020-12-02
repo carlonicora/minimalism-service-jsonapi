@@ -13,7 +13,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
 {
     /** @var int  */
     protected int $type=RelationshipTypeInterface::MANY_TO_MANY;
-    
+
     /** @var string  */
     private string $manyToManyRelationshipTableClass;
 
@@ -60,7 +60,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
             $this->resourceBuilderName,
             null,
             FunctionFactory::buildFromTableName(
-                $this->manyToManyRelationshipTableName,
+                $this->resourceBuilder->getTableName(),
                 'getFirstLevelJoin'
             ),
             [

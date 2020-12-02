@@ -7,8 +7,10 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\AttributeBui
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\ReadFunctionTrait;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
@@ -38,6 +40,9 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
     /** @var string|null  */
     protected ?string $resourceBuilderName=null;
+
+    /** @var ResourceBuilderInterface|null  */
+    protected ?ResourceBuilderInterface $resourceBuilder=null;
 
     /** @var string|null  */
     protected ?string $resourceObjectName=null;
@@ -73,6 +78,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param AttributeBuilderInterface $attribute
      * @param string|null $fieldName
      * @return RelationshipBuilderInterface
+     * @throws Exception
      */
     public function withBuilder(
         AttributeBuilderInterface $attribute,
@@ -88,6 +94,10 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $this->resourceBuilderName = get_class($this->targetBuilderAttribute->getResource());
             $this->resourceObjectName = $this->targetBuilderAttribute->getResource()->getType();
         }
+
+        $resourceFactory = new ResourceBuilderFactory($this->services);
+        $this->resourceBuilder = $resourceFactory->createResourceBuilder($this->resourceBuilderName);
+
         $this->targetBuilderAttribute->setDatabaseFieldRelationship(
             $fieldName ??
             $this->targetBuilderAttribute->getDatabaseFieldName()
