@@ -74,7 +74,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param string|null $fieldName
      * @return RelationshipBuilderInterface
      */
-    public function withTargetTable(
+    public function withBuilder(
         AttributeBuilderInterface $attribute,
         string $fieldName=null
     ): RelationshipBuilderInterface
@@ -102,7 +102,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    public function withHopTable(
+    public function throughManyToManyTable(
         string $tableInterfaceClass,
         string $fieldName
     ): RelationshipBuilderInterface
@@ -118,7 +118,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    public function withTableFunction(
+    public function withFunction(
         string $tableClassName,
         ?string $resourceBuilderClass,
         string $tableFunction,

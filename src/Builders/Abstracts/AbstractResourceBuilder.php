@@ -387,7 +387,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     private function getAttributeValue(AttributeBuilderInterface $attribute, array $data)
     {
-        $response = $data[$attribute->getDatabaseFieldName()] ?? null;
+        $response = $attribute->getStaticValue() ?? $data[$attribute->getDatabaseFieldName()] ?? null;
 
         if ($attribute->isEncrypted()){
             /** @var EncrypterInterface $encrypter */

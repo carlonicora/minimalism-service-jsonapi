@@ -29,7 +29,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
      * @return $this|RelationshipBuilderInterface
      * @throws Exception
      */
-    public function withHopTable(
+    public function throughManyToManyTable(
         string $tableInterfaceClass,
         string $fieldName
     ): RelationshipBuilderInterface

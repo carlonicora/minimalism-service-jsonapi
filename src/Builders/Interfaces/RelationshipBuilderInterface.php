@@ -22,7 +22,7 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param string|null $fieldName
      * @return RelationshipBuilderInterface
      */
-    public function withTargetTable(
+    public function withBuilder(
         AttributeBuilderInterface $attribute,
         string $fieldName=null
     ): RelationshipBuilderInterface;
@@ -32,7 +32,7 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param string $fieldName
      * @return RelationshipBuilderInterface
      */
-    public function withHopTable(
+    public function throughManyToManyTable(
         string $tableInterfaceClass,
         string $fieldName
     ): RelationshipBuilderInterface;
@@ -44,7 +44,7 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param array $parameters
      * @return RelationshipBuilderInterface
      */
-    public function withTableFunction(
+    public function withFunction(
         string $tableClassName,
         ?string $resourceBuilderClass,
         string $tableFunction,

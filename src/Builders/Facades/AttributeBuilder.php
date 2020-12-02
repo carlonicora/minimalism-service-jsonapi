@@ -53,6 +53,9 @@ class AttributeBuilder implements AttributeBuilderInterface
     /** @var ResourceBuilderInterface|null  */
     private ?ResourceBuilderInterface $relationship=null;
 
+    /** @var  */
+    private $staticValue;
+
     /**
      * AttributeBuilder constructor.
      * @param ServicesFactory $services
@@ -130,6 +133,25 @@ class AttributeBuilder implements AttributeBuilderInterface
         $this->databaseFieldRelationship = $databaseFieldRelationship;
 
         return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this|AttributeBuilderInterface
+     */
+    public function setStaticValue($value): AttributeBuilderInterface
+    {
+        $this->staticValue = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getStaticValue()
+    {
+        return $this->staticValue;
     }
 
     /**

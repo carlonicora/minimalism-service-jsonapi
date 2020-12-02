@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
 
-
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\ParameterValidator\Interfaces\ParameterValidatorInterface;
 
@@ -155,4 +154,15 @@ interface AttributeBuilderInterface
      * @return ResourceBuilderInterface|null
      */
     public function getRelationshipResource(): ?ResourceBuilderInterface;
+
+    /**
+     * @param $value
+     * @return $this|AttributeBuilderInterface
+     */
+    public function setStaticValue($value): AttributeBuilderInterface;
+
+    /**
+     * @return mixed|null
+     */
+    public function getStaticValue();
 }
