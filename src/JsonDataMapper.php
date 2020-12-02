@@ -10,6 +10,7 @@ use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceReader;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
@@ -62,6 +63,7 @@ class JsonDataMapper extends AbstractService
     public function initialiseStatics(ServicesFactory $services): void
     {
         parent::initialiseStatics($services);
+        FunctionFactory::initialise($services);
         AbstractResourceBuilder::initialise($services);
     }
 

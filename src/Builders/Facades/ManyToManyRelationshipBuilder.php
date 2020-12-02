@@ -60,9 +60,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
             $this->resourceBuilderName,
             null,
             FunctionFactory::buildFromTableName(
-                $this->services,
                 $this->manyToManyRelationshipTableName,
-                null,
                 'getFirstLevelJoin'
             ),
             [

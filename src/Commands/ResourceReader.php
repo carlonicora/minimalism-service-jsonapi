@@ -88,9 +88,7 @@ class ResourceReader
                     $resourceBuilder,
                     $cache,
                     FunctionFactory::buildFromTableName(
-                        $this->services,
                         $tableName,
-                        null,
                         'loadFromId'
                     ),
                     $values,
@@ -103,9 +101,7 @@ class ResourceReader
                     $resourceBuilder,
                     $cache,
                     FunctionFactory::buildFromTableName(
-                        $this->services,
                         $tableName,
-                        null,
                         'loadByField'
                     ),
                     [$fieldName, $values[0]],

@@ -199,9 +199,7 @@ class ResourceWriter
                 $response = $this->resourceReader->readResourceObjectData(
                     $dataCache,
                     FunctionFactory::buildFromTableName(
-                        $this->services,
                         $resourceBuilder->getTableName(),
-                        null,
                         'loadFromId'
                     ),
                     [$resourceObject->id],

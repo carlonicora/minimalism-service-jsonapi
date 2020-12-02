@@ -11,6 +11,19 @@ use Exception;
 class FunctionFactory
 {
     /**
+     * @var ServicesFactory
+     */
+    private static ServicesFactory $services;
+
+    /**
+     * @param ServicesFactory $services
+     */
+    public static function initialise(ServicesFactory $services): void
+    {
+        self::$services = $services;
+    }
+
+    /**
      * @param string $functionName
      * @param array $parameters
      * @return FunctionFacade
@@ -42,31 +55,24 @@ class FunctionFactory
     }
 
     /**
-     * @param ServicesFactory $services
      * @param string $tableClassName
-     * @param string|null $targetResourceBuilderClass
      * @param string $functionName
      * @param array $parameters
      * @return FunctionFacade
      * @throws Exception
      */
     public static function buildFromTableName(
-        ServicesFactory $services,
         string $tableClassName,
-        ?string $targetResourceBuilderClass,
         string $functionName,
         array $parameters=[]
     ): FunctionFacade
     {
         /** @var MySQL $mysql */
-        $mysql = $services->service(MySQL::class);
+        $mysql = self::$services->service(MySQL::class);
 
         $tableInterface = $mysql->create($tableClassName);
 
-        $response = self::buildFromTableInterface($tableInterface, $functionName, $parameters);
-        $response->setTargetResourceBuilderClass($targetResourceBuilderClass);
-
-        return $response;
+        return self::buildFromTableInterface($tableInterface, $functionName, $parameters);
     }
 
     /**

@@ -38,6 +38,17 @@ class FunctionFacade
     }
 
     /**
+     * @param string|null $targetResourceBuilderClass
+     * @return FunctionFacade
+     */
+    public function withTargetResourceBuilderClass(?string $targetResourceBuilderClass): FunctionFacade
+    {
+        $this->targetResourceBuilderClass = $targetResourceBuilderClass;
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getFunction(): array
@@ -111,14 +122,6 @@ class FunctionFacade
     public function getTargetResourceBuilderClass(): ?string
     {
         return $this->targetResourceBuilderClass;
-    }
-
-    /**
-     * @param string|null $targetResourceBuilderClass
-     */
-    public function setTargetResourceBuilderClass(?string $targetResourceBuilderClass): void
-    {
-        $this->targetResourceBuilderClass = $targetResourceBuilderClass;
     }
 
     /**

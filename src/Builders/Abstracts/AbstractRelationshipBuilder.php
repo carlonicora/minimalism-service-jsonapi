@@ -126,11 +126,11 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     ): RelationshipBuilderInterface
     {
         $this->function = FunctionFactory::buildFromTableName(
-            $this->services,
             $tableClassName,
-            $resourceBuilderClass,
             $tableFunction,
             $parameters
+        )->withTargetResourceBuilderClass(
+            $resourceBuilderClass
         );
 
         return $this;

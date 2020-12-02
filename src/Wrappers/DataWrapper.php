@@ -41,9 +41,7 @@ class DataWrapper
 
         $function = $dataReadersFactory->create(
             FunctionFactory::buildFromTableName(
-                $this->services,
                 $this->function->getTableName(),
-                null,
                 $this->function->getFunctionName()),
             $this->parameters
         );
