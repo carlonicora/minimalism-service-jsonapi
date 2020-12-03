@@ -113,6 +113,7 @@ class JsonDataMapper extends AbstractService
 
     /**
      * @param string $builderName
+     * @param CacheFactoryInterface|null $cache
      * @param array $dataList
      * @param int $loadRelationshipsLevel
      * @param array $externalParameters
@@ -121,13 +122,14 @@ class JsonDataMapper extends AbstractService
      */
     public function generateResourceObjectByData(
         string $builderName,
+        ?CacheFactoryInterface $cache,
         array $dataList,
         int $loadRelationshipsLevel=0,
         array $externalParameters=[]
     ): array
     {
         $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByData($builderName, $dataList, $loadRelationshipsLevel, $externalParameters);
+        return $resourceReader->generateResourceObjectByData($builderName, $cache, $dataList, $loadRelationshipsLevel, $externalParameters);
     }
 
     /**

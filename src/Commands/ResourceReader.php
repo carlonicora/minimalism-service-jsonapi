@@ -170,6 +170,7 @@ class ResourceReader
 
     /**
      * @param string $builderName
+     * @param CacheFactoryInterface|null $cache
      * @param array $dataList
      * @param int $loadRelationshipsLevel
      * @param array $parameters
@@ -179,17 +180,34 @@ class ResourceReader
      */
     public function generateResourceObjectByData(
         string $builderName,
+        ?CacheFactoryInterface $cache,
         array $dataList,
         int $loadRelationshipsLevel=0,
         array $parameters=[],
         array $position=[]
     ): array
     {
-        $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
-        $response = [];
+        $response = null;
 
-        foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
+        if ($cache !== null && ($dataCache = $cache->generateCache())){
+            try {
+                /** @noinspection UnserializeExploitsInspection */
+                $response = unserialize($this->cacher->read($dataCache));
+            } catch (CacheNotFoundException $e) {
+                $response = null;
+            }
+        }
+
+        if ($response === null) {
+            $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
+
+            foreach ($dataList as $data) {
+                $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
+            }
+
+            if ($cache !== null && ($dataCache = $cache->generateCache())){
+                $this->cacher->create($dataCache, serialize($response));
+            }
         }
 
         return $response;
