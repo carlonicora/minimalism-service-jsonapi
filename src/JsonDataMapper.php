@@ -33,6 +33,12 @@ class JsonDataMapper extends AbstractService
     /** @var CacheFacade  */
     private CacheFacade $cache;
 
+    /** @var ResourceReader  */
+    private ResourceReader $resourceReader;
+
+    /** @var ResourceWriter  */
+    private ResourceWriter $resourceWriter;
+
     /**
      * abstractApiCaller constructor.
      * @param ServiceConfigurationsInterface $configData
@@ -46,6 +52,8 @@ class JsonDataMapper extends AbstractService
         $this->configData = $configData;
 
         $this->cache = new CacheFacade();
+        $this->resourceReader = new ResourceReader($this->services);
+        $this->resourceWriter = new ResourceWriter($this->services);
     }
 
     /**
@@ -79,8 +87,13 @@ class JsonDataMapper extends AbstractService
      */
     public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
     {
-        $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByFieldValue($builderName, $cache, $attribute, [$value], $loadRelationshipsLevel);
+        return $this->resourceReader->generateResourceObjectByFieldValue(
+            $builderName,
+            $cache,
+            $attribute,
+            [$value],
+            $loadRelationshipsLevel
+        );
     }
 
     /**
@@ -101,8 +114,7 @@ class JsonDataMapper extends AbstractService
         int $loadRelationshipsLevel=0
     ) : array
     {
-        $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectsByFunction(
+        return $this->resourceReader->generateResourceObjectsByFunction(
             $builderName,
             $cache,
             $function,
@@ -128,8 +140,37 @@ class JsonDataMapper extends AbstractService
         array $externalParameters=[]
     ): array
     {
-        $resourceReader = new ResourceReader($this->services);
-        return $resourceReader->generateResourceObjectByData($builderName, $cache, $dataList, $loadRelationshipsLevel, $externalParameters);
+        return $this->resourceReader->generateResourceObjectByData(
+            $builderName,
+            $cache,
+            $dataList,
+            $loadRelationshipsLevel,
+            $externalParameters
+        );
+    }
+
+    /**
+     * @param CacheFactoryInterface|null $cacheFactory
+     * @param FunctionFacade $function
+     * @param array $parameters
+     * @param bool $iSingleRead
+     * @return array
+     * @throws DbRecordNotFoundException
+     * @throws Exception
+     */
+    public function readData(
+        ?CacheFactoryInterface $cacheFactory,
+        FunctionFacade $function,
+        array $parameters,
+        bool $iSingleRead
+    ): array
+    {
+        return $this->resourceReader->readResourceObjectData(
+            $cacheFactory,
+            $function,
+            $parameters,
+            $iSingleRead
+        );
     }
 
     /**
@@ -141,9 +182,23 @@ class JsonDataMapper extends AbstractService
      */
     public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
     {
-        $resourceWriter = new ResourceWriter($this->services);
-        $resourceWriter->writeDocument($data, $cache, $resourceBuilderName, $updateRelationships);
+        $this->resourceWriter->writeDocument(
+            $data,
+            $cache,
+            $resourceBuilderName,
+            $updateRelationships
+        );
     }
+
+    /*
+    public function writeData(
+        ?CacheFactoryInterface $cacheFactory,
+        FunctionFacade $function,
+        array $parameters): array
+    {
+        return $this->resourceWriter->writeData();
+    }
+    */
 
     /**
      * @param EncrypterInterface|null $defaultEncrypter
