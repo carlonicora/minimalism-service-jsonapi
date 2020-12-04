@@ -33,11 +33,11 @@ class JsonDataMapper extends AbstractService
     /** @var CacheFacade  */
     private CacheFacade $cache;
 
-    /** @var ResourceReader  */
-    private ResourceReader $resourceReader;
+    /** @var ResourceReader|null  */
+    private ?ResourceReader $resourceReader=null;
 
-    /** @var ResourceWriter  */
-    private ResourceWriter $resourceWriter;
+    /** @var ResourceWriter|null  */
+    private ?ResourceWriter $resourceWriter=null;
 
     /**
      * abstractApiCaller constructor.
@@ -52,8 +52,6 @@ class JsonDataMapper extends AbstractService
         $this->configData = $configData;
 
         $this->cache = new CacheFacade();
-        $this->resourceReader = new ResourceReader($this->services);
-        $this->resourceWriter = new ResourceWriter($this->services);
     }
 
     /**
@@ -73,6 +71,9 @@ class JsonDataMapper extends AbstractService
         parent::initialiseStatics($services);
         FunctionFactory::initialise($services);
         AbstractResourceBuilder::initialise($services);
+
+        $this->resourceReader = new ResourceReader($this->services);
+        $this->resourceWriter = new ResourceWriter($this->services);
     }
 
     /**
