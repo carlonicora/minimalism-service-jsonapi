@@ -89,11 +89,12 @@ class ResourceReader
                     $cache,
                     FunctionFactory::buildFromTableName(
                         $tableName,
-                        'loadFromId'
+                        'loadFromId',
+                        $values,
+                        true
                     ),
-                    $values,
-                    $loadRelationshipsLevel,
-                    true
+                    $parameters,
+                    $loadRelationshipsLevel
                 );
             } else {
                 $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
@@ -102,9 +103,10 @@ class ResourceReader
                     $cache,
                     FunctionFactory::buildFromTableName(
                         $tableName,
-                        'loadByField'
+                        'loadByField',
+                        [$fieldName => $values[0]]
                     ),
-                    [$fieldName, $values[0]],
+                    $parameters,
                     $loadRelationshipsLevel
                 );
             }
@@ -157,7 +159,13 @@ class ResourceReader
                 $response = $callable(...$values);
             } else {
                 $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
-                $response = $this->generateResourceObject($resourceBuilder, $cache, $function, $parameters, $loadRelationshipsLevel, false, $position);
+                $response = $this->generateResourceObject(
+                    $resourceBuilder,
+                    $cache,
+                    $function,
+                    $parameters,
+                    $loadRelationshipsLevel,
+                    $position);
             }
 
             if ($cache !== null && ($dataCache = $cache->generateCache())){
@@ -219,7 +227,6 @@ class ResourceReader
      * @param FunctionFacade $function
      * @param array $parameters
      * @param int $loadRelationshipsLevel
-     * @param bool $iSingleRead
      * @param array $position
      * @return array
      * @throws DbRecordNotFoundException
@@ -230,7 +237,6 @@ class ResourceReader
         FunctionFacade $function,
         array $parameters,
         int $loadRelationshipsLevel=0,
-        bool $iSingleRead=false,
         array $position=[]
     ) : array
     {
@@ -239,8 +245,7 @@ class ResourceReader
             $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
         }
 
-        $values = ParametersFacade::prepareParameters($parameters, $position, true);
-        $dataList = $this->readResourceObjectData($dataCache, $function, $values, $iSingleRead);
+        $dataList = $this->readResourceObjectData($dataCache, $function);
 
         if (!empty($dataList) && !array_key_exists(0, $dataList)){
             $dataList = [$dataList];
@@ -258,8 +263,7 @@ class ResourceReader
     /**
      * @param CacheFactoryInterface|null $cacheFactory
      * @param FunctionFacade $function
-     * @param array $parameters
-     * @param bool $iSingleRead
+     * @param array $position
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
@@ -267,8 +271,7 @@ class ResourceReader
     public function readResourceObjectData(
         ?CacheFactoryInterface $cacheFactory,
         FunctionFacade $function,
-        array $parameters,
-        bool $iSingleRead
+        array $position=[]
     ): array
     {
         $response = null;
@@ -276,23 +279,25 @@ class ResourceReader
         $readerFactory = new DataReadersFactory($this->services);
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
 
+        $parameters = ParametersFacade::prepareParameters($function->getParameters(), $position, true);
+
+        /**
         $functionParameters = [];
         foreach ($parameters as $parameterKey=>$parameterValue) {
             if (!is_array($parameterValue)){
                 $functionParameters[] = $parameterValue;
             }
-        }
+        }*/
 
         /** @var DataReaderInterface $reader */
         $reader = $readerFactory->create(
             $function,
-            $functionParameters,
+            $parameters,
             $cacheFactory
         );
 
-        if ($iSingleRead) {
-            $response = [];
-            $response[] = $reader->getSingle();
+        if ($function->isSingleRead()) {
+            $response = [$reader->getSingle()];
         } else {
             $response = $reader->getList();
         }

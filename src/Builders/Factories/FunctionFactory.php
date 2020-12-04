@@ -26,29 +26,33 @@ class FunctionFactory
     /**
      * @param string $functionName
      * @param array $parameters
+     * @param bool $isSingleRead
      * @return FunctionFacade
      */
     private static function initialiseFunctionFacade(
         string $functionName,
-        array $parameters=[]
+        array $parameters=[],
+        bool $isSingleRead=false
     ): FunctionFacade
     {
-        return new FunctionFacade($functionName, $parameters);
+        return new FunctionFacade($functionName, $parameters, $isSingleRead);
     }
 
     /**
      * @param TableInterface $tableInterface
      * @param string $functionName
      * @param array $parameters
+     * @param bool $isSingleRead
      * @return FunctionFacade
      */
     public static function buildFromTableInterface(
         TableInterface $tableInterface,
         string $functionName,
-        array $parameters=[]
+        array $parameters=[],
+        bool $isSingleRead=false
     ): FunctionFacade
     {
-        $response = self::initialiseFunctionFacade($functionName, $parameters);
+        $response = self::initialiseFunctionFacade($functionName, $parameters, $isSingleRead);
         $response->setTableInterface($tableInterface);
 
         return $response;
@@ -58,13 +62,15 @@ class FunctionFactory
      * @param string $tableClassName
      * @param string $functionName
      * @param array $parameters
+     * @param bool $isSingleRead
      * @return FunctionFacade
      * @throws Exception
      */
     public static function buildFromTableName(
         string $tableClassName,
         string $functionName,
-        array $parameters=[]
+        array $parameters=[],
+        bool $isSingleRead=false
     ): FunctionFacade
     {
         /** @var MySQL $mysql */
@@ -72,7 +78,7 @@ class FunctionFactory
 
         $tableInterface = $mysql->create($tableClassName);
 
-        return self::buildFromTableInterface($tableInterface, $functionName, $parameters);
+        return self::buildFromTableInterface($tableInterface, $functionName, $parameters, $isSingleRead);
     }
 
     /**

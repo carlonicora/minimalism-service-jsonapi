@@ -152,24 +152,18 @@ class JsonDataMapper extends AbstractService
     /**
      * @param CacheFactoryInterface|null $cacheFactory
      * @param FunctionFacade $function
-     * @param array $parameters
-     * @param bool $iSingleRead
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function readData(
         ?CacheFactoryInterface $cacheFactory,
-        FunctionFacade $function,
-        array $parameters,
-        bool $iSingleRead
+        FunctionFacade $function
     ): array
     {
         return $this->resourceReader->readResourceObjectData(
             $cacheFactory,
-            $function,
-            $parameters,
-            $iSingleRead
+            $function
         );
     }
 

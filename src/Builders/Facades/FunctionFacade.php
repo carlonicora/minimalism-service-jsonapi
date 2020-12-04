@@ -18,6 +18,9 @@ class FunctionFacade
     /** @var string  */
     private string $functionName;
 
+    /** @var bool  */
+    private bool $isSingleRead;
+
     /**
      * @var array
      */
@@ -27,14 +30,17 @@ class FunctionFacade
      * FunctionFacade constructor.
      * @param string $functionName
      * @param array $parameters
+     * @param bool $isSingleRead
      */
     public function __construct(
         string $functionName,
-        array $parameters=[]
+        array $parameters=[],
+        bool $isSingleRead=false
     )
     {
         $this->functionName = $functionName;
         $this->parameters = $parameters;
+        $this->isSingleRead = $isSingleRead;
     }
 
     /**
@@ -54,6 +60,14 @@ class FunctionFacade
     public function getFunction(): array
     {
         return [$this->tableInterface, $this->functionName];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSingleRead(): bool
+    {
+        return $this->isSingleRead;
     }
 
     /**

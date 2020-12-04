@@ -200,10 +200,10 @@ class ResourceWriter
                     $dataCache,
                     FunctionFactory::buildFromTableName(
                         $resourceBuilder->getTableName(),
-                        'loadFromId'
-                    ),
-                    [$resourceObject->id],
-                    true
+                        'loadFromId',
+                        [$resourceObject->id],
+                        true
+                    )
                 )[0];
             } catch (DbRecordNotFoundException $e) {
                 $response = [];
