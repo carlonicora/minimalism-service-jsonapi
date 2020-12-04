@@ -15,16 +15,13 @@ class ParametersFacade
         bool $limitToDataField=false
     ): array
     {
-        $response = [];
-
         if ($position === []){
+            $selectedParameters = [];
             foreach($parameters as $parameterKey=>$parameter){
-                if (!is_string($parameterKey)){
-                    $response[] = $parameter;
-                }
+                $selectedParameters[] = $parameter;
             }
 
-            return $response;
+            return self::prepareResponse($selectedParameters, $limitToDataField);
         }
 
         $selectedParameters = $parameters;
@@ -36,8 +33,19 @@ class ParametersFacade
             }
         }
 
+        return self::prepareResponse($selectedParameters, $limitToDataField);
+    }
+
+    /**
+     * @param array $selectedParameters
+     * @param bool $limitToDataField
+     * @return array
+     */
+    private static function prepareResponse(array $selectedParameters, bool $limitToDataField): array
+    {
+        $response = [];
         foreach($selectedParameters as $parameterKey=>$parameter){
-            if (!$limitToDataField || strpos($parameterKey, '/')){
+            if (!$limitToDataField || (!is_array($parameterKey) && !strpos($parameterKey, '/'))){
                 $response[] = $parameter;
             }
         }
