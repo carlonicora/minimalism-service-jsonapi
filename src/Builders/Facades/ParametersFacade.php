@@ -1,14 +1,19 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts;
+namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 class ParametersFacade
 {
     /**
      * @param array $parameters
      * @param array $position
+     * @param bool $limitToDataField
      * @return array
      */
-    public static function prepareParameters(array $parameters, array $position): array
+    public static function prepareParameters(
+        array $parameters,
+        array $position,
+        bool $limitToDataField=false
+    ): array
     {
         $response = [];
 
@@ -32,7 +37,7 @@ class ParametersFacade
         }
 
         foreach($selectedParameters as $parameterKey=>$parameter){
-            if (!is_array($parameter)){
+            if (!$limitToDataField || !is_array($parameter)){
                 $response[] = $parameter;
             }
         }

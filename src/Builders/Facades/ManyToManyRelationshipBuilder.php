@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractRelationshipBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
@@ -46,6 +47,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
 
     /**
      * @param array $data
+     * @param CacheFactoryInterface|null $cache
      * @param int $loadRelationshipLevel
      * @return array|ResourceObject[]|null
      * @throws DbRecordNotFoundException
@@ -53,12 +55,13 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
      */
     protected function loadSpecialisedResources(
         array $data,
+        ?CacheFactoryInterface $cache,
         int $loadRelationshipLevel=0
     ): ?array
     {
         return $this->mapper->generateResourceObjectsByFunction(
             $this->resourceBuilderName,
-            null,
+            $cache,
             FunctionFactory::buildFromTableName(
                 $this->resourceBuilder->getTableName(),
                 'getFirstLevelJoin'

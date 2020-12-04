@@ -6,7 +6,7 @@ use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\ParametersFacade;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -239,7 +239,7 @@ class ResourceReader
             $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
         }
 
-        $values = ParametersFacade::prepareParameters($parameters, $position);
+        $values = ParametersFacade::prepareParameters($parameters, $position, true);
         $dataList = $this->readResourceObjectData($dataCache, $function, $values, $iSingleRead);
 
         if (!empty($dataList) && !array_key_exists(0, $dataList)){

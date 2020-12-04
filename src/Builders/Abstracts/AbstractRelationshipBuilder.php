@@ -3,9 +3,12 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\AttributeBuilder;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheBuilderFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
@@ -49,6 +52,9 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
     /** @var FunctionFacade|null  */
     protected ?FunctionFacade $function=null;
+
+    /** @var CacheBuilderFacade|null  */
+    protected ?CacheBuilderFacade $cacheBuilder=null;
 
     /** @var bool  */
     private bool $loadChildren=true;
@@ -147,6 +153,19 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     }
 
     /**
+     * @param CacheBuilderFacade $cacheBuilder
+     * @return RelationshipBuilderInterface
+     */
+    public function withCache(
+        CacheBuilderFacade $cacheBuilder
+    ): RelationshipBuilderInterface
+    {
+        $this->cacheBuilder = $cacheBuilder;
+
+        return $this;
+    }
+
+    /**
      * @param LinkBuilder $link
      * @return RelationshipBuilderInterface
      */
@@ -225,6 +244,41 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
     /**
      * @param array $data
+     * @param array $parameters
+     * @return CacheFactoryInterface|null
+     */
+    protected function getCache(array $data, array $parameters): ?CacheFactoryInterface
+    {
+        if ($this->cacheBuilder === null){
+            return null;
+        }
+
+        $cacheBuilderParametersDefinition = $this->cacheBuilder->getParameters();
+
+        $cacheParameters = [];
+
+        foreach ($cacheBuilderParametersDefinition ?? [] as $parameterDefinition){
+            if (
+                array_key_exists($this->cacheBuilder->getType(), $parameters)
+                &&
+                array_key_exists($parameterDefinition, $parameters[$this->cacheBuilder->getType()]))
+            {
+                $cacheParameters[] = $parameters[$this->cacheBuilder->getType()][$parameterDefinition];
+            } elseif (array_key_exists($parameterDefinition, $data)){
+                $cacheParameters[] = $data[$parameterDefinition];
+            } else {
+                $cacheParameters[] = null;
+            }
+        }
+
+        return $this->cacheBuilder->generateCacheFactoryInterface(
+            $this->services,
+            $cacheParameters
+        );
+    }
+
+    /**
+     * @param array $data
      * @param int $loadRelationshipLevel
      * @param array $externalParameters
      * @param array $position
@@ -243,6 +297,8 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $loadRelationshipLevel = 0;
         }
 
+        $cache = $this->getCache($data, $externalParameters);
+
         if ($this->function !== null){
             $values = [];
 
@@ -258,12 +314,14 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
             $additionalValues = ParametersFacade::prepareParameters($externalParameters, $position);
             foreach ($additionalValues ?? [] as $additionalValue){
-                $values[] = $additionalValue;
+                if (!is_array($additionalValue)) {
+                    $values[] = $additionalValue;
+                }
             }
 
             return $this->mapper->generateResourceObjectsByFunction(
                 $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
-                null,
+                $cache,
                 $this->function,
                 $values,
                 $loadRelationshipLevel
@@ -272,17 +330,20 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
         return $this->loadSpecialisedResources(
             $data,
+            $cache,
             $loadRelationshipLevel
         );
     }
 
     /**
      * @param array $data
+     * @param CacheFactoryInterface|null $cache
      * @param int $loadRelationshipLevel
      * @return array|ResourceObject[]|null
      */
     abstract protected function loadSpecialisedResources(
         array $data,
+        ?CacheFactoryInterface $cache,
         int $loadRelationshipLevel=0
     ): ?array;
 
