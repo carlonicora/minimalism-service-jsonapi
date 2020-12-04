@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-json-data-mapper",
   "description": "JsonDataMapper translates {json-api} document to database structures and vice versa",
-  "version": "2.0.0-beta4",
+  "version": "2.0.0-beta5",
   "homepage": "https://carlonicora.com",
   "time": "2020-05-30",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "php": "^7.4",
     "ext-json": "*",
     "carlonicora/jsonapi": "~2.0",
-    "carlonicora/minimalism": "~11.0",
+    "carlonicora/minimalism": "~11.1",
     "carlonicora/minimalism-service-mysql": "~3.0",
     "carlonicora/minimalism-service-cacher": "~1.2"
   },

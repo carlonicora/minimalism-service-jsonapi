@@ -276,10 +276,17 @@ class ResourceReader
         $readerFactory = new DataReadersFactory($this->services);
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
 
+        $functionParameters = [];
+        foreach ($parameters as $parameterKey=>$parameterValue) {
+            if (!is_array($parameterValue)){
+                $functionParameters[] = $parameterValue;
+            }
+        }
+
         /** @var DataReaderInterface $reader */
         $reader = $readerFactory->create(
             $function,
-            $parameters,
+            $functionParameters,
             $cacheFactory
         );
 
@@ -289,7 +296,6 @@ class ResourceReader
         } else {
             $response = $reader->getList();
         }
-
 
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $function->getTableName() . ' - ' . $function->getFunctionName() . ' )'));
 

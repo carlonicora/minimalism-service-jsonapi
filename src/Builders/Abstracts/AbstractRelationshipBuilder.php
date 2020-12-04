@@ -56,6 +56,9 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     /** @var CacheBuilderFacade|null  */
     protected ?CacheBuilderFacade $cacheBuilder=null;
 
+    /** @var array|null  */
+    protected ?array $cacheBuilderParameters=null;
+
     /** @var bool  */
     private bool $loadChildren=true;
 
@@ -153,14 +156,17 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     }
 
     /**
-     * @param CacheBuilderFacade $cacheBuilder
+     * @param string $cacheBuilder
+     * @param array|null $parameters
      * @return RelationshipBuilderInterface
      */
     public function withCache(
-        CacheBuilderFacade $cacheBuilder
+        string $cacheBuilder,
+        array $parameters=null
     ): RelationshipBuilderInterface
     {
-        $this->cacheBuilder = $cacheBuilder;
+        $this->cacheBuilder = new CacheBuilderFacade($cacheBuilder);
+        $this->cacheBuilderParameters = $parameters;
 
         return $this;
     }
@@ -258,16 +264,27 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         $cacheParameters = [];
 
         foreach ($cacheBuilderParametersDefinition ?? [] as $parameterDefinition){
-            if (
-                array_key_exists($this->cacheBuilder->getType(), $parameters)
-                &&
-                array_key_exists($parameterDefinition, $parameters[$this->cacheBuilder->getType()]))
-            {
-                $cacheParameters[] = $parameters[$this->cacheBuilder->getType()][$parameterDefinition];
-            } elseif (array_key_exists($parameterDefinition, $data)){
-                $cacheParameters[] = $data[$parameterDefinition];
-            } else {
-                $cacheParameters[] = null;
+            $found = false;
+
+            /** @var AttributeBuilderInterface $cacheBuilderParameter */
+            foreach ($this->cacheBuilderParameters as $cacheBuilderParameter){
+                try {
+                    $type = get_class($cacheBuilderParameter->getResource());
+                    if (array_key_exists($type, $parameters) && array_key_exists($parameterDefinition, $parameters[$type])){
+                        $cacheParameters[] = $parameters[$type][$parameterDefinition];
+                        $found = true;
+                        break;
+                    }
+                } catch (Exception $e) {
+                }
+            }
+
+            if (!$found) {
+                if (array_key_exists($parameterDefinition, $data)) {
+                    $cacheParameters[] = $data[$parameterDefinition];
+                } else {
+                    $cacheParameters[] = null;
+                }
             }
         }
 
@@ -313,8 +330,8 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             }
 
             $additionalValues = ParametersFacade::prepareParameters($externalParameters, $position);
-            foreach ($additionalValues ?? [] as $additionalValue){
-                if (!is_array($additionalValue)) {
+            foreach ($additionalValues ?? [] as $additionalValueKey=>$additionalValue){
+                if (!strpos($additionalValueKey, '/')){
                     $values[] = $additionalValue;
                 }
             }

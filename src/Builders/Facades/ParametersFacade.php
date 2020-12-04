@@ -37,7 +37,7 @@ class ParametersFacade
         }
 
         foreach($selectedParameters as $parameterKey=>$parameter){
-            if (!$limitToDataField || !is_array($parameter)){
+            if (!$limitToDataField || strpos($parameterKey, '/')){
                 $response[] = $parameter;
             }
         }

@@ -98,16 +98,18 @@ class DataReaderFacade implements DataReaderInterface
                 if ($response !== null) {
                     $this->cacher->createArray($cache, $response);
 
-                    foreach ($response ?? [] as $record) {
-                        $table = $this->function->getTable();
-                        $primaryKey = $table->getPrimaryKey();
+                    if (array_key_exists(0, $response)) {
+                        foreach ($response ?? [] as $record) {
+                            $table = $this->function->getTable();
+                            $primaryKey = $table->getPrimaryKey();
 
-                        if ($primaryKey !== null && count($primaryKey) === 1) {
-                            $recordId = array_keys($primaryKey)[0];
-                            $childCacheParameters = [$record[$recordId]];
+                            if ($primaryKey !== null && count($primaryKey) === 1) {
+                                $recordId = array_keys($primaryKey)[0];
+                                $childCacheParameters = [$record[$recordId]];
 
-                            if (($subCache = $this->dataCache->generateGranularCache($childCacheParameters)) !== null) {
-                                $this->cacher->createArray($subCache, $record);
+                                if (($subCache = $this->dataCache->generateGranularCache($childCacheParameters)) !== null) {
+                                    $this->cacher->createArray($subCache, $record);
+                                }
                             }
                         }
                     }
