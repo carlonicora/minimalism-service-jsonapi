@@ -98,4 +98,16 @@ class FunctionFactory
 
         return $response;
     }
+
+    public static function buildFromLoaderName(
+        string $loaderClassName,
+        string $functionName,
+        array $parameters=[]
+    ): FunctionFacade
+    {
+        $response = self::initialiseFunctionFacade($functionName, $parameters);
+        $response->setLoaderClassName($loaderClassName);
+
+        return $response;
+    }
 }

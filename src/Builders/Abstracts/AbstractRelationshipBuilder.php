@@ -3,11 +3,12 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\AttributeBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheBuilderFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\OneToOneRelationshipBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -16,9 +17,11 @@ use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\Relations
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\ReadFunctionTrait;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataLoaderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
+use ReflectionClass;
 use RuntimeException;
 
 abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterface
@@ -31,6 +34,9 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
     /** @var MySQL $mysql */
     protected MySQL $mysql;
+
+    /** @var Cacher  */
+    protected Cacher $cacher;
 
     /** @var int  */
     protected int $type;
@@ -53,11 +59,11 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     /** @var FunctionFacade|null  */
     protected ?FunctionFacade $function=null;
 
-    /** @var CacheBuilderFacade|null  */
-    protected ?CacheBuilderFacade $cacheBuilder=null;
+    /** @var CacheBuilder|null  */
+    protected ?CacheBuilder $cacheBuilder=null;
 
-    /** @var array|null  */
-    protected ?array $cacheBuilderParameters=null;
+    /** @var JsonDataMapper  */
+    protected JsonDataMapper $mapper;
 
     /** @var bool  */
     private bool $loadChildren=true;
@@ -79,6 +85,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         $this->services = $services;
         $this->mysql = $services->service(MySQL::class);
         $this->mapper = $services->service(JsonDataMapper::class);
+        $this->cacher = $services->service(Cacher::class);
 
         $this->name = $name;
     }
@@ -137,7 +144,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    public function withFunction(
+    public function withTableFunction(
         string $tableClassName,
         ?string $resourceBuilderClass,
         string $tableFunction,
@@ -156,17 +163,39 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     }
 
     /**
-     * @param string $cacheBuilder
-     * @param array|null $parameters
+     * @param string $loaderClassName
+     * @param string|null $resourceBuilderClass
+     * @param string $loaderFunction
+     * @param array $parameters
+     * @return RelationshipBuilderInterface
+     */
+    public function withLoaderFunction(
+        string $loaderClassName,
+        ?string $resourceBuilderClass,
+        string $loaderFunction,
+        array $parameters
+    ): RelationshipBuilderInterface
+    {
+        $this->function = FunctionFactory::buildFromLoaderName(
+            $loaderClassName,
+            $loaderFunction,
+            $parameters
+        )->withTargetResourceBuilderClass(
+            $resourceBuilderClass
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param CacheBuilder $cacheBuilder
      * @return RelationshipBuilderInterface
      */
     public function withCache(
-        string $cacheBuilder,
-        array $parameters=null
+        CacheBuilder $cacheBuilder
     ): RelationshipBuilderInterface
     {
-        $this->cacheBuilder = new CacheBuilderFacade($cacheBuilder);
-        $this->cacheBuilderParameters = $parameters;
+        $this->cacheBuilder = $cacheBuilder;
 
         return $this;
     }
@@ -251,61 +280,52 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     /**
      * @param array $data
      * @param array $parameters
-     * @return CacheFactoryInterface|null
+     * @return CacheBuilder|null
      */
-    protected function getCache(array $data, array $parameters): ?CacheFactoryInterface
+    protected function getCache(array $data, array $parameters): ?CacheBuilder
     {
         if ($this->cacheBuilder === null){
             return null;
         }
 
-        $cacheBuilderParametersDefinition = $this->cacheBuilder->getParameters();
-
-        $cacheParameters = [];
-
-        foreach ($cacheBuilderParametersDefinition ?? [] as $parameterDefinition){
-            $found = false;
-
-            /** @var AttributeBuilderInterface $cacheBuilderParameter */
-            foreach ($this->cacheBuilderParameters as $cacheBuilderParameter){
-                try {
-                    $type = get_class($cacheBuilderParameter->getResource());
-                    if (array_key_exists($type, $parameters) && array_key_exists($parameterDefinition, $parameters[$type])){
-                        $cacheParameters[] = $parameters[$type][$parameterDefinition];
-                        $found = true;
-                        break;
-                    }
-                } catch (Exception $e) {
-                }
-            }
-
-            if (!$found) {
-                if (array_key_exists($parameterDefinition, $data)) {
-                    $cacheParameters[] = $data[$parameterDefinition];
-                } else {
-                    $cacheParameters[] = null;
-                }
-            }
+        $identifier = $this->cacheBuilder->getIdentifier();
+        if (!is_array($identifier)){
+            return $this->cacheBuilder;
         }
 
-        return $this->cacheBuilder->generateCacheFactoryInterface(
-            $this->services,
-            $cacheParameters
-        );
+        if (!strpos($identifier[array_key_first($identifier)], ':')){
+            if (array_key_exists(array_key_first($identifier), $data)){
+                $this->cacheBuilder->setIdentifier($data[array_key_first($identifier)]);
+                return $this->cacheBuilder;
+            }
+            return null;
+        }
+
+        if (($type = get_class($identifier)) === false){
+            return null;
+        }
+
+        if (array_key_exists($type, $parameters) && array_key_exists(array_key_first($identifier), $parameters[$type])){
+            $this->cacheBuilder->setIdentifier($parameters[$type][array_key_first($identifier)]);
+            return $this->cacheBuilder;
+        }
+
+        return null;
     }
 
     /**
      * @param array $data
      * @param int $loadRelationshipLevel
-     * @param array $externalParameters
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array|ResourceObject[]|null
+     * @throws Exception
      */
     final public function loadResources(
         array $data,
         int $loadRelationshipLevel=0,
-        array $externalParameters=[],
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ?array
     {
         if ($this->loadChildren && $loadRelationshipLevel > 0) {
@@ -314,7 +334,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $loadRelationshipLevel = 0;
         }
 
-        $cache = $this->getCache($data, $externalParameters);
+        $cache = $this->getCache($data, $relationshipParameters);
 
         if ($this->function !== null){
             $values = [];
@@ -329,39 +349,69 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                 }
             }
 
-            $additionalValues = ParametersFacade::prepareParameters($externalParameters, $position);
-            foreach ($additionalValues ?? [] as $additionalValueKey=>$additionalValue){
-                if (!strpos($additionalValueKey, '/')){
-                    $values[] = $additionalValue;
-                }
+            $additionalRelationshipParameters = ParametersFacade::prepareParameters($relationshipParameters, $positionInRelationship);
+            $values = array_merge($values, $additionalRelationshipParameters);
+
+            $this->function->replaceParameters($values);
+
+            if ($this->function->getType() === FunctionFacade::TABLE) {
+                return $this->mapper->generateResourceObjectsByFunction(
+                    $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
+                    $cache,
+                    $this->function,
+                    $loadRelationshipLevel,
+                    $relationshipParameters,
+                    $positionInRelationship
+                );
             }
 
-            return $this->mapper->generateResourceObjectsByFunction(
-                $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
-                $cache,
-                $this->function,
-                $values,
-                $loadRelationshipLevel
-            );
+            if ($this->function->getType() === FunctionFacade::LOADER) {
+                $loaderClass = new ReflectionClass($this->function->getLoaderClassName());
+                /** @var DataLoaderInterface $loader */
+                $loader = $loaderClass->newInstanceArgs([$this->services]);
+
+                $loader->setCacher($cache);
+                $data = $loader->{$this->function->getFunctionName()}(...$this->function->getParameters());
+                $loader->setCacher(null);
+
+                if (get_class($this) === OneToOneRelationshipBuilder::class){
+                    $data = [$data];
+                }
+
+                return $this->mapper->generateResourceObjectByData(
+                    $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
+                    $cache,
+                    $data,
+                    $loadRelationshipLevel,
+                    $relationshipParameters,
+                    $positionInRelationship
+                );
+            }
         }
 
         return $this->loadSpecialisedResources(
             $data,
             $cache,
-            $loadRelationshipLevel
+            $loadRelationshipLevel,
+            $relationshipParameters,
+            $positionInRelationship
         );
     }
 
     /**
      * @param array $data
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param int $loadRelationshipLevel
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array|ResourceObject[]|null
      */
     abstract protected function loadSpecialisedResources(
         array $data,
-        ?CacheFactoryInterface $cache,
-        int $loadRelationshipLevel=0
+        ?CacheBuilder $cache,
+        int $loadRelationshipLevel=0,
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ?array;
 
     /**

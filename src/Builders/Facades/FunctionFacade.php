@@ -3,11 +3,19 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use RuntimeException;
 
 class FunctionFacade
 {
+    public const LOADER=1;
+    public const TABLE=2;
+    public const BUILDER=3;
+
     /** @var TableInterface|null  */
     private ?TableInterface $tableInterface=null;
+
+    /** @var string|null  */
+    private ?string $loaderClassName=null;
 
     /** @var ResourceBuilderInterface|null  */
     private ?ResourceBuilderInterface $resourceBuilder=null;
@@ -41,6 +49,19 @@ class FunctionFacade
         $this->functionName = $functionName;
         $this->parameters = $parameters;
         $this->isSingleRead = $isSingleRead;
+    }
+
+    public function getType(): int
+    {
+        if ($this->loaderClassName !== null){
+            return self::LOADER;
+        }
+
+        if ($this->resourceBuilder === null){
+            return self::BUILDER;
+        }
+
+        return self::TABLE;
     }
 
     /**
@@ -107,6 +128,26 @@ class FunctionFacade
     }
 
     /**
+     * @param string $loaderClassName
+     */
+    public function setLoaderClassName(string $loaderClassName): void
+    {
+        $this->loaderClassName = $loaderClassName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLoaderClassName(): string
+    {
+        if($this->loaderClassName === null){
+            throw new RuntimeException('');
+        }
+
+        return $this->loaderClassName;
+    }
+
+    /**
      * @return TableInterface
      */
     public function getTable(): TableInterface
@@ -152,5 +193,13 @@ class FunctionFacade
     public function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    /**
+     * @param array $parameters
+     */
+    public function replaceParameters(array $parameters): void
+    {
+        $this->parameters = $parameters;
     }
 }

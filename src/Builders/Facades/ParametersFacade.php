@@ -5,17 +5,17 @@ class ParametersFacade
 {
     /**
      * @param array $parameters
-     * @param array $position
+     * @param array $positionInRelationship
      * @param bool $limitToDataField
      * @return array
      */
     public static function prepareParameters(
         array $parameters,
-        array $position,
+        array $positionInRelationship,
         bool $limitToDataField=false
     ): array
     {
-        if ($position === []){
+        if ($positionInRelationship === []){
             $selectedParameters = [];
             foreach($parameters as $parameterKey=>$parameter){
                 $selectedParameters[] = $parameter;
@@ -24,14 +24,26 @@ class ParametersFacade
             return self::prepareResponse($selectedParameters, $limitToDataField);
         }
 
-        $selectedParameters = $parameters;
+        $baseParameters = [];
 
-        while ($position !== []){
-            $key = array_shift($position);
-            if (array_key_exists($key, $selectedParameters)){
-                $selectedParameters = $selectedParameters[$key];
+        foreach ($parameters as $parameterKey=>$parameterValue){
+            if (!is_array($parameterValue) && !strpos($parameterKey, '/')){
+                $baseParameters[$parameterKey] = $parameterValue;
             }
         }
+
+        $selectedParameters = $parameters;
+
+        while ($positionInRelationship !== []){
+            $key = array_shift($positionInRelationship);
+            if (array_key_exists($key, $selectedParameters)){
+                $selectedParameters = $selectedParameters[$key];
+            } else {
+                $selectedParameters = [];
+            }
+        }
+
+        $selectedParameters = array_merge($baseParameters, $selectedParameters);
 
         return self::prepareResponse($selectedParameters, $limitToDataField);
     }

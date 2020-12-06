@@ -6,7 +6,7 @@ use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
@@ -30,11 +30,11 @@ class JsonDataMapper extends AbstractService
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
 
-    /** @var CacheFacade  */
-    private CacheFacade $cache;
-
     /** @var ResourceReader|null  */
     private ?ResourceReader $resourceReader=null;
+
+    /** @var CacheFacade  */
+    private CacheFacade $cache;
 
     /** @var ResourceWriter|null  */
     private ?ResourceWriter $resourceWriter=null;
@@ -50,16 +50,6 @@ class JsonDataMapper extends AbstractService
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
-
-        $this->cache = new CacheFacade();
-    }
-
-    /**
-     * @return CacheFacade
-     */
-    public function getCache(): CacheFacade
-    {
-        return $this->cache;
     }
 
     /**
@@ -77,68 +67,91 @@ class JsonDataMapper extends AbstractService
     }
 
     /**
+     * @return CacheFacade
+     */
+    public function getCache(): CacheFacade
+    {
+        return $this->cache;
+    }
+
+    /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param AttributeBuilderInterface $attribute
      * @param $value
      * @param int $loadRelationshipsLevel
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
-     * @throws Exception
      */
-    public function generateResourceObjectByFieldValue(string $builderName, ?CacheFactoryInterface $cache, AttributeBuilderInterface $attribute, $value, int $loadRelationshipsLevel=0) : array
+    public function generateResourceObjectByFieldValue(
+        string $builderName,
+        ?CacheBuilder $cache,
+        AttributeBuilderInterface $attribute,
+        $value,
+        int $loadRelationshipsLevel=0,
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
+    ) : array
     {
         return $this->resourceReader->generateResourceObjectByFieldValue(
             $builderName,
             $cache,
             $attribute,
             [$value],
-            $loadRelationshipsLevel
+            $loadRelationshipsLevel,
+            $relationshipParameters,
+            $positionInRelationship
         );
     }
 
     /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param FunctionFacade $function
-     * @param array $parameters
      * @param int $loadRelationshipsLevel
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
-     * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cache,
         FunctionFacade $function,
-        array $parameters=[],
-        int $loadRelationshipsLevel=0
+        int $loadRelationshipsLevel=0,
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ) : array
     {
         return $this->resourceReader->generateResourceObjectsByFunction(
             $builderName,
             $cache,
             $function,
-            $parameters,
-            $loadRelationshipsLevel
+            $loadRelationshipsLevel,
+            $relationshipParameters,
+            $positionInRelationship
         );
     }
 
     /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param array $dataList
      * @param int $loadRelationshipsLevel
-     * @param array $externalParameters
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws Exception
      */
     public function generateResourceObjectByData(
         string $builderName,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cache,
         array $dataList,
         int $loadRelationshipsLevel=0,
-        array $externalParameters=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): array
     {
         return $this->resourceReader->generateResourceObjectByData(
@@ -146,19 +159,20 @@ class JsonDataMapper extends AbstractService
             $cache,
             $dataList,
             $loadRelationshipsLevel,
-            $externalParameters
+            $relationshipParameters,
+            $positionInRelationship
         );
     }
 
     /**
-     * @param CacheFactoryInterface|null $cacheFactory
+     * @param CacheBuilder|null $cacheFactory
      * @param FunctionFacade $function
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function readData(
-        ?CacheFactoryInterface $cacheFactory,
+        ?CacheBuilder $cacheFactory,
         FunctionFacade $function
     ): array
     {
@@ -170,12 +184,12 @@ class JsonDataMapper extends AbstractService
 
     /**
      * @param Document $data
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param string $resourceBuilderName
      * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
+    public function writeDocument(Document $data, ?CacheBuilder $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
     {
         $this->resourceWriter->writeDocument(
             $data,
@@ -184,16 +198,6 @@ class JsonDataMapper extends AbstractService
             $updateRelationships
         );
     }
-
-    /*
-    public function writeData(
-        ?CacheFactoryInterface $cacheFactory,
-        FunctionFacade $function,
-        array $parameters): array
-    {
-        return $this->resourceWriter->writeData();
-    }
-    */
 
     /**
      * @param EncrypterInterface|null $defaultEncrypter

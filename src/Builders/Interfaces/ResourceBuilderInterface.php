@@ -61,15 +61,15 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
 
     /**
      * @param array $data
-     * @param array $externalParameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return ResourceObject
      */
     public function buildResourceObject(
         array $data,
-        array $externalParameters=[],
         int $loadRelationshipsLevel = 0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ResourceObject;
 }

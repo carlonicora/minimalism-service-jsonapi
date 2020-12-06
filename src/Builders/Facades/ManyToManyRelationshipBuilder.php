@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractRelationshipBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
@@ -47,32 +47,40 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
 
     /**
      * @param array $data
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cache
      * @param int $loadRelationshipLevel
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array|ResourceObject[]|null
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     protected function loadSpecialisedResources(
         array $data,
-        ?CacheFactoryInterface $cache,
-        int $loadRelationshipLevel=0
+        ?CacheBuilder $cache,
+        int $loadRelationshipLevel=0,
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ?array
     {
+        $parameters = [
+            $this->manyToManyRelationshipTableName,
+            $this->targetBuilderAttribute->getDatabaseFieldRelationship(),
+            $this->manyToManyRelationshipField,
+            $data[$this->targetBuilderAttribute->getDatabaseFieldRelationship()],
+        ];
+
         return $this->mapper->generateResourceObjectsByFunction(
             $this->resourceBuilderName,
             $cache,
             FunctionFactory::buildFromTableName(
                 $this->resourceBuilder->getTableName(),
-                'getFirstLevelJoin'
+                'getFirstLevelJoin',
+                $parameters
             ),
-            [
-                $this->manyToManyRelationshipTableName,
-                $this->targetBuilderAttribute->getDatabaseFieldRelationship(),
-                $this->manyToManyRelationshipField,
-                $data[$this->targetBuilderAttribute->getDatabaseFieldRelationship()],
-            ],
-            $loadRelationshipLevel
+            $loadRelationshipLevel,
+            $relationshipParameters,
+            $positionInRelationship
         );
     }
 

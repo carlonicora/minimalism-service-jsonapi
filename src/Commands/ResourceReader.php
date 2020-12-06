@@ -3,9 +3,8 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Commands;
 
 use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\Cacher\Exceptions\CacheNotFoundException;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
@@ -41,33 +40,31 @@ class ResourceReader
 
     /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param AttributeBuilderInterface $attribute
      * @param array $parameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cacheBuilder,
         AttributeBuilderInterface $attribute,
         array $parameters,
         int $loadRelationshipsLevel=0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ) : array
     {
         $response = null;
 
-        if ($cache !== null && ($dataCache = $cache->generateCache())){
-            try {
-                /** @noinspection UnserializeExploitsInspection */
-                $response = unserialize($this->cacher->read($dataCache));
-            } catch (CacheNotFoundException $e) {
-                $response = null;
-            }
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null) {
+            /** @noinspection UnserializeExploitsInspection */
+            $response = unserialize($response);
         }
 
         if ($response === null || $response === false) {
@@ -81,38 +78,40 @@ class ResourceReader
                 $isMainTable = false;
             }
 
-            $values = ParametersFacade::prepareParameters($parameters, $position);
+            $values = ParametersFacade::prepareParameters($parameters, $positionInRelationship);
 
             if ($isMainTable && $attribute->getName() === 'id') {
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cache,
+                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
                         'loadFromId',
                         $values,
                         true
                     ),
-                    $parameters,
-                    $loadRelationshipsLevel
+                    $loadRelationshipsLevel,
+                    $relationshipParameters,
+                    $positionInRelationship
                 );
             } else {
                 $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cache,
+                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
                         'loadByField',
                         [$fieldName => $values[0]]
                     ),
-                    $parameters,
-                    $loadRelationshipsLevel
+                    $loadRelationshipsLevel,
+                    $relationshipParameters,
+                    $positionInRelationship
                 );
             }
 
-            if ($cache !== null && ($dataCache = $cache->generateCache())){
-                $this->cacher->create($dataCache, serialize($response));
+            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
+                $response = $this->cacher->save($cacheBuilder, serialize($response));
             }
         }
 
@@ -121,55 +120,52 @@ class ResourceReader
 
     /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param FunctionFacade $function
-     * @param array $parameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cacheBuilder,
         FunctionFacade $function,
-        array $parameters=[],
         int $loadRelationshipsLevel=0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ) : array
     {
         $response = null;
 
-        if ($cache !== null && ($dataCache = $cache->generateCache())){
-            try {
-                /** @noinspection UnserializeExploitsInspection */
-                $response = unserialize($this->cacher->read($dataCache));
-            } catch (CacheNotFoundException $e) {
-                $response = null;
-            }
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null) {
+            /** @noinspection UnserializeExploitsInspection */
+            $response = unserialize($response);
         }
 
         if ($response === null) {
             $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
             if ($function->isResourceBuilder() && $function->getResourceBuilderClass() === $builderName && method_exists($function->getResourceBuilder(), $function->getFunctionName())) {
-                $values = ParametersFacade::prepareParameters($parameters, $position);
+                $values = ParametersFacade::prepareParameters($relationshipParameters, $positionInRelationship);
                 $callable = [$function->getResourceBuilder(), $function->getFunctionName()];
                 $response = $callable(...$values);
             } else {
                 $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cache,
+                    $cacheBuilder,
                     $function,
-                    $parameters,
                     $loadRelationshipsLevel,
-                    $position);
+                    $relationshipParameters,
+                    $positionInRelationship
+                );
             }
 
-            if ($cache !== null && ($dataCache = $cache->generateCache())){
-                $this->cacher->create($dataCache, serialize($response));
+            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
+                $response = $this->cacher->save($cacheBuilder, serialize($response));
             }
         }
 
@@ -178,43 +174,39 @@ class ResourceReader
 
     /**
      * @param string $builderName
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param array $dataList
      * @param int $loadRelationshipsLevel
-     * @param array $parameters
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws Exception
      */
     public function generateResourceObjectByData(
         string $builderName,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cacheBuilder,
         array $dataList,
         int $loadRelationshipsLevel=0,
-        array $parameters=[],
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): array
     {
         $response = null;
 
-        if ($cache !== null && ($dataCache = $cache->generateCache())){
-            try {
-                /** @noinspection UnserializeExploitsInspection */
-                $response = unserialize($this->cacher->read($dataCache));
-            } catch (CacheNotFoundException $e) {
-                $response = null;
-            }
+        if ($cacheBuilder !== null && $this->cacher->useCaching()){
+            $response = $this->cacher->readArray($cacheBuilder);
         }
 
         if ($response === null) {
+            $response = [];
             $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
 
             foreach ($dataList as $data) {
-                $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
+                $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
             }
 
-            if ($cache !== null && ($dataCache = $cache->generateCache())){
-                $this->cacher->create($dataCache, serialize($response));
+            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
+                $response = $this->cacher->saveArray($cacheBuilder, $response);
             }
         }
 
@@ -223,29 +215,24 @@ class ResourceReader
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param FunctionFacade $function
-     * @param array $parameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
      */
     private function generateResourceObject(
         ResourceBuilderInterface $resourceBuilder,
-        ?CacheFactoryInterface $cache,
+        ?CacheBuilder $cacheBuilder,
         FunctionFacade $function,
-        array $parameters,
         int $loadRelationshipsLevel=0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ) : array
     {
-        $dataCache = null;
-        if ($cache !== null && ($cacher = $cache->generateCache()) !== null) {
-            $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
-        }
-
-        $dataList = $this->readResourceObjectData($dataCache, $function);
+        $dataList = $this->readResourceObjectData($cacheBuilder, $function);
 
         if (!empty($dataList) && !array_key_exists(0, $dataList)){
             $dataList = [$dataList];
@@ -254,24 +241,24 @@ class ResourceReader
         $response = [];
 
         foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $parameters, $loadRelationshipsLevel, $position);
+            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
         }
 
         return $response;
     }
 
     /**
-     * @param CacheFactoryInterface|null $cacheFactory
+     * @param CacheBuilder|null $cacheBuilder
      * @param FunctionFacade $function
-     * @param array $position
+     * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function readResourceObjectData(
-        ?CacheFactoryInterface $cacheFactory,
+        ?CacheBuilder $cacheBuilder,
         FunctionFacade $function,
-        array $position=[]
+        array $positionInRelationship=[]
     ): array
     {
         $response = null;
@@ -279,21 +266,13 @@ class ResourceReader
         $readerFactory = new DataReadersFactory($this->services);
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
 
-        $parameters = ParametersFacade::prepareParameters($function->getParameters(), $position, true);
-
-        /**
-        $functionParameters = [];
-        foreach ($parameters as $parameterKey=>$parameterValue) {
-            if (!is_array($parameterValue)){
-                $functionParameters[] = $parameterValue;
-            }
-        }*/
+        $parameters = ParametersFacade::prepareParameters($function->getParameters(), $positionInRelationship, true);
 
         /** @var DataReaderInterface $reader */
         $reader = $readerFactory->create(
             $function,
             $parameters,
-            $cacheFactory
+            $cacheBuilder
         );
 
         if ($function->isSingleRead()) {

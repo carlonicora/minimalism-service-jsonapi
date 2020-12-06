@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
 
 interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksInterface
@@ -44,22 +45,34 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param array $parameters
      * @return RelationshipBuilderInterface
      */
-    public function withFunction(
+    public function withTableFunction(
         string $tableClassName,
         ?string $resourceBuilderClass,
         string $tableFunction,
         array $parameters
     ): RelationshipBuilderInterface;
 
+    /**
+     * @param string $loaderClassName
+     * @param string|null $resourceBuilderClass
+     * @param string $loaderFunction
+     * @param array $parameters
+     * @return RelationshipBuilderInterface
+     */
+    public function withLoaderFunction(
+        string $loaderClassName,
+        ?string $resourceBuilderClass,
+        string $loaderFunction,
+        array $parameters
+    ): RelationshipBuilderInterface;
+
 
     /**
-     * @param string $cacheBuilder
-     * @param array|null $parameters
+     * @param CacheBuilder $cacheBuilder
      * @return RelationshipBuilderInterface
      */
     public function withCache(
-        string $cacheBuilder,
-        array $parameters=null
+        CacheBuilder $cacheBuilder
     ): RelationshipBuilderInterface;
 
     /**
@@ -91,15 +104,15 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
     /**
      * @param array $data
      * @param int $loadRelationshipLevel
-     * @param array $externalParameters
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return array|ResourceObject[]|null
      */
     public function loadResources(
         array $data,
         int $loadRelationshipLevel=0,
-        array $externalParameters=[],
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ?array;
 
     /**

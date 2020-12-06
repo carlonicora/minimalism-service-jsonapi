@@ -289,17 +289,17 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
     /**
      * @param array $data
-     * @param array $externalParameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      * @return ResourceObject
      * @throws Exception
      */
     final public function buildResourceObject(
         array $data,
-        array $externalParameters=[],
         int $loadRelationshipsLevel=0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): ResourceObject
     {
         $response = new ResourceObject($this->type);
@@ -308,7 +308,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $this->buildLinks($this, $this, $response->links, $data, $response);
 
         if ($loadRelationshipsLevel > 0){
-            $this->buildRelationships($response, $data, $externalParameters, $loadRelationshipsLevel, $position);
+            $this->buildRelationships($response, $data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
         }
 
         return $response;
@@ -317,29 +317,29 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /**
      * @param ResourceObject $response
      * @param array $data
-     * @param array $externalParameters
      * @param int $loadRelationshipsLevel
-     * @param array $position
+     * @param array $relationshipParameters
+     * @param array $positionInRelationship
      */
     private function buildRelationships(
         ResourceObject $response,
         array $data,
-        array $externalParameters=[],
         int $loadRelationshipsLevel=0,
-        array $position=[]
+        array $relationshipParameters=[],
+        array $positionInRelationship=[]
     ): void
     {
         /** @var RelationshipBuilderInterface $relationshipBuilder */
         foreach ($this->relationships as $relationshipBuilder){
-            $position[] = $relationshipBuilder->getBuilder();
+            $positionInRelationship[] = $relationshipBuilder->getBuilder();
             try {
                 $relation = new Relationship();
 
                 $resources = $relationshipBuilder->loadResources(
                     $data,
                     $loadRelationshipsLevel,
-                    $externalParameters,
-                    $position
+                    $relationshipParameters,
+                    $positionInRelationship
                 );
 
                 if ($resources !== null) {
@@ -355,7 +355,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                     $response->relationships[$relationshipBuilder->getName()] = $relation;
                 }
             } catch (Exception $e) {}
-            array_pop($position);
+            array_pop($positionInRelationship);
         }
     }
 

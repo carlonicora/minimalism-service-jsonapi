@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 
@@ -13,13 +13,13 @@ interface DataReaderInterface
      * @param ServicesFactory $services
      * @param FunctionFacade $function
      * @param array $functionParameters
-     * @param CacheFactoryInterface|null $dataInterface
+     * @param CacheBuilder|null $cacheBuilder
      */
     public function __construct(
         ServicesFactory $services,
         FunctionFacade $function,
         array $functionParameters = [],
-        CacheFactoryInterface $dataInterface = null
+        CacheBuilder $cacheBuilder = null
     );
 
     /**

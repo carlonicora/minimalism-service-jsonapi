@@ -5,8 +5,8 @@ use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
@@ -38,6 +38,9 @@ class ResourceWriter
     /** @var MySQL  */
     private MySQL $mysql;
 
+    /** @var Cacher  */
+    private Cacher $cacher;
+
     /**
      * ResourceReader constructor.
      * @param ServicesFactory $services
@@ -47,6 +50,7 @@ class ResourceWriter
         $this->services = $services;
         $this->mapper = $services->service(JsonDataMapper::class);
         $this->mysql = $services->service(MySQL::class);
+        $this->cacher = $this->services->service(Cacher::class);
 
         $this->resourceFactory = new ResourceBuilderFactory($this->services);
         $this->resourceReader = new ResourceReader($this->services);
@@ -54,18 +58,18 @@ class ResourceWriter
 
     /**
      * @param Document $data
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param string $resourceBuilderName
      * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheFactoryInterface $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
+    public function writeDocument(Document $data, ?CacheBuilder $cacheBuilder, string $resourceBuilderName, bool $updateRelationships=false) : void
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($resourceBuilderName);
         $this->validateAndDecryptDocument($data, $resourceBuilder);
 
         foreach ($data->resources ?? [] as $resourceObject) {
-            $this->writeResourceObject($resourceBuilder, $cache, $resourceObject, $updateRelationships);
+            $this->writeResourceObject($resourceBuilder, $cacheBuilder, $resourceObject, $updateRelationships);
         }
 
         $this->encryptDocument($data, $resourceBuilder);
@@ -73,14 +77,14 @@ class ResourceWriter
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param ResourceObject $resourceObject
      * @param bool $updateRelationships
      * @throws Exception
      */
-    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject, bool $updateRelationships=false): void
+    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheBuilder $cacheBuilder, ResourceObject $resourceObject, bool $updateRelationships=false): void
     {
-        $response = $this->buildBaseEntity($resourceBuilder, $cache, $resourceObject);
+        $response = $this->buildBaseEntity($resourceBuilder, $cacheBuilder, $resourceObject);
 
         if ($updateRelationships) {
             /** @var RelationshipBuilderInterface $relationship */
@@ -114,15 +118,8 @@ class ResourceWriter
             }
         }
 
-        if ($cache !== null){
-            /** @var Cacher $cacher */
-            $cacher = $this->services->service(Cacher::class);
-
-            $finalCache = $cache->generateCache();
-
-            if ($finalCache !== null) {
-                $cacher->delete($finalCache);
-            }
+        if ($cacheBuilder !== null &&  $this->cacher->useCaching()){
+            $this->cacher->invalidate($cacheBuilder);
         }
     }
 
@@ -181,23 +178,18 @@ class ResourceWriter
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheFactoryInterface|null $cache
+     * @param CacheBuilder|null $cacheBuilder
      * @param ResourceObject $resourceObject
      * @return array
      * @throws Exception
      */
-    private function buildBaseEntity(ResourceBuilderInterface $resourceBuilder, ?CacheFactoryInterface $cache, ResourceObject $resourceObject) : array
+    private function buildBaseEntity(ResourceBuilderInterface $resourceBuilder, ?CacheBuilder $cacheBuilder, ResourceObject $resourceObject) : array
     {
         $response = [];
         if ($resourceObject->id !== null){
             try {
-                $dataCache = null;
-                if ($cache !== null && ($cacher = $cache->generateCache()) !== null) {
-                    $dataCache = $cacher->getChildCacheFactory($this->services, $cache->implementsGranularCache());
-                }
-
                 $response = $this->resourceReader->readResourceObjectData(
-                    $dataCache,
+                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $resourceBuilder->getTableName(),
                         'loadFromId',
