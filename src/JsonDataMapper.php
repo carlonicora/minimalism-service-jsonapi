@@ -50,6 +50,7 @@ class JsonDataMapper extends AbstractService
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
+        $this->cache = new CacheFacade();
     }
 
     /**
