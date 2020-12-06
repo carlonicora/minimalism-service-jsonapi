@@ -83,7 +83,6 @@ class ResourceReader
             if ($isMainTable && $attribute->getName() === 'id') {
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
                         'loadFromId',
@@ -98,7 +97,6 @@ class ResourceReader
                 $fieldName = $isMainTable ? $attribute->getDatabaseFieldName() : $attribute->getDatabaseFieldRelationship();
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
                         'loadByField',
@@ -111,7 +109,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $response = $this->cacher->save($cacheBuilder, serialize($response));
+                $this->cacher->save($cacheBuilder, serialize($response));
             }
         }
 
@@ -156,7 +154,6 @@ class ResourceReader
                 $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
                 $response = $this->generateResourceObject(
                     $resourceBuilder,
-                    $cacheBuilder,
                     $function,
                     $loadRelationshipsLevel,
                     $relationshipParameters,
@@ -165,7 +162,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $response = $this->cacher->save($cacheBuilder, serialize($response));
+                $this->cacher->save($cacheBuilder, serialize($response));
             }
         }
 
@@ -193,8 +190,9 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching()){
-            $response = $this->cacher->readArray($cacheBuilder);
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null){
+            /** @noinspection UnserializeExploitsInspection */
+            $response = unserialize($response);
         }
 
         if ($response === null) {
@@ -206,7 +204,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $response = $this->cacher->saveArray($cacheBuilder, $response);
+                $this->cacher->save($cacheBuilder, serialize($response));
             }
         }
 
@@ -215,40 +213,51 @@ class ResourceReader
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheBuilder|null $cacheBuilder
      * @param FunctionFacade $function
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
      * @throws DbRecordNotFoundException
+     * @throws Exception
      */
     private function generateResourceObject(
         ResourceBuilderInterface $resourceBuilder,
-        ?CacheBuilder $cacheBuilder,
         FunctionFacade $function,
         int $loadRelationshipsLevel=0,
         array $relationshipParameters=[],
         array $positionInRelationship=[]
     ) : array
     {
-        $dataList = $this->readResourceObjectData($cacheBuilder, $function);
+        $response = null;
 
-        if (!empty($dataList) && !array_key_exists(0, $dataList)){
-            $dataList = [$dataList];
+        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder())) !== null){
+            /** @noinspection UnserializeExploitsInspection */
+            $response = unserialize($response);
         }
 
-        $response = [];
+        if ($response === null) {
+            $dataList = $this->readResourceObjectData($function);
 
-        foreach ($dataList as $data){
-            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
+            if (!empty($dataList) && !array_key_exists(0, $dataList)) {
+                $dataList = [$dataList];
+            }
+
+            $response = [];
+
+            foreach ($dataList as $data) {
+                $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
+            }
+
+            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()){
+                $this->cacher->save($function->getCacheBuilder(), serialize($response));
+            }
         }
 
         return $response;
     }
 
     /**
-     * @param CacheBuilder|null $cacheBuilder
      * @param FunctionFacade $function
      * @param array $positionInRelationship
      * @return array
@@ -256,7 +265,6 @@ class ResourceReader
      * @throws Exception
      */
     public function readResourceObjectData(
-        ?CacheBuilder $cacheBuilder,
         FunctionFacade $function,
         array $positionInRelationship=[]
     ): array
@@ -268,20 +276,25 @@ class ResourceReader
 
         $parameters = ParametersFacade::prepareParameters($function->getParameters(), $positionInRelationship, true);
 
-        /** @var DataReaderInterface $reader */
-        $reader = $readerFactory->create(
-            $function,
-            $parameters,
-            $cacheBuilder
-        );
+        if ($function->getType() === FunctionFacade::LOADER){
+            $loaderClassName = $function->getLoaderClassName();
+            $loader = new $loaderClassName($this->services);
 
-        if ($function->isSingleRead()) {
-            $response = [$reader->getSingle()];
-        } else {
-            $response = $reader->getList();
+            $response = $loader->{$function->getFunctionName()}(...$parameters);
+        } elseif ($function->getType() === FunctionFacade::TABLE) {
+            /** @var DataReaderInterface $reader */
+            $reader = $readerFactory->create(
+                $function,
+                $parameters
+            );
+
+            if ($function->isSingleRead()) {
+                $response = [$reader->getSingle()];
+            } else {
+                $response = $reader->getList();
+            }
+            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $function->getTableName() . ' - ' . $function->getFunctionName() . ' )'));
         }
-
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $function->getTableName() . ' - ' . $function->getFunctionName() . ' )'));
 
         return $response;
     }

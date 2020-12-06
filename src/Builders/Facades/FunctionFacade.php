@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use RuntimeException;
@@ -28,6 +29,9 @@ class FunctionFacade
 
     /** @var bool  */
     private bool $isSingleRead;
+    
+    /** @var CacheBuilder|null  */
+    private ?CacheBuilder $cacheBuilder=null;
 
     /**
      * @var array
@@ -57,7 +61,7 @@ class FunctionFacade
             return self::LOADER;
         }
 
-        if ($this->resourceBuilder === null){
+        if ($this->resourceBuilder !== null){
             return self::BUILDER;
         }
 
@@ -201,5 +205,24 @@ class FunctionFacade
     public function replaceParameters(array $parameters): void
     {
         $this->parameters = $parameters;
+    }
+
+    /**
+     * @return CacheBuilder|null
+     */
+    public function getCacheBuilder(): ?CacheBuilder
+    {
+        return $this->cacheBuilder;
+    }
+
+    /**
+     * @param CacheBuilder $cacheBuilder
+     * @return FunctionFacade
+     */
+    public function withCacheBuilder(CacheBuilder $cacheBuilder): FunctionFacade
+    {
+        $this->cacheBuilder = $cacheBuilder;
+        
+        return $this;
     }
 }

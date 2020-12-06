@@ -69,7 +69,12 @@ class ResourceWriter
         $this->validateAndDecryptDocument($data, $resourceBuilder);
 
         foreach ($data->resources ?? [] as $resourceObject) {
-            $this->writeResourceObject($resourceBuilder, $cacheBuilder, $resourceObject, $updateRelationships);
+            $this->writeResourceObject(
+                $resourceBuilder,
+                $cacheBuilder,
+                $resourceObject,
+                $updateRelationships
+            );
         }
 
         $this->encryptDocument($data, $resourceBuilder);
@@ -82,9 +87,17 @@ class ResourceWriter
      * @param bool $updateRelationships
      * @throws Exception
      */
-    private function writeResourceObject(ResourceBuilderInterface $resourceBuilder, ?CacheBuilder $cacheBuilder, ResourceObject $resourceObject, bool $updateRelationships=false): void
+    private function writeResourceObject(
+        ResourceBuilderInterface $resourceBuilder,
+        ?CacheBuilder $cacheBuilder,
+        ResourceObject $resourceObject,
+        bool $updateRelationships=false
+    ): void
     {
-        $response = $this->buildBaseEntity($resourceBuilder, $cacheBuilder, $resourceObject);
+        $response = $this->buildBaseEntity(
+            $resourceBuilder,
+            $resourceObject
+        );
 
         if ($updateRelationships) {
             /** @var RelationshipBuilderInterface $relationship */
@@ -178,18 +191,19 @@ class ResourceWriter
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheBuilder|null $cacheBuilder
      * @param ResourceObject $resourceObject
      * @return array
      * @throws Exception
      */
-    private function buildBaseEntity(ResourceBuilderInterface $resourceBuilder, ?CacheBuilder $cacheBuilder, ResourceObject $resourceObject) : array
+    private function buildBaseEntity(
+        ResourceBuilderInterface $resourceBuilder,
+        ResourceObject $resourceObject
+    ) : array
     {
         $response = [];
         if ($resourceObject->id !== null){
             try {
                 $response = $this->resourceReader->readResourceObjectData(
-                    $cacheBuilder,
                     FunctionFactory::buildFromTableName(
                         $resourceBuilder->getTableName(),
                         'loadFromId',

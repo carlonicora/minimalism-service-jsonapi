@@ -2,7 +2,6 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Facades\DataReaderFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
@@ -26,21 +25,18 @@ class DataReadersFactory
     /**
      * @param FunctionFacade $function
      * @param array $functionParameters
-     * @param CacheBuilder|null $cacheBuilder
      * @return DataReaderFacade
      * @throws Exception
      */
     public function create(
         FunctionFacade $function,
-        array $functionParameters = [],
-        CacheBuilder $cacheBuilder = null
+        array $functionParameters = []
     ) : DataReaderInterface
     {
         return new DataReaderFacade(
             $this->services,
             $function,
             $functionParameters,
-            $cacheBuilder
         );
     }
 }

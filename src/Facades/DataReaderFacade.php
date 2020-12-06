@@ -2,7 +2,6 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Facades;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
@@ -31,27 +30,21 @@ class DataReaderFacade implements DataReaderInterface
     /** @var Cacher  */
     protected Cacher $cacher;
     
-    /** @var CacheBuilder|null  */
-    protected ?CacheBuilder $cacheBuilder;
-
     /**
      * DataReaderFacade constructor.
      * @param ServicesFactory $services
      * @param FunctionFacade $function
      * @param array $functionParameters
-     * @param CacheBuilder|null $cacheBuilder
      * @throws Exception
      */
     public function __construct(
         ServicesFactory $services,
         FunctionFacade $function,
-        array $functionParameters = [],
-        CacheBuilder $cacheBuilder = null
+        array $functionParameters = []
     ) {
         $this->services = $services;
         $this->function = $function;
         $this->functionParameters = $functionParameters;
-        $this->cacheBuilder = $cacheBuilder;
 
         $this->redis = $services->service(Redis::class);
         $this->database = $services->service(MySQL::class);
@@ -65,13 +58,13 @@ class DataReaderFacade implements DataReaderInterface
      */
     public function getSingle() : array
     {
-        if ($this->cacheBuilder !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->cacheBuilder)) === null){
+        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
+            if (($response = $this->cacher->readArray($this->function->getCacheBuilder())) === null){
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
                 if (is_array($response)) {
-                    $this->cacher->createArray($this->cacheBuilder, $response);
+                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response);
                 } else {
-                    $this->cacher->create($this->cacheBuilder, (string)$response);
+                    $this->cacher->save($this->function->getCacheBuilder(), (string)$response);
                 }
             }
         } else {
@@ -83,15 +76,16 @@ class DataReaderFacade implements DataReaderInterface
 
     /**
      * @return array|null
+     * @throws Exception
      */
     public function getList() : ?array
     {
-        if ($this->cacheBuilder !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->cacheBuilder)) === null) {
+        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
+            if (($response = $this->cacher->readArray($this->function->getCacheBuilder())) === null) {
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null) {
-                    $this->cacher->createArray($this->cacheBuilder, $response);
+                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response);
                 }
             }
         } else {
@@ -103,15 +97,16 @@ class DataReaderFacade implements DataReaderInterface
 
     /**
      * @return int
+     * @throws Exception
      */
     public function getCount() : int
     {
-        if ($this->cacheBuilder !== null && $this->cacher->useCaching()) {
-            if (($response = (int)$this->cacher->read($this->cacheBuilder)) === null) {
+        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
+            if (($response = (int)$this->cacher->read($this->function->getCacheBuilder())) === null) {
                 $response = (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null) {
-                    $this->cacher->create($this->cacheBuilder, $response);
+                    $this->cacher->save($this->function->getCacheBuilder(), $response);
                 }
             }
         } else {
