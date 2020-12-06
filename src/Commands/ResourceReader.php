@@ -231,16 +231,35 @@ class ResourceReader
     {
         $response = null;
 
-        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder())) !== null){
+        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder())) !== null) {
             /** @noinspection UnserializeExploitsInspection */
             $response = unserialize($response);
         }
 
         if ($response === null) {
-            $dataList = $this->readResourceObjectData($function);
+            $dataList = null;
+            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()){
+                $function->getCacheBuilder()->setType(CacheBuilder::DATA);
+                if (($dataList = $this->cacher->readArray($function->getCacheBuilder())) !== null){
+                    /** @noinspection UnserializeExploitsInspection */
+                    $dataList = unserialize($response);
+                }
+            }
 
-            if (!empty($dataList) && !array_key_exists(0, $dataList)) {
-                $dataList = [$dataList];
+            if ($dataList === null) {
+                $dataList = $this->readResourceObjectData($function);
+
+                if (!empty($dataList) && !array_key_exists(0, $dataList)) {
+                    $dataList = [$dataList];
+                }
+
+                if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
+                    $this->cacher->saveArray($function->getCacheBuilder(), $dataList);
+                }
+            }
+
+            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
+                $function->getCacheBuilder()->setType(CacheBuilder::JSON);
             }
 
             $response = [];

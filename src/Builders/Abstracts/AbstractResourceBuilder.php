@@ -6,6 +6,7 @@ use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Services\Cacher\Factories\CacheFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderInterfaceFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -61,6 +62,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var string|null  */
     protected ?string $resourceCache=null;
 
+    /** @var CacheFactory|null  */
+    protected ?CacheFactory $cacheFactory=null;
+
     /**
      * @param ServicesFactory $services
      * @throws Exception
@@ -82,6 +86,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
         $this->services = $services;
         $this->mapper = $services->service(JsonDataMapper::class);
+        $this->cacheFactory = new CacheFactory();
 
         $this->setAttributes();
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Attributes Created (' . get_class($this) . ')'));

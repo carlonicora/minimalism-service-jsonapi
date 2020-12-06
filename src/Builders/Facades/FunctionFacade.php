@@ -216,10 +216,10 @@ class FunctionFacade
     }
 
     /**
-     * @param CacheBuilder $cacheBuilder
+     * @param CacheBuilder|null $cacheBuilder
      * @return FunctionFacade
      */
-    public function withCacheBuilder(CacheBuilder $cacheBuilder): FunctionFacade
+    public function withCacheBuilder(?CacheBuilder $cacheBuilder): FunctionFacade
     {
         $this->cacheBuilder = $cacheBuilder;
         
