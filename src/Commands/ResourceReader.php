@@ -62,7 +62,7 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null) {
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null) {
             /** @noinspection UnserializeExploitsInspection */
             $response = unserialize($response);
         }
@@ -109,7 +109,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response));
+                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
             }
         }
 
@@ -138,7 +138,7 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null) {
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null) {
             /** @noinspection UnserializeExploitsInspection */
             $response = unserialize($response);
         }
@@ -162,7 +162,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response));
+                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
             }
         }
 
@@ -190,7 +190,7 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder)) !== null){
+        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null){
             /** @noinspection UnserializeExploitsInspection */
             $response = unserialize($response);
         }
@@ -204,7 +204,7 @@ class ResourceReader
             }
 
             if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response));
+                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
             }
         }
 
@@ -231,19 +231,16 @@ class ResourceReader
     {
         $response = null;
 
-        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder())) !== null) {
+        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder(), CacheBuilder::JSON)) !== null) {
             /** @noinspection UnserializeExploitsInspection */
             $response = unserialize($response);
         }
 
         if ($response === null) {
             $dataList = null;
-            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()){
-                $function->getCacheBuilder()->setType(CacheBuilder::DATA);
-                if (($dataList = $this->cacher->readArray($function->getCacheBuilder())) !== null){
-                    /** @noinspection UnserializeExploitsInspection */
-                    $dataList = unserialize($response);
-                }
+            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($dataList = $this->cacher->readArray($function->getCacheBuilder(), CacheBuilder::DATA)) !== null) {
+                /** @noinspection UnserializeExploitsInspection */
+                $dataList = unserialize($response);
             }
 
             if ($dataList === null) {
@@ -254,12 +251,8 @@ class ResourceReader
                 }
 
                 if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-                    $this->cacher->saveArray($function->getCacheBuilder(), $dataList);
+                    $this->cacher->saveArray($function->getCacheBuilder(), $dataList, CacheBuilder::DATA);
                 }
-            }
-
-            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-                $function->getCacheBuilder()->setType(CacheBuilder::JSON);
             }
 
             $response = [];
@@ -269,7 +262,7 @@ class ResourceReader
             }
 
             if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()){
-                $this->cacher->save($function->getCacheBuilder(), serialize($response));
+                $this->cacher->save($function->getCacheBuilder(), serialize($response), CacheBuilder::JSON);
             }
         }
 

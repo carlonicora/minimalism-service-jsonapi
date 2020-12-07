@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Facades;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
@@ -59,12 +60,12 @@ class DataReaderFacade implements DataReaderInterface
     public function getSingle() : array
     {
         if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->function->getCacheBuilder())) === null){
+            if (($response = $this->cacher->readArray($this->function->getCacheBuilder(), CacheBuilder::DATA)) === null){
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
                 if (is_array($response)) {
-                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response);
+                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response, CacheBuilder::DATA);
                 } else {
-                    $this->cacher->save($this->function->getCacheBuilder(), (string)$response);
+                    $this->cacher->save($this->function->getCacheBuilder(), (string)$response, CacheBuilder::DATA);
                 }
             }
         } else {
@@ -81,11 +82,12 @@ class DataReaderFacade implements DataReaderInterface
     public function getList() : ?array
     {
         if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->function->getCacheBuilder())) === null) {
+            if (($response = $this->cacher->readArray($this->function->getCacheBuilder(), CacheBuilder::DATA)) === null) {
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null) {
-                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response);
+                    $this->function->getCacheBuilder()->setType(CacheBuilder::DATA);
+                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response, CacheBuilder::DATA);
                 }
             }
         } else {
@@ -101,18 +103,6 @@ class DataReaderFacade implements DataReaderInterface
      */
     public function getCount() : int
     {
-        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-            if (($response = (int)$this->cacher->read($this->function->getCacheBuilder())) === null) {
-                $response = (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
-
-                if ($response !== null) {
-                    $this->cacher->save($this->function->getCacheBuilder(), $response);
-                }
-            }
-        } else {
-            $response = (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
-        }
-
-        return $response;
+        return (int)call_user_func($this->function->getFunction(), ...$this->functionParameters);
     }
 }
