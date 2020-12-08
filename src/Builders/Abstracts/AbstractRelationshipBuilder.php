@@ -371,9 +371,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                 /** @var DataLoaderInterface $loader */
                 $loader = $loaderClass->newInstanceArgs([$this->services]);
 
-                $loader->setCacher($cache);
                 $data = $loader->{$this->function->getFunctionName()}(...$this->function->getParameters());
-                $loader->setCacher(null);
 
                 if (get_class($this) === OneToOneRelationshipBuilder::class){
                     $data = [$data];
