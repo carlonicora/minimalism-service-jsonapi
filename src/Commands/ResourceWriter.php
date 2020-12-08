@@ -235,21 +235,21 @@ class ResourceWriter
     private function encryptDocument(Document $data, ResourceBuilderInterface $resourceBuilder): void
     {
         foreach ($data->resources ?? [] as $resourceObject){
-            if ($this->mapper->getDefaultEncrypter() === null) {
+            if ($this->mapper->getDefaultEncrypter() !== null) {
                 $resourceObject->id = $this->mapper->getDefaultEncrypter()->encryptId(
                     $resourceObject->id
                 );
-            }
 
-            /** @var AttributeBuilderInterface $attribute */
-            foreach ($resourceBuilder->getAttributes() ?? [] as $attribute){
-                if ($attribute->getName() !== 'id' && $attribute->isEncrypted()){
-                    $resourceObject->attributes->update(
-                        $attribute->getName(),
-                        $this->mapper->getDefaultEncrypter()->encryptId(
-                            $resourceObject->attributes->get($attribute->getName())
-                        )
-                    );
+                /** @var AttributeBuilderInterface $attribute */
+                foreach ($resourceBuilder->getAttributes() ?? [] as $attribute){
+                    if ($attribute->getName() !== 'id' && $attribute->isEncrypted() && $resourceObject->attributes->has($attribute->getName())){
+                        $resourceObject->attributes->update(
+                            $attribute->getName(),
+                            $this->mapper->getDefaultEncrypter()->encryptId(
+                                $resourceObject->attributes->get($attribute->getName())
+                            )
+                        );
+                    }
                 }
             }
         }
