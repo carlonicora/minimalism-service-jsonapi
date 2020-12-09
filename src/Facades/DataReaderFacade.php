@@ -85,7 +85,7 @@ class DataReaderFacade implements DataReaderInterface
             if (($response = $this->cacher->readArray($this->function->getCacheBuilder(), CacheBuilder::DATA)) === null) {
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
-                if ($response !== null) {
+                if ($response !== null && $response !== []) {
                     $this->function->getCacheBuilder()->setType(CacheBuilder::DATA);
                     $this->cacher->saveArray($this->function->getCacheBuilder(), $response, CacheBuilder::DATA);
                 }

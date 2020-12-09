@@ -352,11 +352,16 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $additionalRelationshipParameters = ParametersFacade::prepareParameters($relationshipParameters, $positionInRelationship);
             $values = array_merge($values, $additionalRelationshipParameters);
 
+            $temporaryParameters = $this->function->getParameters();
+            $temporaryCache = $this->function->getCacheBuilder();
+
             $this->function->replaceParameters($values);
             $this->function->withCacheBuilder($cache);
 
+            $response = [];
+
             if ($this->function->getType() === FunctionFacade::TABLE) {
-                return $this->mapper->generateResourceObjectsByFunction(
+                $response = $this->mapper->generateResourceObjectsByFunction(
                     $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                     $cache,
                     $this->function,
@@ -364,9 +369,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                     $relationshipParameters,
                     $positionInRelationship
                 );
-            }
-
-            if ($this->function->getType() === FunctionFacade::LOADER) {
+            } elseif ($this->function->getType() === FunctionFacade::LOADER) {
                 $loaderClass = new ReflectionClass($this->function->getLoaderClassName());
                 /** @var DataLoaderInterface $loader */
                 $loader = $loaderClass->newInstanceArgs([$this->services]);
@@ -377,7 +380,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                     $data = [$data];
                 }
 
-                return $this->mapper->generateResourceObjectByData(
+                $response = $this->mapper->generateResourceObjectByData(
                     $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                     $cache,
                     $data,
@@ -386,6 +389,11 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                     $positionInRelationship
                 );
             }
+
+            $this->function->replaceParameters($temporaryParameters);
+            $this->function->withCacheBuilder($temporaryCache);
+
+            return $response;
         }
 
         return $this->loadSpecialisedResources(

@@ -229,41 +229,16 @@ class ResourceReader
         array $positionInRelationship=[]
     ) : array
     {
-        $response = null;
+        $dataList = $this->readResourceObjectData($function);
 
-        if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($function->getCacheBuilder(), CacheBuilder::JSON)) !== null) {
-            /** @noinspection UnserializeExploitsInspection */
-            $response = unserialize($response);
+        if (!empty($dataList) && !array_key_exists(0, $dataList)) {
+            $dataList = [$dataList];
         }
 
-        if ($response === null) {
-            $dataList = null;
-            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching() && ($dataList = $this->cacher->readArray($function->getCacheBuilder(), CacheBuilder::DATA)) !== null) {
-                /** @noinspection UnserializeExploitsInspection */
-                $dataList = unserialize($response);
-            }
+        $response = [];
 
-            if ($dataList === null) {
-                $dataList = $this->readResourceObjectData($function);
-
-                if (!empty($dataList) && !array_key_exists(0, $dataList)) {
-                    $dataList = [$dataList];
-                }
-
-                if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-                    $this->cacher->saveArray($function->getCacheBuilder(), $dataList, CacheBuilder::DATA);
-                }
-            }
-
-            $response = [];
-
-            foreach ($dataList as $data) {
-                $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
-            }
-
-            if ($function->getCacheBuilder() !== null && $this->cacher->useCaching()){
-                $this->cacher->save($function->getCacheBuilder(), serialize($response), CacheBuilder::JSON);
-            }
+        foreach ($dataList as $data) {
+            $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
         }
 
         return $response;
