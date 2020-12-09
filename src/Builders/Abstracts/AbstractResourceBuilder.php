@@ -7,6 +7,7 @@ use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\Cacher\Factories\CacheFactory;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderInterfaceFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -62,8 +63,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var string|null  */
     protected ?string $resourceCache=null;
 
-    /** @var CacheFactory|null  */
-    protected ?CacheFactory $cacheFactory=null;
+    /** @var CacheFactoryInterface|null  */
+    protected ?CacheFactoryInterface $cacheFactory=null;
 
     /**
      * @param ServicesFactory $services
@@ -86,6 +87,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
         $this->services = $services;
         $this->mapper = $services->service(JsonDataMapper::class);
+
         $this->cacheFactory = new CacheFactory();
 
         $this->setAttributes();
@@ -94,6 +96,14 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Links Created (' . get_class($this) . ')'));
 
         $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->services);
+    }
+
+    /**
+     * @param CacheFactoryInterface $cacheFactory
+     */
+    public function setCacheFactoryInterface(CacheFactoryInterface $cacheFactory): void
+    {
+        $this->cacheFactory = $cacheFactory;
     }
 
     /**
