@@ -136,6 +136,16 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     public function initialiseRelationships(): void
     {
         $this->setRelationships();
+
+        /** @var RelationshipBuilderInterface $relationship */
+        foreach ($this->getRelationships() as $relationship) {
+            if ($relationship->getAttribute() !== null) {
+                $relationship->getAttribute()->setRelationshipResource($this);
+            }
+        }
+
+        $this->mapper->getCache()->setResourceBuilder($this);
+
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Relationships Created (' . get_class($this) . ')'));
     }
 
