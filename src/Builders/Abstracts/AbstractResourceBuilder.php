@@ -54,6 +54,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var array|RelationshipBuilderInterface[] */
     protected array $relationships = [];
 
+    /** @var array  */
+    protected array $meta = [];
+
     /** @var AttributeBuilderFactory */
     private AttributeBuilderFactory $attributeBuilderFactory;
 
@@ -122,13 +125,20 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         return $this->resourceCache;
     }
 
-
     /**
      * @return array|AttributeBuilderInterface[]
      */
     public function getAttributes(): array
     {
         return $this->attributes;
+    }
+
+    /**
+     * @return array|AttributeBuilderInterface[]
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
     }
 
     /**
@@ -233,12 +243,17 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /**
      *
      */
-    abstract protected function setAttributes(): void;
+    protected function setAttributes(): void {}
 
     /**
      *
      */
-    abstract protected function setLinks(): void;
+    protected function setLinks(): void {}
+
+    /**
+     *
+     */
+    protected function setMeta(): void {}
 
     /**
      *
@@ -330,6 +345,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = new ResourceObject($this->type);
 
         $this->buildAttributes($response, $data);
+        $this->buildMeta($response);
         $this->buildLinks($this, $this, $response->links, $data, $response);
 
         if ($loadRelationshipsLevel > 0){
@@ -402,6 +418,21 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                     );
                 }
             }
+        }
+    }
+
+    /**
+     * @param ResourceObject $response
+     * @throws Exception
+     */
+    private function buildMeta(ResourceObject $response): void
+    {
+        /** @var array $meta */
+        foreach ($this->meta as $meta) {
+            $response->meta->add(
+                $meta['name'],
+                $meta['value']
+            );
         }
     }
 

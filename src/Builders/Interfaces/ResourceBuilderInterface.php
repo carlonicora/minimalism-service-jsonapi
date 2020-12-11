@@ -50,6 +50,11 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
     public function getAttributes(): array;
 
     /**
+     * @return array
+     */
+    public function getMeta(): array;
+
+    /**
      * @param string $relationshipName
      * @return RelationshipBuilderInterface|null
      */
