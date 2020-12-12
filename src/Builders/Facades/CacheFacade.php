@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\MetaBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 
 class CacheFacade
@@ -9,7 +10,8 @@ class CacheFacade
     /** @var array  */
     private array $cache = [
         'resources' => [],
-        'attributes' => []
+        'attributes' => [],
+        'meta' => []
     ];
 
     /**
@@ -49,10 +51,10 @@ class CacheFacade
 
 
     /**
-     * @param array $meta
+     * @param MetaBuilderInterface $metaBuilder
      */
-    public function setMetaBuilder(array $meta): void
+    public function setMetaBuilder(MetaBuilderInterface $metaBuilder): void
     {
-        $this->cache['meta'] = $meta;
+        $this->cache['meta'][get_class($metaBuilder->getResourceBuilder())][$metaBuilder->getName()] = $metaBuilder;
     }
 }

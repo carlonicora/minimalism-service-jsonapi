@@ -36,11 +36,13 @@ class ResourceBuilderFactory
             /** @var ResourceBuilderInterface $response */
             $response = new $builderName($this->services);
 
-            foreach ($response->getAttributes() as $attribute) {
+            foreach ($response->getAttributes() ?? [] as $attribute) {
                 $this->mapper->getCache()->setAttributeBuilder($attribute);
             }
 
-            $this->mapper->getCache()->setMetaBuilder($response->getMeta());
+            foreach ($response->getMeta() ?? [] as $meta){
+                $this->mapper->getCache()->setMetaBuilder($meta);
+            }
 
             $this->mapper->getCache()->setResourceBuilder($response);
         }

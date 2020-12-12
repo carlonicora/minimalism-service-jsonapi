@@ -9,9 +9,12 @@ use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\Cacher\Factories\CacheFactory;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\MetaBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderInterfaceFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ElementBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\MetaBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
@@ -54,14 +57,14 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var array|RelationshipBuilderInterface[] */
     protected array $relationships = [];
 
-    /** @var array  */
-    protected array $meta = [
-        'base' => [],
-        'relationship' => []
-    ];
+    /** @var array|MetaBuilderInterface  */
+    protected array $meta = [];
 
     /** @var AttributeBuilderFactory */
     private AttributeBuilderFactory $attributeBuilderFactory;
+
+    /** @var MetaBuilderFactory  */
+    private MetaBuilderFactory $metaBuilderFactory;
 
     /** @var string|null  */
     protected ?string $dataCache=null;
@@ -90,6 +93,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     public function __construct(ServicesFactory $services)
     {
         $this->attributeBuilderFactory = new AttributeBuilderFactory($services, $this);
+        $this->metaBuilderFactory = new MetaBuilderFactory($services, $this);
 
         $this->services = $services;
         $this->mapper = $services->service(JsonDataMapper::class);
@@ -308,7 +312,6 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         return null;
     }
 
-
     /**
      * @param string $attributeName
      * @return AttributeBuilderInterface
@@ -318,6 +321,20 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = $this->attributeBuilderFactory->create($attributeName);
 
         $this->attributes[$attributeName] = $response;
+
+        return $response;
+    }
+
+    /**
+     * @param string $metaName
+     * @param int $positioning
+     * @return ElementBuilderInterface
+     */
+    final protected function generateMeta(string $metaName, int $positioning): ElementBuilderInterface
+    {
+        $response = $this->metaBuilderFactory->create($metaName, $positioning);
+
+        $this->meta[$metaName] = $response;
 
         return $response;
     }
@@ -350,7 +367,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = new ResourceObject($this->type);
 
         $this->buildAttributes($response, $data);
-        $this->buildMeta($response, ($positionInRelationship !== []));
+        $this->buildMeta($response, $data, ($positionInRelationship === []));
         $this->buildLinks($this, $this, $response->links, $data, $response);
 
         if ($loadRelationshipsLevel > 0){
@@ -415,11 +432,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         foreach ($this->attributes as $attribute) {
             if (!$attribute->isWriteOnly()){
                 if ($attribute->getName() === 'id'){
-                    $response->id = $this->getAttributeValue($attribute, $data);
+                    $response->id = $this->getElementValue($attribute, $data);
                 } else {
                     $response->attributes->add(
                         $attribute->getName(),
-                        $this->getAttributeValue($attribute, $data)
+                        $this->getElementValue($attribute, $data)
                     );
                 }
             }
@@ -428,53 +445,56 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
     /**
      * @param ResourceObject $response
-     * @param bool $isRelationship
+     * @param array $data
+     * @param bool $isResource
      * @throws Exception
      */
-    private function buildMeta(ResourceObject $response, bool $isRelationship=false): void
+    private function buildMeta(ResourceObject $response, array $data, bool $isResource): void
     {
-        $meta = $this->getMeta();
-        if ($isRelationship) {
-            $meta = $meta['relationship'];
-        } else {
-            $meta = $meta['base'];
-        }
-
-        foreach ($meta ?? [] as $singleMeta) {
-            $response->meta->add(
-                $singleMeta['name'],
-                $singleMeta['value']
-            );
+        /** @var MetaBuilderInterface $meta */
+        foreach ($this->meta as $meta) {
+            if ($meta->getPositioning() === MetaBuilderInterface::ALL
+                ||
+                ($meta->getPositioning() === MetaBuilderInterface::RESOURCE && $isResource)
+                ||
+                ($meta->getPositioning() === MetaBuilderInterface::RELATIONSHIP && !$isResource)
+            )
+            {
+                $response->meta->add(
+                    $meta->getName(),
+                    $this->getElementValue($meta, $data)
+                );
+            }
         }
     }
 
     /**
-     * @param AttributeBuilderInterface $attribute
+     * @param ElementBuilderInterface $element
      * @param array $data
      * @return mixed
      */
-    private function getAttributeValue(AttributeBuilderInterface $attribute, array $data)
+    private function getElementValue(ElementBuilderInterface $element, array $data)
     {
-        $response = $attribute->getStaticValue() ?? $data[$attribute->getDatabaseFieldName()] ?? null;
+        $response = $element->getStaticValue() ?? $data[$element->getDatabaseFieldName()] ?? null;
 
-        if ($attribute->isEncrypted()){
+        if ($element->isEncrypted()){
             /** @var EncrypterInterface $encrypter */
             if ($response !== null && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null) {
                 $response = $encrypter->encryptId(
                     $response
                 );
             }
-        } elseif ($attribute->getTransformationClass() !== null && $attribute->getTransformationMethod() !== null) {
-            $transformatorClass = $attribute->getTransformationClass();
+        } elseif ($element->getTransformationClass() !== null && $element->getTransformationMethod() !== null) {
+            $transformatorClass = $element->getTransformationClass();
 
             /** @var TransformatorInterface $transformator */
             $transformator = new $transformatorClass($this->services);
             $response = $transformator->transform(
-                $attribute->getTransformationMethod(),
+                $element->getTransformationMethod(),
                 $data,
-                $attribute->getDatabaseFieldName()
+                $element->getDatabaseFieldName()
             );
-        } elseif (($type = $attribute->getType()) !== null) {
+        } elseif (($type = $element->getType()) !== null) {
             $response = $type->transformValue($response);
         }
 
