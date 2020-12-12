@@ -328,11 +328,15 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         array $positionInRelationship=[]
     ): ?array
     {
-        if (!$this->loadChildren || $loadRelationshipLevel <= 0){
+        if ($loadRelationshipLevel <= 0){
             return null;
         }
 
-        $loadRelationshipLevel--;
+        if ($this->loadChildren) {
+            $loadRelationshipLevel--;
+        } else {
+            $loadRelationshipLevel = 0;
+        }
 
         $cache = $this->getCache($data, $relationshipParameters);
 
