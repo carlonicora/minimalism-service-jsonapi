@@ -55,7 +55,10 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     protected array $relationships = [];
 
     /** @var array  */
-    protected array $meta = [];
+    protected array $meta = [
+        'base' => [],
+        'relationship' => []
+    ];
 
     /** @var AttributeBuilderFactory */
     private AttributeBuilderFactory $attributeBuilderFactory;
@@ -97,6 +100,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Attributes Created (' . get_class($this) . ')'));
         $this->setLinks();
         $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Links Created (' . get_class($this) . ')'));
+        $this->setMeta();
+        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Meta Created (' . get_class($this) . ')'));
 
         $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->services);
     }
@@ -345,7 +350,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = new ResourceObject($this->type);
 
         $this->buildAttributes($response, $data);
-        $this->buildMeta($response);
+        $this->buildMeta($response, ($positionInRelationship !== []));
         $this->buildLinks($this, $this, $response->links, $data, $response);
 
         if ($loadRelationshipsLevel > 0){
@@ -423,15 +428,22 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
     /**
      * @param ResourceObject $response
+     * @param bool $isRelationship
      * @throws Exception
      */
-    private function buildMeta(ResourceObject $response): void
+    private function buildMeta(ResourceObject $response, bool $isRelationship=false): void
     {
-        /** @var array $meta */
-        foreach ($this->meta as $meta) {
+        $meta = $this->getMeta();
+        if ($isRelationship) {
+            $meta = $meta['relationship'];
+        } else {
+            $meta = $meta['base'];
+        }
+
+        foreach ($meta ?? [] as $singleMeta) {
             $response->meta->add(
-                $meta['name'],
-                $meta['value']
+                $singleMeta['name'],
+                $singleMeta['value']
             );
         }
     }

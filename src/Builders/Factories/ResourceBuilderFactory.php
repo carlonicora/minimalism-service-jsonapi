@@ -40,6 +40,8 @@ class ResourceBuilderFactory
                 $this->mapper->getCache()->setAttributeBuilder($attribute);
             }
 
+            $this->mapper->getCache()->setMetaBuilder($response->getMeta());
+
             $this->mapper->getCache()->setResourceBuilder($response);
         }
 

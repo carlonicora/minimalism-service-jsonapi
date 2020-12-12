@@ -46,4 +46,13 @@ class CacheFacade
     {
         $this->cache['attributes'][get_class($attributeBuilder->getResourceBuilder())][$attributeBuilder->getName()] = $attributeBuilder;
     }
+
+
+    /**
+     * @param array $meta
+     */
+    public function setMetaBuilder(array $meta): void
+    {
+        $this->cache['meta'] = $meta;
+    }
 }
