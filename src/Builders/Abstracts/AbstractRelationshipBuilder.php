@@ -293,7 +293,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             return $this->cacheBuilder;
         }
 
-        if (!strpos($identifier[array_key_first($identifier)], '/')){
+        if (!strpos(array_key_first($identifier), '/')){
             if (array_key_exists(array_key_first($identifier), $data)){
                 $this->cacheBuilder->setIdentifier($data[array_key_first($identifier)]);
                 return $this->cacheBuilder;
