@@ -287,16 +287,17 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         if ($this->cacheBuilder === null){
             return null;
         }
+        $response = clone($this->cacheBuilder);
 
-        $identifier = $this->cacheBuilder->getIdentifier();
+        $identifier = $response->getIdentifier();
         if (!is_array($identifier)){
-            return $this->cacheBuilder;
+            return $response;
         }
 
         if (!strpos(array_key_first($identifier), '/')){
             if (array_key_exists(array_key_first($identifier), $data)){
-                $this->cacheBuilder->setIdentifier($data[array_key_first($identifier)]);
-                return $this->cacheBuilder;
+                $response->setIdentifier($data[array_key_first($identifier)]);
+                return $response;
             }
             return null;
         }
@@ -306,8 +307,8 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
         }
 
         if (array_key_exists($type, $parameters) && array_key_exists(array_key_first($identifier), $parameters[$type])){
-            $this->cacheBuilder->setIdentifier($parameters[$type][array_key_first($identifier)]);
-            return $this->cacheBuilder;
+            $response->setIdentifier($parameters[$type][array_key_first($identifier)]);
+            return $response;
         }
 
         return null;
