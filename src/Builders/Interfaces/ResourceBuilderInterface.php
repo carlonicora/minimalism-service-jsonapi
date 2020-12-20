@@ -3,7 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
 
 interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
@@ -61,9 +61,9 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
     public function getRelationship(string $relationshipName) : ?RelationshipBuilderInterface;
 
     /**
-     * @param CacheFactoryInterface $cacheFactory
+     * @param CacheBuilderFactoryInterface $cacheFactory
      */
-    public function setCacheFactoryInterface(CacheFactoryInterface $cacheFactory): void;
+    public function setCacheFactoryInterface(CacheBuilderFactoryInterface $cacheFactory): void;
 
     /**
      * @return array

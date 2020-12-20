@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheFactoryInterface;
+use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
@@ -30,10 +30,10 @@ class ResourceBuildersPreLoader
 
     /**
      * @param string $buildersFolder
-     * @param CacheFactoryInterface $cacheFactory
+     * @param CacheBuilderFactoryInterface $cacheFactory
      * @throws Exception
      */
-    public function preLoad(string $buildersFolder, CacheFactoryInterface $cacheFactory): void
+    public function preLoad(string $buildersFolder, CacheBuilderFactoryInterface $cacheFactory): void
     {
         $builderFactory = new ResourceBuilderFactory($this->services);
         $files = scandir($buildersFolder);
