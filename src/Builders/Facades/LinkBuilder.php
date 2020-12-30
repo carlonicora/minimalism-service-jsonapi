@@ -5,26 +5,18 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\LinkBuilderInter
 
 class LinkBuilder implements LinkBuilderInterface
 {
-    /** @var string  */
-    private string $name;
-
-    /** @var string  */
-    private string $link;
-
-    /** @var array|null  */
-    private ?array $meta;
-
     /**
      * LinkBuilderInterface constructor.
      * @param string $name
      * @param string $link
      * @param array|null $meta
      */
-    public function __construct(string $name, string $link, array $meta=null)
+    public function __construct(
+        private string $name,
+        private string $link,
+        private ?array $meta=null,
+    )
     {
-        $this->name = $name;
-        $this->link = $link;
-        $this->meta = $meta;
     }
 
     /**

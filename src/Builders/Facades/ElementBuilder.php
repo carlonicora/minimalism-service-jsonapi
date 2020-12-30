@@ -4,15 +4,11 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ElementBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use Exception;
 
 abstract class ElementBuilder implements ElementBuilderInterface
 {
     /** @var string  */
     protected string $name;
-
-    /** @var string  */
-    protected string $type=ParameterValidator::PARAMETER_TYPE_STRING;
 
     /** @var string|null  */
     protected ?string $validator=null;

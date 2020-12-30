@@ -1,25 +1,26 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Factories;
 
+use CarloNicora\Minimalism\Interfaces\DataInterface;
+use CarloNicora\Minimalism\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 
 class FunctionFactory
 {
     /**
-     * @var MySQL
+     * @var DataInterface
      */
-    private static MySQL $mysql;
+    private static DataInterface $dataProvider;
 
     /**
-     * @param MySQL $mysql
+     * @param ServicesProxy $servicesProxy
      */
-    public static function initialise(MySQL $mysql): void
+    public static function initialise(ServicesProxy $servicesProxy): void
     {
-        self::$mysql = $mysql;
+        self::$dataProvider = $servicesProxy->getDataProvider();
     }
 
     /**
@@ -72,7 +73,7 @@ class FunctionFactory
         bool $isSingleRead=false
     ): FunctionFacade
     {
-        $tableInterface = self::$mysql->create($tableClassName);
+        $tableInterface = self::$dataProvider->create($tableClassName);
 
         return self::buildFromTableInterface($tableInterface, $functionName, $parameters, $isSingleRead);
     }

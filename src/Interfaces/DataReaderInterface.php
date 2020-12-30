@@ -1,33 +1,27 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Interfaces;
 
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use CarloNicora\Minimalism\Services\Redis\Redis;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
+use Exception;
 
 interface DataReaderInterface
 {
     /**
      * DataReaderInterface constructor.
-     * @param Redis $redis
-     * @param MySQL $mysql
-     * @param Cacher $cacher
+     * @param ServicesProxy $servicesProxy
      * @param FunctionFacade $function
      * @param array $functionParameters
      */
     public function __construct(
-        Redis $redis,
-        MySQL $mysql,
-        Cacher $cacher,
+        ServicesProxy $servicesProxy,
         FunctionFacade $function,
         array $functionParameters = []
     );
 
     /**
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws Exception
      */
     public function getSingle() : array;
 

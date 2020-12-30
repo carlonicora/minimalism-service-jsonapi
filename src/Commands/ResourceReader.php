@@ -1,8 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
@@ -11,10 +10,7 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilder
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Factories\DataReadersFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataReaderInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use CarloNicora\Minimalism\Services\Redis\Redis;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 
 class ResourceReader
@@ -24,35 +20,30 @@ class ResourceReader
 
     /**
      * ResourceReader constructor.
-     * @param JsonApi $jsonApi
-     * @param Cacher $cacher
-     * @param Redis $redis
-     * @param MySQL $mysql
+     * @param ServicesProxy $servicesProxy
      */
     public function __construct(
-        private JsonApi $jsonApi,
-        private Cacher $cacher,
-        private Redis $redis,
-        private MySQL $mysql,
+        private ServicesProxy $servicesProxy,
     ) {
-        $this->resourceFactory = new ResourceBuilderFactory($this->jsonApi);
+        $this->resourceFactory = new ResourceBuilderFactory(
+            servicesProxy: $this->servicesProxy,
+        );
     }
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @param AttributeBuilderInterface $attribute
      * @param array $parameters
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
-        ?CacheBuilder $cacheBuilder,
+        ?CacheBuilderInterface $cacheBuilder,
         AttributeBuilderInterface $attribute,
         array $parameters,
         int $loadRelationshipsLevel=0,
@@ -62,9 +53,14 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null) {
-            /** @noinspection UnserializeExploitsInspection */
-            $response = unserialize($response);
+        if ($cacheBuilder !== null && $this->servicesProxy->useCache()){
+            $response = $this->servicesProxy->getCacheProvider()
+                ? $this->servicesProxy->getCacheProvider()->read($cacheBuilder, CacheBuilderInterface::JSON)
+                : null;
+            if ($response !== null) {
+                /** @noinspection UnserializeExploitsInspection */
+                $response = unserialize($response);
+            }
         }
 
         if ($response === null || $response === false) {
@@ -84,7 +80,7 @@ class ResourceReader
                     $resourceBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
-                        'loadFromId',
+                        'loadById',
                         $values,
                         true
                     ),
@@ -107,8 +103,8 @@ class ResourceReader
                 );
             }
 
-            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
+            if ($cacheBuilder !== null && $this->servicesProxy->useCache()) {
+                $this->servicesProxy->getCacheProvider()?->save($cacheBuilder, serialize($response), CacheBuilderInterface::JSON);
             }
         }
 
@@ -117,18 +113,17 @@ class ResourceReader
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @param FunctionFacade $function
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
-        ?CacheBuilder $cacheBuilder,
+        ?CacheBuilderInterface $cacheBuilder,
         FunctionFacade $function,
         int $loadRelationshipsLevel=0,
         array $relationshipParameters=[],
@@ -137,9 +132,14 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null) {
-            /** @noinspection UnserializeExploitsInspection */
-            $response = unserialize($response);
+        if ($cacheBuilder !== null && $this->servicesProxy->useCache()) {
+            $response = $this->servicesProxy->getCacheProvider()
+                ? $this->servicesProxy->getCacheProvider()->read($cacheBuilder, CacheBuilderInterface::JSON)
+                : null;
+            if ($response !== null) {
+                /** @noinspection UnserializeExploitsInspection */
+                $response = unserialize($response);
+            }
         }
 
         if ($response === null) {
@@ -158,8 +158,8 @@ class ResourceReader
                 );
             }
 
-            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
+            if ($cacheBuilder !== null && $this->servicesProxy->useCache()) {
+                $this->servicesProxy->getCacheProvider()?->save($cacheBuilder, serialize($response), CacheBuilderInterface::JSON);
             }
         }
 
@@ -168,7 +168,7 @@ class ResourceReader
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @param array $dataList
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
@@ -178,7 +178,7 @@ class ResourceReader
      */
     public function generateResourceObjectByData(
         string $builderName,
-        ?CacheBuilder $cacheBuilder,
+        ?CacheBuilderInterface $cacheBuilder,
         array $dataList,
         int $loadRelationshipsLevel=0,
         array $relationshipParameters=[],
@@ -187,9 +187,14 @@ class ResourceReader
     {
         $response = null;
 
-        if ($cacheBuilder !== null && $this->cacher->useCaching() && ($response = $this->cacher->read($cacheBuilder, CacheBuilder::JSON)) !== null){
-            /** @noinspection UnserializeExploitsInspection */
-            $response = unserialize($response);
+        if ($cacheBuilder !== null && $this->servicesProxy->useCache()){
+            $response = $this->servicesProxy->getCacheProvider()
+                ? $this->servicesProxy->getCacheProvider()->read($cacheBuilder, CacheBuilderInterface::JSON)
+                : null;
+            if ($response !== null) {
+                /** @noinspection UnserializeExploitsInspection */
+                $response = unserialize($response);
+            }
         }
 
         if ($response === null) {
@@ -200,8 +205,8 @@ class ResourceReader
                 $response[] = $resourceBuilder->buildResourceObject($data, $loadRelationshipsLevel, $relationshipParameters, $positionInRelationship);
             }
 
-            if ($cacheBuilder !== null && $this->cacher->useCaching()) {
-                $this->cacher->save($cacheBuilder, serialize($response), CacheBuilder::JSON);
+            if ($cacheBuilder !== null && $this->servicesProxy->useCache()) {
+                $this->servicesProxy->getCacheProvider()->save($cacheBuilder, serialize($response), CacheBuilderInterface::JSON);
             }
         }
 
@@ -215,7 +220,6 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
      * @throws Exception
      */
     private function generateResourceObject(
@@ -245,7 +249,6 @@ class ResourceReader
      * @param FunctionFacade $function
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function readResourceObjectData(
@@ -256,15 +259,15 @@ class ResourceReader
         $response = null;
 
         $readerFactory = new DataReadersFactory(
-            $this->redis,
-            $this->mysql,
-            $this->cacher
+            servicesProxy: $this->servicesProxy
         );
         $parameters = ParametersFacade::prepareParameters($function->getParameters(), $positionInRelationship, true);
 
         if ($function->getType() === FunctionFacade::LOADER){
             $loaderClassName = $function->getLoaderClassName();
-            $loader = new $loaderClassName($this->services);
+            $loader = new $loaderClassName(
+                $this->servicesProxy
+            );
 
             $response = $loader->{$function->getFunctionName()}(...$parameters);
         } elseif ($function->getType() === FunctionFacade::TABLE) {

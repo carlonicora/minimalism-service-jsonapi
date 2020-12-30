@@ -24,8 +24,6 @@
     "php": ">=8.0",
     "ext-json": "*",
     "carlonicora/jsonapi": "~2.0",
-    "carlonicora/minimalism": "~12.0",
-    "carlonicora/minimalism-service-mysql": "~4.0",
-    "carlonicora/minimalism-service-cacher": "~3.0"
+    "carlonicora/minimalism": "~12.0"
   }
 }

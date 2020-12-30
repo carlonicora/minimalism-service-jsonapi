@@ -2,23 +2,17 @@
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 
 interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
     /**
      * ResourceBuilderInterface constructor.
-     * @param JsonApi $jsonApi
-     * @param MySQL $mysql
-     * @param Cacher $cacher
+     * @param ServicesProxy $servicesProxy
      */
     public function __construct(
-        JsonApi $jsonApi,
-        MySQL $mysql,
-        Cacher $cacher,
+        ServicesProxy $servicesProxy,
     );
 
     /**

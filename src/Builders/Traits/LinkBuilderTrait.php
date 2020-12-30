@@ -62,7 +62,7 @@ trait LinkBuilderTrait
         foreach ($builder->getLinks() as $link) {
             $url = $this->buildLink($link->getLink(), $resourceBuilder, $data, $resourceObject);
 
-            if (($linkBuilder = $this->jsonApi->getLinkBuilder()) !== null){
+            if (($linkBuilder = $this->servicesProxy->getLinkBuilder()) !== null){
                 /** @var ResourceBuilderInterface $rbi */
                 $rbi = $this;
                 $url = $linkBuilder->buildLink($url, $rbi, $data);

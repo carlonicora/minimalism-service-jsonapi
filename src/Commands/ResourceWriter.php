@@ -4,18 +4,14 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipTypeInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use CarloNicora\Minimalism\Services\Redis\Redis;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 use RuntimeException;
 use Throwable;
@@ -30,29 +26,33 @@ class ResourceWriter
 
     /**
      * ResourceReader constructor.
-     * @param JsonApi $jsonApi
-     * @param MySQL $mysql
-     * @param Cacher $cacher
-     * @param Redis $redis
+     * @param ServicesProxy $servicesProxy
      */
     public function __construct(
-        private JsonApi $jsonApi,
-        private Cacher $cacher,
-        private Redis $redis,
-        private MySQL $mysql,
+        private ServicesProxy $servicesProxy,
     ) {
-        $this->resourceFactory = new ResourceBuilderFactory($this->jsonApi);
-        $this->resourceReader = new ResourceReader($this->jsonApi, $this->cacher, $this->redis, $this->mysql);
+        $this->resourceFactory = new ResourceBuilderFactory(
+            servicesProxy: $this->servicesProxy
+        );
+
+        $this->resourceReader = new ResourceReader(
+            servicesProxy: $this->servicesProxy
+        );
     }
 
     /**
      * @param Document $data
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @param string $resourceBuilderName
      * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheBuilder $cacheBuilder, string $resourceBuilderName, bool $updateRelationships=false) : void
+    public function writeDocument(
+        Document $data,
+        ?CacheBuilderInterface $cacheBuilder,
+        string $resourceBuilderName,
+        bool $updateRelationships=false
+    ) : void
     {
         $resourceBuilder = $this->resourceFactory->createResourceBuilder($resourceBuilderName);
         $this->validateAndDecryptDocument($data, $resourceBuilder);
@@ -71,14 +71,14 @@ class ResourceWriter
 
     /**
      * @param ResourceBuilderInterface $resourceBuilder
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @param ResourceObject $resourceObject
      * @param bool $updateRelationships
      * @throws Exception
      */
     private function writeResourceObject(
         ResourceBuilderInterface $resourceBuilder,
-        ?CacheBuilder $cacheBuilder,
+        ?CacheBuilderInterface $cacheBuilder,
         ResourceObject $resourceObject,
         bool $updateRelationships=false
     ): void
@@ -103,7 +103,7 @@ class ResourceWriter
             }
         }
 
-        $table = $this->mysql->create($resourceBuilder->getTableName());
+        $table = $this->servicesProxy->getDataProvider()->create($resourceBuilder->getTableName());
         $table->update($response);
 
         if ($resourceObject->id === null && ($id = $resourceBuilder->getAttribute('id')) !== null){
@@ -119,8 +119,8 @@ class ResourceWriter
             }
         }
 
-        if ($cacheBuilder !== null &&  $this->cacher->useCaching()){
-            $this->cacher->invalidate($cacheBuilder);
+        if ($cacheBuilder !== null &&  $this->servicesProxy->useCache() && $this->servicesProxy->getCacheProvider() !== null){
+            $this->servicesProxy->getCacheProvider()->invalidate($cacheBuilder);
         }
     }
 
@@ -134,7 +134,7 @@ class ResourceWriter
     {
         $relationship = $resourceObject->relationship($relationshipName);
         if (($relationshipResourceInfo = $resourceBuilder->getRelationship($relationshipName)) !== null) {
-            $table = $this->mysql->create($relationshipResourceInfo->getManyToManyRelationshipTableClass());
+            $table = $this->servicesProxy->getDataProvider()->create($relationshipResourceInfo->getManyToManyRelationshipTableClass());
 
             $currentRelationshipArray = [];
             $newRelationshipsId = [];
@@ -193,12 +193,12 @@ class ResourceWriter
                 $response = $this->resourceReader->readResourceObjectData(
                     FunctionFactory::buildFromTableName(
                         $resourceBuilder->getTableName(),
-                        'loadFromId',
+                        'loadById',
                         [$resourceObject->id],
                         true
                     )
                 )[0];
-            } catch (DbRecordNotFoundException) {
+            } catch (Exception) {
                 $response = [];
             }
         }
@@ -222,8 +222,8 @@ class ResourceWriter
     private function encryptDocument(Document $data, ResourceBuilderInterface $resourceBuilder): void
     {
         foreach ($data->resources ?? [] as $resourceObject){
-            if ($this->jsonApi->getDefaultEncrypter() !== null) {
-                $resourceObject->id = $this->jsonApi->getDefaultEncrypter()->encryptId(
+            if ($this->servicesProxy->getEncrypter() !== null) {
+                $resourceObject->id = $this->servicesProxy->getEncrypter()->encryptId(
                     $resourceObject->id
                 );
 
@@ -232,7 +232,7 @@ class ResourceWriter
                     if ($attribute->getName() !== 'id' && $attribute->isEncrypted() && $resourceObject->attributes->has($attribute->getName())){
                         $resourceObject->attributes->update(
                             $attribute->getName(),
-                            $this->jsonApi->getDefaultEncrypter()->encryptId(
+                            $this->servicesProxy->getEncrypter()->encryptId(
                                 $resourceObject->attributes->get($attribute->getName())
                             )
                         );
@@ -252,16 +252,19 @@ class ResourceWriter
         foreach ($data->resources ?? [] as $resourceObject){
             $isNewResource = $resourceObject->id === null;
 
-            if (!$isNewResource && $this->jsonApi->getDefaultEncrypter() !== null){
+            if (!$isNewResource && $this->servicesProxy->getEncrypter() !== null){
                 /** @var ResourceObject $dataResource */
 
                 try {
+                    $resourceReader = new ResourceReader(
+                        servicesProxy: $this->servicesProxy,
+                    );
                     $dataResource = current(
-                        $this->jsonApi->generateResourceObjectByFieldValue(
+                        $resourceReader->generateResourceObjectByFieldValue(
                             get_class($resourceBuilder),
                             null,
                             $resourceBuilder->getAttribute('id'),
-                            $this->jsonApi->getDefaultEncrypter()->decryptId($resourceObject->id)
+                            [$this->servicesProxy->getEncrypter()->decryptId($resourceObject->id)]
                         )
                     );
 
@@ -294,8 +297,8 @@ class ResourceWriter
             throw new RuntimeException('Missing required field: id', 500);
         }
 
-        if ($field !== null && $resourceObject->id !== null && $this->jsonApi->getDefaultEncrypter() !== null && $field->isEncrypted()) {
-            $resourceObject->id = $this->jsonApi->getDefaultEncrypter()->decryptId($resourceObject->id);
+        if ($field !== null && $resourceObject->id !== null && $this->servicesProxy->getEncrypter() !== null && $field->isEncrypted()) {
+            $resourceObject->id = $this->servicesProxy->getEncrypter()->decryptId($resourceObject->id);
         }
 
         /** @var AttributeBuilderInterface $attribute */
@@ -305,7 +308,7 @@ class ResourceWriter
                     $attributeValue = $resourceObject->attributes->get($attribute->getName());
 
                     if ($attribute->isEncrypted()){
-                        $attributeValue = $this->jsonApi->getDefaultEncrypter()->decryptId($attributeValue);
+                        $attributeValue = $this->servicesProxy->getEncrypter()->decryptId($attributeValue);
                     }
 
                     $resourceObject->attributes->update($attribute->getName(), $attributeValue);
@@ -348,8 +351,8 @@ class ResourceWriter
                     throw new RuntimeException('Relationship resource mismatch:' . $resourceLink->type, $relationship->getType(), 500);
                 }
 
-                if ($resourceLink->id !== null && $this->jsonApi->getDefaultEncrypter() !== null && $relationship->getAttribute() !== null && $relationship->getAttribute()->isEncrypted()) {
-                    $resourceLink->id = $this->jsonApi->getDefaultEncrypter()->decryptId($resourceLink->id);
+                if ($resourceLink->id !== null && $this->servicesProxy->getEncrypter() !== null && $relationship->getAttribute() !== null && $relationship->getAttribute()->isEncrypted()) {
+                    $resourceLink->id = $this->servicesProxy->getEncrypter()->decryptId($resourceLink->id);
                 }
             }
         }

@@ -1,13 +1,10 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Facades;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataReaderInterface;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use CarloNicora\Minimalism\Services\Redis\Redis;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 
 class DataReaderFacade implements DataReaderInterface
@@ -20,16 +17,12 @@ class DataReaderFacade implements DataReaderInterface
 
     /**
      * DataReaderFacade constructor.
-     * @param Redis $redis
-     * @param MySQL $mysql
-     * @param Cacher $cacher
+     * @param ServicesProxy $servicesProxy
      * @param FunctionFacade $function
      * @param array $functionParameters
      */
     public function __construct(
-        private Redis $redis,
-        private MySQL $mysql,
-        private Cacher $cacher,
+        private ServicesProxy $servicesProxy,
         FunctionFacade $function,
         array $functionParameters = []
     ) {
@@ -39,18 +32,21 @@ class DataReaderFacade implements DataReaderInterface
 
     /**
      * @return array
-     * @throws DbRecordNotFoundException|Exception
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function getSingle() : array
     {
-        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->function->getCacheBuilder(), CacheBuilder::DATA)) === null){
+        if ($this->function->getCacheBuilder() !== null && $this->servicesProxy->useCache()) {
+            $response = $this->servicesProxy->getCacheProvider()
+                ? $this->servicesProxy->getCacheProvider()->readArray($this->function->getCacheBuilder(), CacheBuilderInterface::DATA)
+                : null;
+            if ($response === null){
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
                 if (is_array($response)) {
-                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response, CacheBuilder::DATA);
+                    $this->servicesProxy->getCacheProvider()?->saveArray($this->function->getCacheBuilder(), $response, CacheBuilderInterface::DATA);
                 } else {
-                    $this->cacher->save($this->function->getCacheBuilder(), (string)$response, CacheBuilder::DATA);
+                    $this->servicesProxy->getCacheProvider()->save($this->function->getCacheBuilder(), (string)$response, CacheBuilderInterface::DATA);
                 }
             }
         } else {
@@ -66,13 +62,16 @@ class DataReaderFacade implements DataReaderInterface
      */
     public function getList() : ?array
     {
-        if ($this->function->getCacheBuilder() !== null && $this->cacher->useCaching()) {
-            if (($response = $this->cacher->readArray($this->function->getCacheBuilder(), CacheBuilder::DATA)) === null) {
+        if ($this->function->getCacheBuilder() !== null && $this->servicesProxy->useCache()) {
+            $response = $this->servicesProxy->getCacheProvider()
+                ? $this->servicesProxy->getCacheProvider()->readArray($this->function->getCacheBuilder(), CacheBuilderInterface::DATA)
+                : null;
+            if ($response === null) {
                 $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
 
                 if ($response !== null && $response !== []) {
-                    $this->function->getCacheBuilder()->setType(CacheBuilder::DATA);
-                    $this->cacher->saveArray($this->function->getCacheBuilder(), $response, CacheBuilder::DATA);
+                    $this->function->getCacheBuilder()->setType(CacheBuilderInterface::DATA);
+                    $this->servicesProxy->getCacheProvider()?->saveArray($this->function->getCacheBuilder(), $response, CacheBuilderInterface::DATA);
                 }
             }
         } else {

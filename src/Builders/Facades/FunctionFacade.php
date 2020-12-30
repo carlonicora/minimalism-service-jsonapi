@@ -1,9 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
+use CarloNicora\Minimalism\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use RuntimeException;
 
 class FunctionFacade
@@ -30,8 +30,8 @@ class FunctionFacade
     /** @var bool  */
     private bool $isSingleRead;
     
-    /** @var CacheBuilder|null  */
-    private ?CacheBuilder $cacheBuilder=null;
+    /** @var CacheBuilderInterface|null  */
+    private ?CacheBuilderInterface $cacheBuilder=null;
 
     /**
      * @var array
@@ -208,18 +208,18 @@ class FunctionFacade
     }
 
     /**
-     * @return CacheBuilder|null
+     * @return CacheBuilderInterface|null
      */
-    public function getCacheBuilder(): ?CacheBuilder
+    public function getCacheBuilder(): ?CacheBuilderInterface
     {
         return $this->cacheBuilder;
     }
 
     /**
-     * @param CacheBuilder|null $cacheBuilder
+     * @param CacheBuilderInterface|null $cacheBuilder
      * @return FunctionFacade
      */
-    public function withCacheBuilder(?CacheBuilder $cacheBuilder): FunctionFacade
+    public function withCacheBuilder(?CacheBuilderInterface $cacheBuilder): FunctionFacade
     {
         $this->cacheBuilder = $cacheBuilder;
         

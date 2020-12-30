@@ -1,8 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
-use CarloNicora\Minimalism\Services\ParameterValidator\Interfaces\ParameterValidatorInterface;
-
 interface ElementBuilderInterface
 {
     /**
@@ -108,17 +106,6 @@ interface ElementBuilderInterface
      * @return $this|ElementBuilderInterface
      */
     public function setTransformationMethod(?string $transformationMethod): ElementBuilderInterface;
-
-    /**
-     * @return ParameterValidatorInterface
-     */
-    public function getType(): ParameterValidatorInterface;
-
-    /**
-     * @param string $type
-     * @return $this|ElementBuilderInterface
-     */
-    public function setType(string $type): ElementBuilderInterface;
 
     /**
      * @return string|null

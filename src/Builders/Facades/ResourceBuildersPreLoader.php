@@ -1,26 +1,26 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 
 class ResourceBuildersPreLoader
 {
     /**
      * ResourceBuildersPreLoader constructor.
-     * @param JsonApi $jsonApi
-     * @param MySQL $mysql
+     * @param ServicesProxy $servicesProxy
      */
-    public function __construct(private JsonApi $jsonApi, MySQL $mysql)
+    public function __construct(
+        private ServicesProxy $servicesProxy,
+    )
     {
-        AbstractResourceBuilder::initialise($jsonApi);
-        FunctionFactory::initialise($mysql);
+        AbstractResourceBuilder::initialise($this->servicesProxy);
+        FunctionFactory::initialise($this->servicesProxy);
     }
 
     /**
@@ -30,7 +30,9 @@ class ResourceBuildersPreLoader
      */
     public function preLoad(string $buildersFolder, CacheBuilderFactoryInterface $cacheFactory): void
     {
-        $builderFactory = new ResourceBuilderFactory($this->jsonApi);
+        $builderFactory = new ResourceBuilderFactory(
+            servicesProxy: $this->servicesProxy
+        );
         $files = scandir($buildersFolder);
 
         $builders = [];

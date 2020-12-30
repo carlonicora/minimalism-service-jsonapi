@@ -3,16 +3,13 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Traits;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\Path;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 
 trait LinkCreatorTrait
 {
-    /** @var JsonApi */
-    protected JsonApi $jsonApi;
-
-    protected Path $path;
+    /** @var ServicesProxy  */
+    protected ServicesProxy $servicesProxy;
 
     /**
      * @param string $url
@@ -24,7 +21,7 @@ trait LinkCreatorTrait
     public function buildLink(string $url, ResourceBuilderInterface $resource, array $data, ResourceObject $resourceObject=null) : string
     {
         if ($url[0] !== '%'){
-            $url = $this->path->getUrl() . $url;
+            $url = $this->servicesProxy->getPath()->getUrl() . $url;
         }
 
         $linkElements = explode('%', $url);
@@ -45,15 +42,15 @@ trait LinkCreatorTrait
                     $value = '';
                 }
 
-                if (is_int($value) && $attribute->isEncrypted() && ($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null){
-                    $value = $encrypter->encryptId($value);
+                if (is_int($value) && $attribute->isEncrypted() && $encrypter = $this->servicesProxy->getEncrypter() !== null){
+                    $value = $this->servicesProxy->getEncrypter()->encryptId($value);
                 }
 
                 $linkElements[$linkElementsCounter] = $value;
             } elseif (array_key_exists($linkElements[$linkElementsCounter], $data)){
                 try {
-                    if (($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null) {
-                        $linkElements[$linkElementsCounter] = $encrypter->encryptId($data[$linkElements[$linkElementsCounter]]);
+                    if ($this->servicesProxy->getEncrypter() !== null) {
+                        $linkElements[$linkElementsCounter] = $this->servicesProxy->getEncrypter()->encryptId($data[$linkElements[$linkElementsCounter]]);
                     }
                 } catch (Exception) {
                     $linkElements[$linkElementsCounter] = $data[$linkElements[$linkElementsCounter]];

@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractRelationshipBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipTypeInterface;
 use Exception;
@@ -13,7 +13,7 @@ class OneToManyRelationshipBuilder extends AbstractRelationshipBuilder
 
     /**
      * @param array $data
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
@@ -22,13 +22,13 @@ class OneToManyRelationshipBuilder extends AbstractRelationshipBuilder
      */
     protected function loadSpecialisedResources(
         array $data,
-        ?CacheBuilder $cache,
+        ?CacheBuilderInterface $cache,
         int $loadRelationshipLevel=0,
         array $relationshipParameters=[],
         array $positionInRelationship=[]
     ): ?array
     {
-        return $this->jsonApi->generateResourceObjectByFieldValue(
+        return $this->resourceReader->generateResourceObjectByFieldValue(
             $this->resourceBuilderName,
             $cache,
             $this->targetBuilderAttribute,

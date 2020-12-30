@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractRelationshipBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipBuilderInterface;
@@ -37,7 +37,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
 
         $this->manyToManyRelationshipTableClass = $tableInterfaceClass;
 
-        $table = $this->mysql->create($tableInterfaceClass);
+        $table = $this->servicesProxy->getDataProvider()->create($tableInterfaceClass);
         $this->manyToManyRelationshipTableName = $table->getTableName();
 
         return $this;
@@ -45,7 +45,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
 
     /**
      * @param array $data
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
@@ -54,7 +54,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
      */
     protected function loadSpecialisedResources(
         array $data,
-        ?CacheBuilder $cache,
+        ?CacheBuilderInterface $cache,
         int $loadRelationshipLevel=0,
         array $relationshipParameters=[],
         array $positionInRelationship=[]
@@ -67,7 +67,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
             $data[$this->targetBuilderAttribute->getDatabaseFieldRelationship()],
         ];
 
-        return $this->jsonApi->generateResourceObjectsByFunction(
+        return $this->resourceReader->generateResourceObjectsByFunction(
             $this->resourceBuilderName,
             $cache,
             FunctionFactory::buildFromTableName(

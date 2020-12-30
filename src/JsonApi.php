@@ -2,10 +2,11 @@
 namespace CarloNicora\Minimalism\Services\JsonApi;
 
 use CarloNicora\JsonApi\Document;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
+use CarloNicora\Minimalism\Interfaces\CacheInterface;
+use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
@@ -14,64 +15,57 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilder
 use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceReader;
 use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use CarloNicora\Minimalism\Services\Redis\Redis;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
+use CarloNicora\Minimalism\Services\Path;
 use Exception;
 
 class JsonApi implements ServiceInterface
 {
-    /** @var EncrypterInterface|null  */
-    private ?EncrypterInterface $defaultEncrypter=null;
-
-    /** @var LinkCreatorInterface|null  */
-    private ?LinkCreatorInterface $linkBuilder=null;
-
     /** @var ResourceReader|null  */
     private ?ResourceReader $resourceReader=null;
-
-    /** @var CacheFacade  */
-    private CacheFacade $cache;
 
     /** @var ResourceWriter|null  */
     private ?ResourceWriter $resourceWriter=null;
 
-    /**
-     * abstractApiCaller constructor.
-     * @param MySQL $mysql
-     * @param Cacher $cacher
-     * @param Redis $redis
-     */
-    public function __construct(
-        private MySQL $mysql,
-        private Cacher $cacher,
-        private Redis $redis,
-    ) {
-        $this->cache = new CacheFacade();
-    }
+    /** @var ServicesProxy  */
+    private ServicesProxy $servicesProxy;
 
     /**
-     * @return CacheFacade
+     * abstractApiCaller constructor.
+     * @param DataInterface $dataProvider
+     * @param CacheInterface|null $cacheProvider
+     * @param EncrypterInterface|null $encrypter
+     * @param Path $path
      */
-    public function getCache(): CacheFacade
-    {
-        return $this->cache;
+    public function __construct(
+        DataInterface $dataProvider,
+        ?CacheInterface $cacheProvider,
+        ?EncrypterInterface $encrypter,
+        Path $path,
+    ) {
+        $this->servicesProxy = new ServicesProxy(
+            dataProvider: $dataProvider,
+            cacheProvider: $cacheProvider,
+            encrypter: $encrypter,
+            path: $path,
+            cacheFacade: new CacheFacade()
+        );
     }
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param AttributeBuilderInterface $attribute
      * @param $value
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
-        ?CacheBuilder $cache,
+        ?CacheBuilderInterface $cache,
         AttributeBuilderInterface $attribute,
         $value,
         int $loadRelationshipsLevel=0,
@@ -92,17 +86,17 @@ class JsonApi implements ServiceInterface
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param FunctionFacade $function
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
-        ?CacheBuilder $cache,
+        ?CacheBuilderInterface $cache,
         FunctionFacade $function,
         int $loadRelationshipsLevel=0,
         array $relationshipParameters=[],
@@ -121,7 +115,7 @@ class JsonApi implements ServiceInterface
 
     /**
      * @param string $builderName
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param array $dataList
      * @param int $loadRelationshipsLevel
      * @param array $relationshipParameters
@@ -131,7 +125,7 @@ class JsonApi implements ServiceInterface
      */
     public function generateResourceObjectByData(
         string $builderName,
-        ?CacheBuilder $cache,
+        ?CacheBuilderInterface $cache,
         array $dataList,
         int $loadRelationshipsLevel=0,
         array $relationshipParameters=[],
@@ -151,7 +145,6 @@ class JsonApi implements ServiceInterface
     /**
      * @param FunctionFacade $function
      * @return array
-     * @throws DbRecordNotFoundException
      * @throws Exception
      */
     public function readData(
@@ -165,12 +158,17 @@ class JsonApi implements ServiceInterface
 
     /**
      * @param Document $data
-     * @param CacheBuilder|null $cache
+     * @param CacheBuilderInterface|null $cache
      * @param string $resourceBuilderName
      * @param bool $updateRelationships
      * @throws Exception
      */
-    public function writeDocument(Document $data, ?CacheBuilder $cache, string $resourceBuilderName, bool $updateRelationships=false) : void
+    public function writeDocument(
+        Document $data,
+        ?CacheBuilderInterface $cache,
+        string $resourceBuilderName,
+        bool $updateRelationships=false
+    ) : void
     {
         $this->resourceWriter->writeDocument(
             $data,
@@ -181,48 +179,28 @@ class JsonApi implements ServiceInterface
     }
 
     /**
-     * @param EncrypterInterface|null $defaultEncrypter
-     */
-    public function setDefaultEncrypter(?EncrypterInterface $defaultEncrypter): void
-    {
-        $this->defaultEncrypter = $defaultEncrypter;
-    }
-
-    /**
-     * @return EncrypterInterface|null
-     */
-    public function getDefaultEncrypter(): ?EncrypterInterface
-    {
-        return $this->defaultEncrypter;
-    }
-
-    /**
-     * @return LinkCreatorInterface|null
-     */
-    public function getLinkBuilder(): ?LinkCreatorInterface
-    {
-        return $this->linkBuilder;
-    }
-
-    /**
      * @param LinkCreatorInterface|null $linkBuilder
      */
     public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
-        $this->linkBuilder = $linkBuilder;
+        $this->servicesProxy->setLinkBuilder($linkBuilder);
     }
 
     public function initialise(): void
     {
-        FunctionFactory::initialise($this->mysql);
-        AbstractResourceBuilder::initialise($this);
+        FunctionFactory::initialise($this->servicesProxy);
+        AbstractResourceBuilder::initialise($this->servicesProxy);
 
-        $this->resourceReader = new ResourceReader($this, $this->cacher, $this->redis, $this->mysql);
-        $this->resourceWriter = new ResourceWriter($this, $this->cacher, $this->redis, $this->mysql);
+        $this->resourceReader = new ResourceReader(
+            servicesProxy: $this->servicesProxy,
+        );
+        $this->resourceWriter = new ResourceWriter(
+            servicesProxy: $this->servicesProxy,
+        );
     }
 
-    public function destroy(): void
-    {
-        // TODO: Implement destroy() method.
-    }
+    /**
+     *
+     */
+    public function destroy(): void {}
 }

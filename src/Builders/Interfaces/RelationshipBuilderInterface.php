@@ -1,25 +1,19 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
-use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\LinkBuilder;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 
 interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
     /**
      * RelationshipBuilderInterface constructor.
-     * @param JsonApi $jsonApi
-     * @param MySQL $mysql
-     * @param Cacher $cacher
+     * @param ServicesProxy $servicesProxy
      * @param string $name
      */
     public function __construct(
-        JsonApi $jsonApi,
-        MySQL $mysql,
-        Cacher $cacher,
+        ServicesProxy $servicesProxy,
         string $name
     );
 
@@ -73,11 +67,11 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
 
 
     /**
-     * @param CacheBuilder $cacheBuilder
+     * @param CacheBuilderInterface $cacheBuilder
      * @return RelationshipBuilderInterface
      */
     public function withCache(
-        CacheBuilder $cacheBuilder
+        CacheBuilderInterface $cacheBuilder
     ): RelationshipBuilderInterface;
 
     /**

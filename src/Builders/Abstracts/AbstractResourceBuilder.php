@@ -3,10 +3,6 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts;
 
 use CarloNicora\JsonApi\Objects\Relationship;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
-use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\Cacher\Factories\CacheBuilderFactory;
-use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\AttributeBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\MetaBuilderFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\RelationshipBuilderInterfaceFactory;
@@ -20,8 +16,7 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\LinkBuilderTrait;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\ReadFunctionTrait;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
-use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 use RuntimeException;
 
@@ -33,8 +28,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var RelationshipBuilderInterfaceFactory  */
     protected RelationshipBuilderInterfaceFactory $relationshipBuilderInterfaceFactory;
 
-    /** @var JsonApi|null  */
-    private static ?JsonApi $staticJsonApi=null;
+    /** @var ServicesProxy|null  */
+    private static ?ServicesProxy $staticServicesProxy=null;
 
     /** @var array  */
     private static array $fieldCache = [];
@@ -69,47 +64,34 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var string|null  */
     protected ?string $resourceCache=null;
 
-    /** @var CacheBuilderFactoryInterface|null  */
-    protected ?CacheBuilderFactoryInterface $cacheFactory=null;
-
     /**
-     * @param JsonApi $jsonApi
+     * @param ServicesProxy $servicesProxy
      */
-    public static function initialise(JsonApi $jsonApi) : void
+    public static function initialise(
+        ServicesProxy $servicesProxy,
+    ) : void
     {
-        self::$staticJsonApi = $jsonApi;
+        self::$staticServicesProxy = $servicesProxy;
     }
 
     /**
      * AbstractResourceBuilder constructor.
-     * @param JsonApi $jsonApi
-     * @param MySQL $mysql
-     * @param Cacher $cacher
+     * @param ServicesProxy $servicesProxy
      */
     public function __construct(
-        protected JsonApi $jsonApi,
-        protected MySQL $mysql,
-        protected Cacher $cacher,
+        protected ServicesProxy $servicesProxy,
     )
     {
         $this->attributeBuilderFactory = new AttributeBuilderFactory($this);
         $this->metaBuilderFactory = new MetaBuilderFactory($this);
 
-        $this->cacheFactory = new CacheBuilderFactory();
-
         $this->setAttributes();
         $this->setLinks();
         $this->setMeta();
 
-        $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->jsonApi, $$this->mysql, $$this->cacher);
-    }
-
-    /**
-     * @param CacheBuilderFactoryInterface $cacheFactory
-     */
-    public function setCacheFactoryInterface(CacheBuilderFactoryInterface $cacheFactory): void
-    {
-        $this->cacheFactory = $cacheFactory;
+        $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory(
+            servicesProxy: $this->servicesProxy
+        );
     }
 
     /**
@@ -167,7 +149,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             }
         }
 
-        $this->jsonApi->getCache()->setResourceBuilder($this);
+        $this->servicesProxy->getCacheFacade()->setResourceBuilder($this);
     }
 
     /**
@@ -193,7 +175,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     final public static function tableName() : string
     {
         try {
-            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
+            $resourceBuilderFactory = new ResourceBuilderFactory(
+                servicesProxy: self::$staticServicesProxy
+            );
             $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
 
             return $resourceBuilder->getTableName();
@@ -209,9 +193,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     protected static function attribute(string $attributeName) : AttributeBuilderInterface
     {
-        if (($response = self::$staticJsonApi->getCache()->getAttributeBuilder(static::class, $attributeName)) === null)
+        if (($response = self::$staticServicesProxy->getCacheFacade()->getAttributeBuilder(static::class, $attributeName)) === null)
         {
-            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
+            $resourceBuilderFactory = new ResourceBuilderFactory(
+                servicesProxy: self::$staticServicesProxy
+            );
             $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
 
             $response = $resourceBuilder->getAttribute($attributeName);
@@ -231,7 +217,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     protected static function relationship(string $relationshipName) : AttributeBuilderInterface
     {
-        $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
+        $resourceBuilderFactory = new ResourceBuilderFactory(
+            servicesProxy: self::$staticServicesProxy
+        );
         $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
         /** @var RelationshipBuilderInterface $relationshipBuilder */
         $relationshipBuilder = $resourceBuilder->relationships[$relationshipName];
@@ -468,9 +456,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
         $response = $element->getStaticValue() ?? $data[$element->getDatabaseFieldName()] ?? null;
 
         if ($element->isEncrypted()){
-            /** @var EncrypterInterface $encrypter */
-            if ($response !== null && ($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null) {
-                $response = $encrypter->encryptId(
+            if ($response !== null && $this->servicesProxy->getEncrypter() !== null) {
+                $response = $this->servicesProxy->getEncrypter()->encryptId(
                     $response
                 );
             }

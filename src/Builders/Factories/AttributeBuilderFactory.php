@@ -7,17 +7,13 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderI
 
 class AttributeBuilderFactory
 {
-    /** @var ResourceBuilderInterface  */
-    private ResourceBuilderInterface $parent;
-
     /**
      * AttributeBuilderFactory constructor.
      * @param ResourceBuilderInterface $parent
      */
-    public function __construct(ResourceBuilderInterface $parent)
-    {
-        $this->parent = $parent;
-    }
+    public function __construct(
+        private ResourceBuilderInterface $parent
+    ) {}
 
     /**
      * @param string $attributeName
