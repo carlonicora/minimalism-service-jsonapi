@@ -1,17 +1,25 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Interfaces;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 
 interface LinkCreatorInterface
 {
     /**
      * LinkBuilderInterface constructor.
-     * @param ServicesFactory $services
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      */
-    public function __construct(ServicesFactory $services);
+    public function __construct(
+        JsonApi $jsonApi,
+        MySQL $mysql,
+        Cacher $cacher,
+    );
 
     /**
      * @param string $url

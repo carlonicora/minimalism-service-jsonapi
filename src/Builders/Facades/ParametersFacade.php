@@ -1,5 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
 class ParametersFacade
 {

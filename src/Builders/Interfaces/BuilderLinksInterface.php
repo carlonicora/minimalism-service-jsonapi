@@ -1,12 +1,12 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\LinkBuilder;
 
 interface BuilderLinksInterface
 {
     /**
-     * @return array|LinkBuilder[]
+     * @return array
      */
     public function getLinks() : array;
 

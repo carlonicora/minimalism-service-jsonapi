@@ -1,15 +1,12 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces;
-
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+namespace CarloNicora\Minimalism\Services\JsonApi\Interfaces;
 
 interface TransformatorInterface
 {
     /**
      * TransformationsInterface constructor.
-     * @param ServicesFactory $services
      */
-    public function __construct(ServicesFactory $services);
+    public function __construct();
 
     /**
      * @param string $transformationFunction
@@ -17,5 +14,5 @@ interface TransformatorInterface
      * @param string|null $fieldName
      * @return mixed
      */
-    public function transform(string $transformationFunction, array $data, ?string $fieldName);
+    public function transform(string $transformationFunction, array $data, ?string $fieldName): mixed;
 }

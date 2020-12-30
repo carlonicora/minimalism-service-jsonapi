@@ -1,13 +1,9 @@
 <?php
 
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ElementBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\ParameterValidator\Factories\ParameterValidatorFactory;
-use CarloNicora\Minimalism\Services\ParameterValidator\Interfaces\ParameterValidatorInterface;
-use CarloNicora\Minimalism\Services\ParameterValidator\ParameterValidator;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ElementBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
 use Exception;
 
 abstract class ElementBuilder implements ElementBuilderInterface
@@ -33,9 +29,6 @@ abstract class ElementBuilder implements ElementBuilderInterface
     /** @var string|null  */
     protected ?string $databaseFieldName;
 
-    /** @var ServicesFactory */
-    protected ServicesFactory $services;
-
     /** @var ResourceBuilderInterface  */
     protected ResourceBuilderInterface $parent;
 
@@ -60,7 +53,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string $name
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setName(string $name): ElementBuilderInterface
     {
@@ -79,7 +72,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string|null $databaseFieldName
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setDatabaseFieldName(?string $databaseFieldName): ElementBuilderInterface
     {
@@ -98,7 +91,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string|null $databaseFieldRelationship
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setDatabaseFieldRelationship(?string $databaseFieldRelationship): ElementBuilderInterface
     {
@@ -107,7 +100,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param $value
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setStaticValue($value): ElementBuilderInterface
     {
@@ -117,9 +110,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
     }
 
     /**
-     * @return mixed|null
+     * @return mixed
      */
-    public function getStaticValue()
+    public function getStaticValue(): mixed
     {
         return $this->staticValue;
     }
@@ -134,7 +127,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param bool $isEncrypted
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsEncrypted(bool $isEncrypted): ElementBuilderInterface
     {
@@ -153,7 +146,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param bool $isReadOnly
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsReadOnly(bool $isReadOnly): ElementBuilderInterface
     {
@@ -170,7 +163,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param bool $isRequired
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsRequired(bool $isRequired): ElementBuilderInterface
     {
@@ -187,7 +180,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param bool $isWriteOnly
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsWriteOnly(bool $isWriteOnly): ElementBuilderInterface
     {
@@ -204,7 +197,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string|null $transformationClass
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setTransformationClass(?string $transformationClass): ElementBuilderInterface
     {
@@ -223,32 +216,11 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string|null $transformationMethod
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setTransformationMethod(?string $transformationMethod): ElementBuilderInterface
     {
         $this->transformationMethod = $transformationMethod;
-
-        return $this;
-    }
-
-    /**
-     * @return ParameterValidatorInterface
-     * @throws Exception
-     */
-    public function getType(): ParameterValidatorInterface
-    {
-        $parameterValidatorFactory = new ParameterValidatorFactory();
-        return $parameterValidatorFactory->createParameterValidator($this->services, $this->type);
-    }
-
-    /**
-     * @param string $type
-     * @return $this|ElementBuilderInterface
-     */
-    public function setType(string $type): ElementBuilderInterface
-    {
-        $this->type = $type;
 
         return $this;
     }
@@ -263,7 +235,7 @@ abstract class ElementBuilder implements ElementBuilderInterface
 
     /**
      * @param string|null $validator
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setValidator(?string $validator): ElementBuilderInterface
     {

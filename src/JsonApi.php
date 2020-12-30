@@ -1,29 +1,26 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper;
+namespace CarloNicora\Minimalism\Services\JsonApi;
 
 use CarloNicora\JsonApi\Document;
-use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\CacheFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceReader;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Commands\ResourceWriter;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Configurations\JsonDataMapperConfigurations;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceReader;
+use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceWriter;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
 
-class JsonDataMapper extends AbstractService
+class JsonApi implements ServiceInterface
 {
-    /** @var JsonDataMapperConfigurations|ServiceConfigurationsInterface  */
-    protected JsonDataMapperConfigurations $configData;
-
     /** @var EncrypterInterface|null  */
     private ?EncrypterInterface $defaultEncrypter=null;
 
@@ -41,30 +38,16 @@ class JsonDataMapper extends AbstractService
 
     /**
      * abstractApiCaller constructor.
-     * @param ServiceConfigurationsInterface $configData
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param MySQL $mysql
+     * @param Cacher $cacher
+     * @param Redis $redis
      */
-    public function __construct(ServiceConfigurationsInterface $configData, ServicesFactory $services) {
-        parent::__construct($configData, $services);
-
-        /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
-        $this->configData = $configData;
+    public function __construct(
+        private MySQL $mysql,
+        private Cacher $cacher,
+        private Redis $redis,
+    ) {
         $this->cache = new CacheFacade();
-    }
-
-    /**
-     * @param ServicesFactory $services
-     * @throws Exception
-     */
-    public function initialiseStatics(ServicesFactory $services): void
-    {
-        parent::initialiseStatics($services);
-        FunctionFactory::initialise($services);
-        AbstractResourceBuilder::initialise($services);
-
-        $this->resourceReader = new ResourceReader($this->services);
-        $this->resourceWriter = new ResourceWriter($this->services);
     }
 
     /**
@@ -227,5 +210,19 @@ class JsonDataMapper extends AbstractService
     public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
+    }
+
+    public function initialise(): void
+    {
+        FunctionFactory::initialise($this->mysql);
+        AbstractResourceBuilder::initialise($this);
+
+        $this->resourceReader = new ResourceReader($this, $this->cacher, $this->redis, $this->mysql);
+        $this->resourceWriter = new ResourceWriter($this, $this->cacher, $this->redis, $this->mysql);
+    }
+
+    public function destroy(): void
+    {
+        // TODO: Implement destroy() method.
     }
 }

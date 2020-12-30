@@ -1,18 +1,17 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Wrappers;
+namespace CarloNicora\Minimalism\Services\JsonApi\Wrappers;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Factories\DataReadersFactory;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
 
 class DataWrapper
 {
-    /** @var ServicesFactory  */
-    private ServicesFactory $services;
-
     /** @var FunctionFacade|null  */
     private ?FunctionFacade $function=null;
 
@@ -24,12 +23,15 @@ class DataWrapper
 
     /**
      * Parameter constructor.
-     * @param ServicesFactory $services
+     * @param Redis $redis
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      */
-    public function __construct(ServicesFactory $services)
-    {
-        $this->services = $services;
-    }
+    public function __construct(
+        private Redis $redis,
+        private MySQL $mysql,
+        private Cacher $cacher,
+    ){}
 
     /**
      * @return array|null
@@ -37,7 +39,7 @@ class DataWrapper
      */
     public function loadData() : ?array
     {
-        $dataReadersFactory = new DataReadersFactory($this->services);
+        $dataReadersFactory = new DataReadersFactory($this->redis, $this->mysql, $this->cacher);
 
         $function = $dataReadersFactory->create(
             FunctionFactory::buildFromTableName(

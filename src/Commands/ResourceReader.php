@@ -1,41 +1,41 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Commands;
+namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
-use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Factories\DataReadersFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Factories\DataReadersFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataReaderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
 
 class ResourceReader
 {
-    /** @var ServicesFactory  */
-    private ServicesFactory $services;
-
     /** @var ResourceBuilderFactory  */
     private ResourceBuilderFactory $resourceFactory;
 
-    /** @var Cacher  */
-    private Cacher $cacher;
-
     /**
      * ResourceReader constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
+     * @param Cacher $cacher
+     * @param Redis $redis
+     * @param MySQL $mysql
      */
-    public function __construct(ServicesFactory $services) {
-        $this->services = $services;
-        $this->cacher = $services->service(Cacher::class);
-        $this->resourceFactory = new ResourceBuilderFactory($this->services);
+    public function __construct(
+        private JsonApi $jsonApi,
+        private Cacher $cacher,
+        private Redis $redis,
+        private MySQL $mysql,
+    ) {
+        $this->resourceFactory = new ResourceBuilderFactory($this->jsonApi);
     }
 
     /**
@@ -69,7 +69,6 @@ class ResourceReader
 
         if ($response === null || $response === false) {
             $resourceBuilder = $this->resourceFactory->createResourceBuilder($builderName);
-            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
 
             $isMainTable = true;
             $tableName = $resourceBuilder->getTableName();
@@ -144,8 +143,6 @@ class ResourceReader
         }
 
         if ($response === null) {
-            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Builder ' . $builderName . ' created'));
-
             if ($function->isResourceBuilder() && $function->getResourceBuilderClass() === $builderName && method_exists($function->getResourceBuilder(), $function->getFunctionName())) {
                 $values = ParametersFacade::prepareParameters($relationshipParameters, $positionInRelationship);
                 $callable = [$function->getResourceBuilder(), $function->getFunctionName()];
@@ -258,9 +255,11 @@ class ResourceReader
     {
         $response = null;
 
-        $readerFactory = new DataReadersFactory($this->services);
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Reader Initialised'));
-
+        $readerFactory = new DataReadersFactory(
+            $this->redis,
+            $this->mysql,
+            $this->cacher
+        );
         $parameters = ParametersFacade::prepareParameters($function->getParameters(), $positionInRelationship, true);
 
         if ($function->getType() === FunctionFacade::LOADER){
@@ -280,7 +279,6 @@ class ResourceReader
             } else {
                 $response = $reader->getList();
             }
-            $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Data Read (' . $function->getTableName() . ' - ' . $function->getFunctionName() . ' )'));
         }
 
         return $response;

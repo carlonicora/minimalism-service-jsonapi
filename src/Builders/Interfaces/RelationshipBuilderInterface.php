@@ -1,20 +1,25 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
-use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 
 interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
     /**
      * RelationshipBuilderInterface constructor.
-     * @param ServicesFactory $services
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      * @param string $name
      */
     public function __construct(
-        ServicesFactory $services, 
+        JsonApi $jsonApi,
+        MySQL $mysql,
+        Cacher $cacher,
         string $name
     );
 
@@ -106,7 +111,7 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
-     * @return array|ResourceObject[]|null
+     * @return array|null
      */
     public function loadResources(
         array $data,

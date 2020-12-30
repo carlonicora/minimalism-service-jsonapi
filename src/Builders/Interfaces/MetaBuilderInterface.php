@@ -1,7 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
-
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
 interface MetaBuilderInterface extends ElementBuilderInterface
 {
@@ -12,10 +10,9 @@ interface MetaBuilderInterface extends ElementBuilderInterface
     /**
      *
      * AttributeBuilder constructor.
-     * @param ServicesFactory $services
      * @param ResourceBuilderInterface $parent
      * @param string $name
      * @param int $positioning
      */
-    public function __construct(ServicesFactory $services, ResourceBuilderInterface $parent, string $name, int $positioning);
+    public function __construct(ResourceBuilderInterface $parent, string $name, int $positioning);
 }

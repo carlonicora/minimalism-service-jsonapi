@@ -1,17 +1,25 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 
 interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterface
 {
     /**
      * ResourceBuilderInterface constructor.
-     * @param ServicesFactory $services
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      */
-    public function __construct(ServicesFactory $services);
+    public function __construct(
+        JsonApi $jsonApi,
+        MySQL $mysql,
+        Cacher $cacher,
+    );
 
     /**
      *
@@ -34,7 +42,7 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
     public function getType(): string;
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getTableName() : ?string;
 

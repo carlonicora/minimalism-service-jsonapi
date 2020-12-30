@@ -1,15 +1,15 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Traits;
 
 use CarloNicora\JsonApi\Objects\Link;
 use CarloNicora\JsonApi\Objects\Links;
 use CarloNicora\JsonApi\Objects\Meta;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\BuilderLinksInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\LinkBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Traits\LinkCreatorTrait;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\BuilderLinksInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\LinkBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Traits\LinkCreatorTrait;
 use Exception;
 
 trait LinkBuilderTrait
@@ -42,7 +42,7 @@ trait LinkBuilderTrait
     }
 
     /**
-     * @return array|LinkBuilder[]
+     * @return array
      */
     public function getLinks() : array
     {
@@ -62,7 +62,7 @@ trait LinkBuilderTrait
         foreach ($builder->getLinks() as $link) {
             $url = $this->buildLink($link->getLink(), $resourceBuilder, $data, $resourceObject);
 
-            if (($linkBuilder = $this->mapper->getLinkBuilder()) !== null){
+            if (($linkBuilder = $this->jsonApi->getLinkBuilder()) !== null){
                 /** @var ResourceBuilderInterface $rbi */
                 $rbi = $this;
                 $url = $linkBuilder->buildLink($url, $rbi, $data);

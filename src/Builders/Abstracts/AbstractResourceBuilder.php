@@ -1,29 +1,29 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts;
 
 use CarloNicora\JsonApi\Objects\Relationship;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Events\MinimalismInfoEvents;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
 use CarloNicora\Minimalism\Services\Cacher\Factories\CacheBuilderFactory;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\AttributeBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\MetaBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\RelationshipBuilderInterfaceFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ElementBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\MetaBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\ReadFunctionTrait;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEvents;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\LinkCreatorInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\AttributeBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\MetaBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\RelationshipBuilderInterfaceFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ElementBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\MetaBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\LinkBuilderTrait;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\ReadFunctionTrait;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
+use RuntimeException;
 
 abstract class AbstractResourceBuilder implements ResourceBuilderInterface, LinkCreatorInterface
 {
@@ -33,11 +33,8 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var RelationshipBuilderInterfaceFactory  */
     protected RelationshipBuilderInterfaceFactory $relationshipBuilderInterfaceFactory;
 
-    /** @var ServicesFactory|null  */
-    private static ?ServicesFactory $staticServices=null;
-
-    /** @var JsonDataMapper|null  */
-    private static ?JsonDataMapper $staticMapper=null;
+    /** @var JsonApi|null  */
+    private static ?JsonApi $staticJsonApi=null;
 
     /** @var array  */
     private static array $fieldCache = [];
@@ -57,7 +54,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     /** @var array|RelationshipBuilderInterface[] */
     protected array $relationships = [];
 
-    /** @var array|MetaBuilderInterface  */
+    /** @var array  */
     protected array $meta = [];
 
     /** @var AttributeBuilderFactory */
@@ -76,38 +73,35 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     protected ?CacheBuilderFactoryInterface $cacheFactory=null;
 
     /**
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
      */
-    public static function initialise(ServicesFactory $services) : void
+    public static function initialise(JsonApi $jsonApi) : void
     {
-        self::$staticServices = $services;
-        self::$staticMapper = $services->service(JsonDataMapper::class);
+        self::$staticJsonApi = $jsonApi;
     }
 
     /**
      * AbstractResourceBuilder constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      */
-    public function __construct(ServicesFactory $services)
+    public function __construct(
+        protected JsonApi $jsonApi,
+        protected MySQL $mysql,
+        protected Cacher $cacher,
+    )
     {
-        $this->attributeBuilderFactory = new AttributeBuilderFactory($services, $this);
-        $this->metaBuilderFactory = new MetaBuilderFactory($services, $this);
-
-        $this->services = $services;
-        $this->mapper = $services->service(JsonDataMapper::class);
+        $this->attributeBuilderFactory = new AttributeBuilderFactory($this);
+        $this->metaBuilderFactory = new MetaBuilderFactory($this);
 
         $this->cacheFactory = new CacheBuilderFactory();
 
         $this->setAttributes();
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Attributes Created (' . get_class($this) . ')'));
         $this->setLinks();
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Links Created (' . get_class($this) . ')'));
         $this->setMeta();
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Meta Created (' . get_class($this) . ')'));
 
-        $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->services);
+        $this->relationshipBuilderInterfaceFactory = new RelationshipBuilderInterfaceFactory($this->jsonApi, $$this->mysql, $$this->cacher);
     }
 
     /**
@@ -135,7 +129,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     }
 
     /**
-     * @return array|AttributeBuilderInterface[]
+     * @return array
      */
     public function getAttributes(): array
     {
@@ -143,7 +137,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     }
 
     /**
-     * @return array|AttributeBuilderInterface[]
+     * @return array
      */
     public function getMeta(): array
     {
@@ -173,9 +167,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             }
         }
 
-        $this->mapper->getCache()->setResourceBuilder($this);
-
-        $this->services->logger()->info()->log(new MinimalismInfoEvents(9, null, 'Resource Object Relationships Created (' . get_class($this) . ')'));
+        $this->jsonApi->getCache()->setResourceBuilder($this);
     }
 
     /**
@@ -201,11 +193,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
     final public static function tableName() : string
     {
         try {
-            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
+            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
             $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
 
             return $resourceBuilder->getTableName();
-        } catch (Exception $e) {
+        } catch (Exception) {
             return '';
         }
     }
@@ -217,18 +209,16 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     protected static function attribute(string $attributeName) : AttributeBuilderInterface
     {
-        if (($response = self::$staticMapper->getCache()->getAttributeBuilder(static::class, $attributeName)) === null)
+        if (($response = self::$staticJsonApi->getCache()->getAttributeBuilder(static::class, $attributeName)) === null)
         {
-            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
+            $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
             $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
 
             $response = $resourceBuilder->getAttribute($attributeName);
         }
 
         if ($response === null) {
-            self::$staticServices->logger()->error()->log(
-                JsonDataMapperErrorEvents::NO_ATTRIBUTE_FOUND(static::class, $attributeName)
-            )->throw();
+            throw new RuntimeException('Attribute not found', $attributeName);
         }
 
         return clone $response;
@@ -241,7 +231,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      */
     protected static function relationship(string $relationshipName) : AttributeBuilderInterface
     {
-        $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticServices);
+        $resourceBuilderFactory = new ResourceBuilderFactory(self::$staticJsonApi);
         $resourceBuilder = $resourceBuilderFactory->createResourceBuilder(static::class);
         /** @var RelationshipBuilderInterface $relationshipBuilder */
         $relationshipBuilder = $resourceBuilder->relationships[$relationshipName];
@@ -417,7 +407,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
 
                     $response->relationships[$relationshipBuilder->getName()] = $relation;
                 }
-            } catch (Exception $e) {}
+            } catch (Exception) {}
             array_pop($positionInRelationship);
         }
     }
@@ -473,13 +463,13 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param array $data
      * @return mixed
      */
-    private function getElementValue(ElementBuilderInterface $element, array $data)
+    private function getElementValue(ElementBuilderInterface $element, array $data): mixed
     {
         $response = $element->getStaticValue() ?? $data[$element->getDatabaseFieldName()] ?? null;
 
         if ($element->isEncrypted()){
             /** @var EncrypterInterface $encrypter */
-            if ($response !== null && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null) {
+            if ($response !== null && ($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null) {
                 $response = $encrypter->encryptId(
                     $response
                 );
@@ -488,14 +478,12 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
             $transformatorClass = $element->getTransformationClass();
 
             /** @var TransformatorInterface $transformator */
-            $transformator = new $transformatorClass($this->services);
+            $transformator = new $transformatorClass();
             $response = $transformator->transform(
                 $element->getTransformationMethod(),
                 $data,
                 $element->getDatabaseFieldName()
             );
-        } elseif (($type = $element->getType()) !== null) {
-            $response = $type->transformValue($response);
         }
 
         return $response;

@@ -1,30 +1,17 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Abstracts;
+namespace CarloNicora\Minimalism\Services\JsonApi\Abstracts;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\TransformatorInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
 
 abstract class AbstractTransformator implements TransformatorInterface
 {
-    /** @var ServicesFactory  */
-    protected ServicesFactory $services;
-
-    /**
-     * AbstractTransformator constructor.
-     * @param ServicesFactory $services
-     */
-    public function __construct(ServicesFactory $services)
-    {
-        $this->services = $services;
-    }
-
     /**
      * @param string $transformationFunction
      * @param array $data
      * @param string|null $fieldName
-     * @return mixed|void
+     * @return mixed
      */
-    public function transform(string $transformationFunction, array $data, ?string $fieldName=null)
+    public function transform(string $transformationFunction, array $data, ?string $fieldName=null): mixed
     {
         if (method_exists($this, $transformationFunction)) {
             return $this->$transformationFunction($data, $fieldName);

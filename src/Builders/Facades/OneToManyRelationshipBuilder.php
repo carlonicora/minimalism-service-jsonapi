@@ -1,11 +1,9 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\JsonApi\Objects\ResourceObject;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractRelationshipBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipTypeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractRelationshipBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipTypeInterface;
 use Exception;
 
 class OneToManyRelationshipBuilder extends AbstractRelationshipBuilder
@@ -19,8 +17,7 @@ class OneToManyRelationshipBuilder extends AbstractRelationshipBuilder
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
-     * @return array|ResourceObject[]|null
-     * @throws DbRecordNotFoundException
+     * @return array|null
      * @throws Exception
      */
     protected function loadSpecialisedResources(
@@ -31,7 +28,7 @@ class OneToManyRelationshipBuilder extends AbstractRelationshipBuilder
         array $positionInRelationship=[]
     ): ?array
     {
-        return $this->mapper->generateResourceObjectByFieldValue(
+        return $this->jsonApi->generateResourceObjectByFieldValue(
             $this->resourceBuilderName,
             $cache,
             $this->targetBuilderAttribute,

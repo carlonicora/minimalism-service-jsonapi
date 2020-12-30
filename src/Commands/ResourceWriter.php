@@ -1,59 +1,48 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Commands;
+namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
 use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipTypeInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Events\JsonDataMapperErrorEvents;
-use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipTypeInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
+use RuntimeException;
 use Throwable;
 
 class ResourceWriter
 {
-    /** @var ServicesFactory  */
-    private ServicesFactory $services;
-
     /** @var ResourceBuilderFactory  */
     private ResourceBuilderFactory $resourceFactory;
-
-    /** @var JsonDataMapper  */
-    private JsonDataMapper $mapper;
 
     /** @var ResourceReader  */
     private ResourceReader $resourceReader;
 
-    /** @var MySQL  */
-    private MySQL $mysql;
-
-    /** @var Cacher  */
-    private Cacher $cacher;
-
     /**
      * ResourceReader constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
+     * @param Redis $redis
      */
-    public function __construct(ServicesFactory $services) {
-        $this->services = $services;
-        $this->mapper = $services->service(JsonDataMapper::class);
-        $this->mysql = $services->service(MySQL::class);
-        $this->cacher = $this->services->service(Cacher::class);
-
-        $this->resourceFactory = new ResourceBuilderFactory($this->services);
-        $this->resourceReader = new ResourceReader($this->services);
+    public function __construct(
+        private JsonApi $jsonApi,
+        private Cacher $cacher,
+        private Redis $redis,
+        private MySQL $mysql,
+    ) {
+        $this->resourceFactory = new ResourceBuilderFactory($this->jsonApi);
+        $this->resourceReader = new ResourceReader($this->jsonApi, $this->cacher, $this->redis, $this->mysql);
     }
 
     /**
@@ -108,13 +97,12 @@ class ResourceWriter
                         if (false === empty($relatedResources) && false === empty($relationshipValue = current($relatedResources)->id) && $relationship->getAttribute() !== null) {
                             $response[$relationship->getAttribute()->getDatabaseFieldRelationship()] = $relationshipValue;
                         }
-                    } catch (Exception $e) {
+                    } catch (Exception) {
                     }
                 }
             }
         }
 
-        /** @var TableInterface $table */
         $table = $this->mysql->create($resourceBuilder->getTableName());
         $table->update($response);
 
@@ -146,7 +134,6 @@ class ResourceWriter
     {
         $relationship = $resourceObject->relationship($relationshipName);
         if (($relationshipResourceInfo = $resourceBuilder->getRelationship($relationshipName)) !== null) {
-            /** @var TableInterface $table */
             $table = $this->mysql->create($relationshipResourceInfo->getManyToManyRelationshipTableClass());
 
             $currentRelationshipArray = [];
@@ -211,7 +198,7 @@ class ResourceWriter
                         true
                     )
                 )[0];
-            } catch (DbRecordNotFoundException $e) {
+            } catch (DbRecordNotFoundException) {
                 $response = [];
             }
         }
@@ -235,8 +222,8 @@ class ResourceWriter
     private function encryptDocument(Document $data, ResourceBuilderInterface $resourceBuilder): void
     {
         foreach ($data->resources ?? [] as $resourceObject){
-            if ($this->mapper->getDefaultEncrypter() !== null) {
-                $resourceObject->id = $this->mapper->getDefaultEncrypter()->encryptId(
+            if ($this->jsonApi->getDefaultEncrypter() !== null) {
+                $resourceObject->id = $this->jsonApi->getDefaultEncrypter()->encryptId(
                     $resourceObject->id
                 );
 
@@ -245,7 +232,7 @@ class ResourceWriter
                     if ($attribute->getName() !== 'id' && $attribute->isEncrypted() && $resourceObject->attributes->has($attribute->getName())){
                         $resourceObject->attributes->update(
                             $attribute->getName(),
-                            $this->mapper->getDefaultEncrypter()->encryptId(
+                            $this->jsonApi->getDefaultEncrypter()->encryptId(
                                 $resourceObject->attributes->get($attribute->getName())
                             )
                         );
@@ -265,19 +252,16 @@ class ResourceWriter
         foreach ($data->resources ?? [] as $resourceObject){
             $isNewResource = $resourceObject->id === null;
 
-            /** @var JsonDataMapper $mapper */
-            $mapper = $this->services->service(JsonDataMapper::class);
-
-            if (!$isNewResource && $mapper->getDefaultEncrypter() !== null){
+            if (!$isNewResource && $this->jsonApi->getDefaultEncrypter() !== null){
                 /** @var ResourceObject $dataResource */
 
                 try {
                     $dataResource = current(
-                        $mapper->generateResourceObjectByFieldValue(
+                        $this->jsonApi->generateResourceObjectByFieldValue(
                             get_class($resourceBuilder),
                             null,
                             $resourceBuilder->getAttribute('id'),
-                            $mapper->getDefaultEncrypter()->decryptId($resourceObject->id)
+                            $this->jsonApi->getDefaultEncrypter()->decryptId($resourceObject->id)
                         )
                     );
 
@@ -287,7 +271,7 @@ class ResourceWriter
                             $resourceObject->attributes->add($attributeName, $attributeValue);
                         }
                     }
-                } catch (Throwable $e) {
+                } catch (Throwable) {
                 }
             }
 
@@ -307,11 +291,11 @@ class ResourceWriter
         $field = $resourceBuilder->getAttribute('id');
 
         if (!$isNewResource && $field === null){
-            $this->services->logger()->error()->log(
-                JsonDataMapperErrorEvents::REQUIRED_FIELD_MISSING('id')
-            )->throw();
-        }elseif ($field !== null && $resourceObject->id !== null && $this->mapper->getDefaultEncrypter() !== null && $field->isEncrypted()) {
-            $resourceObject->id = $this->mapper->getDefaultEncrypter()->decryptId($resourceObject->id);
+            throw new RuntimeException('Missing required field: id', 500);
+        }
+
+        if ($field !== null && $resourceObject->id !== null && $this->jsonApi->getDefaultEncrypter() !== null && $field->isEncrypted()) {
+            $resourceObject->id = $this->jsonApi->getDefaultEncrypter()->decryptId($resourceObject->id);
         }
 
         /** @var AttributeBuilderInterface $attribute */
@@ -320,18 +304,14 @@ class ResourceWriter
                 try {
                     $attributeValue = $resourceObject->attributes->get($attribute->getName());
 
-                    $attributeValue = $attribute->getType()->transformValue($attributeValue);
-
                     if ($attribute->isEncrypted()){
-                        $attributeValue = $this->mapper->getDefaultEncrypter()->decryptId($attributeValue);
+                        $attributeValue = $this->jsonApi->getDefaultEncrypter()->decryptId($attributeValue);
                     }
 
                     $resourceObject->attributes->update($attribute->getName(), $attributeValue);
-                } catch (Exception $e) {
+                } catch (Exception) {
                     if ($attribute->isRequired()) {
-                        $this->services->logger()->error()->log(
-                            JsonDataMapperErrorEvents::REQUIRED_FIELD_MISSING($attribute->getName())
-                        )->throw();
+                        throw new RuntimeException('Required field missing: ' . $attribute->getName(), 500);
                     }
                 }
             }
@@ -360,20 +340,16 @@ class ResourceWriter
                     count($resourceObject->relationships[$relationship->getName()]->resourceLinkage->resources) === 0
                 )
             ){
-                $this->services->logger()->error()->log(
-                    JsonDataMapperErrorEvents::REQUIRED_RELATIONSHIP_MISSING($relationshipName)
-                )->throw();
+                throw new RuntimeException('Required relationship missing: ' . $relationshipName, 500);
             }
 
             foreach ($resourceObject->relationship($relationshipName)->resourceLinkage->resources ?? [] as $resourceLink){
                 if ( $resourceLink->type !== $relationship->getResourceObjectName()){
-                    $this->services->logger()->error()->log(
-                        JsonDataMapperErrorEvents::RELATIONSHIP_RESOURCE_MISMATCH($resourceLink->type, $relationship->getType())
-                    )->throw();
+                    throw new RuntimeException('Relationship resource mismatch:' . $resourceLink->type, $relationship->getType(), 500);
                 }
 
-                if ($resourceLink->id !== null && $this->mapper->getDefaultEncrypter() !== null && $relationship->getAttribute() !== null && $relationship->getAttribute()->isEncrypted()) {
-                    $resourceLink->id = $this->mapper->getDefaultEncrypter()->decryptId($resourceLink->id);
+                if ($resourceLink->id !== null && $this->jsonApi->getDefaultEncrypter() !== null && $relationship->getAttribute() !== null && $relationship->getAttribute()->isEncrypted()) {
+                    $resourceLink->id = $this->jsonApi->getDefaultEncrypter()->decryptId($resourceLink->id);
                 }
             }
         }

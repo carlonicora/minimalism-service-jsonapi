@@ -1,29 +1,17 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Factories;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
 use Exception;
 
 class ResourceBuilderFactory
 {
-    /** @var ServicesFactory */
-    private ServicesFactory $services;
-
-    /** @var JsonDataMapper  */
-    private JsonDataMapper $mapper;
-
     /**
      * ResourceBuilderFactory constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
      */
-    public function __construct(ServicesFactory $services)
-    {
-        $this->services = $services;
-        $this->mapper = $services->service(JsonDataMapper::class);
-    }
+    public function __construct(private JsonApi $jsonApi) {}
 
     /**
      * @param string $builderName
@@ -32,19 +20,19 @@ class ResourceBuilderFactory
      */
     public function createResourceBuilder(string $builderName) : ResourceBuilderInterface
     {
-        if (($response = $this->mapper->getCache()->getResourceBuilder($builderName)) === null) {
+        if (($response = $this->jsonApi->getCache()->getResourceBuilder($builderName)) === null) {
             /** @var ResourceBuilderInterface $response */
-            $response = new $builderName($this->services);
+            $response = new $builderName($this->jsonApi);
 
             foreach ($response->getAttributes() ?? [] as $attribute) {
-                $this->mapper->getCache()->setAttributeBuilder($attribute);
+                $this->jsonApi->getCache()->setAttributeBuilder($attribute);
             }
 
             foreach ($response->getMeta() ?? [] as $meta){
-                $this->mapper->getCache()->setMetaBuilder($meta);
+                $this->jsonApi->getCache()->setMetaBuilder($meta);
             }
 
-            $this->mapper->getCache()->setResourceBuilder($response);
+            $this->jsonApi->getCache()->setResourceBuilder($response);
         }
 
         return $response;

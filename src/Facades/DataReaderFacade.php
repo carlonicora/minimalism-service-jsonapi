@@ -1,11 +1,10 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataReaderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\Services\Redis\Redis;
@@ -13,43 +12,29 @@ use Exception;
 
 class DataReaderFacade implements DataReaderInterface
 {
-    /** @var ServicesFactory  */
-    protected ServicesFactory $services;
-
     /** @var FunctionFacade  */
     public FunctionFacade $function;
 
     /** @var array  */
     public array $functionParameters;
 
-    /** @var Redis  */
-    protected Redis $redis;
-
-    /** @var MySQL  */
-    protected MySQL $database;
-
-    /** @var Cacher  */
-    protected Cacher $cacher;
-    
     /**
      * DataReaderFacade constructor.
-     * @param ServicesFactory $services
+     * @param Redis $redis
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      * @param FunctionFacade $function
      * @param array $functionParameters
-     * @throws Exception
      */
     public function __construct(
-        ServicesFactory $services,
+        private Redis $redis,
+        private MySQL $mysql,
+        private Cacher $cacher,
         FunctionFacade $function,
         array $functionParameters = []
     ) {
-        $this->services = $services;
         $this->function = $function;
         $this->functionParameters = $functionParameters;
-
-        $this->redis = $services->service(Redis::class);
-        $this->database = $services->service(MySQL::class);
-        $this->cacher = $services->service(Cacher::class);
     }
 
     /**

@@ -1,24 +1,22 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts;
 
-use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Builders\CacheBuilder;
 use CarloNicora\Minimalism\Services\Cacher\Cacher;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\AttributeBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\LinkBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\OneToOneRelationshipBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\ParametersFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\RelationshipBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\LinkBuilderTrait;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits\ReadFunctionTrait;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataLoaderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\AttributeBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\LinkBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\OneToOneRelationshipBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\RelationshipBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\LinkBuilderTrait;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\ReadFunctionTrait;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataLoaderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
 use ReflectionClass;
@@ -29,20 +27,8 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     use ReadFunctionTrait;
     use LinkBuilderTrait;
 
-    /** @var ServicesFactory */
-    protected ServicesFactory $services;
-
-    /** @var MySQL $mysql */
-    protected MySQL $mysql;
-
-    /** @var Cacher  */
-    protected Cacher $cacher;
-
     /** @var int  */
     protected int $type;
-
-    /** @var string  */
-    protected string $name;
 
     /** @var AttributeBuilderInterface|null  */
     protected ?AttributeBuilderInterface $targetBuilderAttribute=null;
@@ -62,9 +48,6 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     /** @var CacheBuilder|null  */
     protected ?CacheBuilder $cacheBuilder=null;
 
-    /** @var JsonDataMapper  */
-    protected JsonDataMapper $mapper;
-
     /** @var bool  */
     private bool $loadChildren=true;
 
@@ -73,22 +56,17 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
     /**
      * AbstractRelationshipBuilder constructor.
-     * @param ServicesFactory $services
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      * @param string $name
-     * @throws Exception
      */
     public function __construct(
-        ServicesFactory $services,
-        string $name
-    )
-    {
-        $this->services = $services;
-        $this->mysql = $services->service(MySQL::class);
-        $this->mapper = $services->service(JsonDataMapper::class);
-        $this->cacher = $services->service(Cacher::class);
-
-        $this->name = $name;
-    }
+        protected JsonApi $jsonApi,
+        protected MySQL $mysql,
+        protected Cacher $cacher,
+        protected string $name,
+    ) {}
 
     /**
      * @param AttributeBuilderInterface $attribute
@@ -111,7 +89,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $this->resourceObjectName = $this->targetBuilderAttribute->getResource()->getType();
         }
 
-        $resourceFactory = new ResourceBuilderFactory($this->services);
+        $resourceFactory = new ResourceBuilderFactory($this->jsonApi);
         $this->resourceBuilder = $resourceFactory->createResourceBuilder($this->resourceBuilderName);
 
         $this->targetBuilderAttribute->setDatabaseFieldRelationship(
@@ -320,7 +298,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
-     * @return array|ResourceObject[]|null
+     * @return array|null
      * @throws Exception
      */
     final public function loadResources(
@@ -367,7 +345,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             $response = [];
 
             if ($this->function->getType() === FunctionFacade::TABLE) {
-                $response = $this->mapper->generateResourceObjectsByFunction(
+                $response = $this->jsonApi->generateResourceObjectsByFunction(
                     $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                     $cache,
                     $this->function,
@@ -378,7 +356,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             } elseif ($this->function->getType() === FunctionFacade::LOADER) {
                 $loaderClass = new ReflectionClass($this->function->getLoaderClassName());
                 /** @var DataLoaderInterface $loader */
-                $loader = $loaderClass->newInstanceArgs([$this->services]);
+                $loader = $loaderClass->newInstanceArgs();
 
                 $data = $loader->{$this->function->getFunctionName()}(...$this->function->getParameters());
 
@@ -386,7 +364,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
                     $data = [$data];
                 }
 
-                $response = $this->mapper->generateResourceObjectByData(
+                $response = $this->jsonApi->generateResourceObjectByData(
                     $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                     $cache,
                     $data,
@@ -417,7 +395,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param int $loadRelationshipLevel
      * @param array $relationshipParameters
      * @param array $positionInRelationship
-     * @return array|ResourceObject[]|null
+     * @return array|null
      */
     abstract protected function loadSpecialisedResources(
         array $data,

@@ -1,5 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Interfaces;
 
 interface DataWriterInterface
 {

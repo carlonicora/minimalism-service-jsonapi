@@ -1,5 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Traits;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Traits;
 
 trait ReadFunctionTrait
 {
@@ -27,7 +27,7 @@ trait ReadFunctionTrait
 
 
     /**
-     * @return array
+     * @return array|null
      */
     public function getReadValues(): ?array
     {

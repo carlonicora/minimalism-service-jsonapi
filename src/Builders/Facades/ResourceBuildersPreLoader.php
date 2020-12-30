@@ -1,31 +1,26 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\Cacher\Interfaces\CacheBuilderFactoryInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Abstracts\AbstractResourceBuilder;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\FunctionFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories\ResourceBuilderFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
 
 class ResourceBuildersPreLoader
 {
     /**
-     * @var ServicesFactory
-     */
-    private ServicesFactory $services;
-
-    /**
      * ResourceBuildersPreLoader constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param JsonApi $jsonApi
+     * @param MySQL $mysql
      */
-    public function __construct(ServicesFactory $services)
+    public function __construct(private JsonApi $jsonApi, MySQL $mysql)
     {
-        $this->services = $services;
-        AbstractResourceBuilder::initialise($this->services);
-        FunctionFactory::initialise($this->services);
+        AbstractResourceBuilder::initialise($jsonApi);
+        FunctionFactory::initialise($mysql);
     }
 
     /**
@@ -35,7 +30,7 @@ class ResourceBuildersPreLoader
      */
     public function preLoad(string $buildersFolder, CacheBuilderFactoryInterface $cacheFactory): void
     {
-        $builderFactory = new ResourceBuilderFactory($this->services);
+        $builderFactory = new ResourceBuilderFactory($this->jsonApi);
         $files = scandir($buildersFolder);
 
         $builders = [];
@@ -70,7 +65,7 @@ class ResourceBuildersPreLoader
         $handle = fopen($file, 'rb');
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
-                if (strpos($line, 'namespace') === 0) {
+                if (str_starts_with($line, 'namespace')) {
                     $parts = explode(' ', $line);
                     $ns = rtrim(trim($parts[1]), ';');
                     break;

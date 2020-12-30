@@ -1,10 +1,9 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ElementBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\MetaBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ElementBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\MetaBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
 
 class MetaBuilder extends ElementBuilder implements MetaBuilderInterface
 {
@@ -13,17 +12,15 @@ class MetaBuilder extends ElementBuilder implements MetaBuilderInterface
 
     /**
      * AttributeBuilder constructor.
-     * @param ServicesFactory $services
      * @param ResourceBuilderInterface $parent
      * @param string $name
      * @param int $positioning
      */
-    public function __construct(ServicesFactory $services, ResourceBuilderInterface $parent, string $name, int $positioning)
+    public function __construct(ResourceBuilderInterface $parent, string $name, int $positioning)
     {
         $this->name = $name;
         $this->positioning = $positioning;
         $this->databaseFieldName = $name;
-        $this->services = $services;
         $this->parent = $parent;
     }
 

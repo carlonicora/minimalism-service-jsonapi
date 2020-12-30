@@ -1,19 +1,18 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Traits;
+namespace CarloNicora\Minimalism\Services\JsonApi\Traits;
 
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\JsonDataMapper;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\JsonApi;
+use CarloNicora\Minimalism\Services\Path;
 use Exception;
 
 trait LinkCreatorTrait
 {
-    /** @var ServicesFactory  */
-    protected ServicesFactory $services;
+    /** @var JsonApi */
+    protected JsonApi $jsonApi;
 
-    /** @var JsonDataMapper */
-    protected JsonDataMapper $mapper;
+    protected Path $path;
 
     /**
      * @param string $url
@@ -25,7 +24,7 @@ trait LinkCreatorTrait
     public function buildLink(string $url, ResourceBuilderInterface $resource, array $data, ResourceObject $resourceObject=null) : string
     {
         if ($url[0] !== '%'){
-            $url = $this->services->paths()->getUrl() . $url;
+            $url = $this->path->getUrl() . $url;
         }
 
         $linkElements = explode('%', $url);
@@ -42,21 +41,21 @@ trait LinkCreatorTrait
                     } elseif ($resourceObject !== null) {
                         $value = $resourceObject->attributes->get($attribute->getDatabaseFieldName());
                     }
-                } catch (Exception $e) {
+                } catch (Exception) {
                     $value = '';
                 }
 
-                if (is_int($value) && $attribute->isEncrypted() && ($encrypter = $this->mapper->getDefaultEncrypter()) !== null){
+                if (is_int($value) && $attribute->isEncrypted() && ($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null){
                     $value = $encrypter->encryptId($value);
                 }
 
                 $linkElements[$linkElementsCounter] = $value;
             } elseif (array_key_exists($linkElements[$linkElementsCounter], $data)){
                 try {
-                    if (($encrypter = $this->mapper->getDefaultEncrypter()) !== null) {
+                    if (($encrypter = $this->jsonApi->getDefaultEncrypter()) !== null) {
                         $linkElements[$linkElementsCounter] = $encrypter->encryptId($data[$linkElements[$linkElementsCounter]]);
                     }
-                } catch (Exception $e) {
+                } catch (Exception) {
                     $linkElements[$linkElementsCounter] = $data[$linkElements[$linkElementsCounter]];
                 }
                 if ([$linkElementsCounter] === '') {

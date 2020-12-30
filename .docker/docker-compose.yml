@@ -1,19 +1,15 @@
 version: '3.8'
 
 services:
-  minimalism-service-json-data-mapper:
-    container_name: minimalism-service-json-data-mapper
-    image: carlonicora/minimalism-service-json-data-mapper:1.0
+  minimalism-service-jsonapi:
+    container_name: minimalism-service-jsonapi
+    image: carlonicora/minimalism-service-jsonapi:3.0
     build:
       context: .
       dockerfile: ./php-cli/Dockerfile
-      args:
-        - XDEBUG_HOST=${XDEBUG_HOST}
-        - XDEBUG_PORT=${XDEBUG_PORT}
     working_dir: /app
     volumes:
       - ../:/app
-      - ../:/opt/project
     tty: true
     stdin_open: true
     networks:

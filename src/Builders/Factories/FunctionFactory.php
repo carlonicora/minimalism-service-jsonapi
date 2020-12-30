@@ -1,9 +1,8 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Factories;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Factories;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use Exception;
@@ -11,16 +10,16 @@ use Exception;
 class FunctionFactory
 {
     /**
-     * @var ServicesFactory
+     * @var MySQL
      */
-    private static ServicesFactory $services;
+    private static MySQL $mysql;
 
     /**
-     * @param ServicesFactory $services
+     * @param MySQL $mysql
      */
-    public static function initialise(ServicesFactory $services): void
+    public static function initialise(MySQL $mysql): void
     {
-        self::$services = $services;
+        self::$mysql = $mysql;
     }
 
     /**
@@ -73,10 +72,7 @@ class FunctionFactory
         bool $isSingleRead=false
     ): FunctionFacade
     {
-        /** @var MySQL $mysql */
-        $mysql = self::$services->service(MySQL::class);
-
-        $tableInterface = $mysql->create($tableClassName);
+        $tableInterface = self::$mysql->create($tableClassName);
 
         return self::buildFromTableInterface($tableInterface, $functionName, $parameters, $isSingleRead);
     }

@@ -1,25 +1,28 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Factories;
+namespace CarloNicora\Minimalism\Services\JsonApi\Factories;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades\FunctionFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Facades\DataReaderFacade;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Interfaces\DataReaderInterface;
+use CarloNicora\Minimalism\Services\Cacher\Cacher;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Facades\DataReaderFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\DataReaderInterface;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\Services\Redis\Redis;
 use Exception;
 
 class DataReadersFactory
 {
-    /** @var ServicesFactory  */
-    private ServicesFactory $services;
-
     /**
      * DataReadersFactory constructor.
-     * @param ServicesFactory $services
-     * @throws Exception
+     * @param Redis $redis
+     * @param MySQL $mysql
+     * @param Cacher $cacher
      */
-    public function __construct(ServicesFactory $services)
+    public function __construct(
+        private Redis $redis,
+        private MySQL $mysql,
+        private Cacher $cacher,
+    )
     {
-        $this->services = $services;
     }
 
     /**
@@ -34,7 +37,9 @@ class DataReadersFactory
     ) : DataReaderInterface
     {
         return new DataReaderFacade(
-            $this->services,
+            $this->redis,
+            $this->mysql,
+            $this->cacher,
             $function,
             $functionParameters,
         );

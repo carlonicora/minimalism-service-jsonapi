@@ -1,5 +1,5 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
 use CarloNicora\Minimalism\Services\ParameterValidator\Interfaces\ParameterValidatorInterface;
 
@@ -153,9 +153,9 @@ interface ElementBuilderInterface
     public function setStaticValue($value): ElementBuilderInterface;
 
     /**
-     * @return mixed|null
+     * @return mixed
      */
-    public function getStaticValue();
+    public function getStaticValue(): mixed;
 
     /**
      * @return int

@@ -1,10 +1,9 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\AttributeBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ElementBuilderInterface;
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\ResourceBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ElementBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderInterface;
 
 class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterface
 {
@@ -25,15 +24,13 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
 
     /**
      * AttributeBuilder constructor.
-     * @param ServicesFactory $services
      * @param ResourceBuilderInterface $parent
      * @param string $name
      */
-    public function __construct(ServicesFactory $services, ResourceBuilderInterface $parent, string $name)
+    public function __construct(ResourceBuilderInterface $parent, string $name)
     {
         $this->name = $name;
         $this->databaseFieldName = $name;
-        $this->services = $services;
         $this->parent = $parent;
     }
 
@@ -47,7 +44,7 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
 
     /**
      * @param string|null $databaseFieldRelationship
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setDatabaseFieldRelationship(?string $databaseFieldRelationship): ElementBuilderInterface
     {
@@ -66,7 +63,7 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
 
     /**
      * @param bool $isReadOnly
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsReadOnly(bool $isReadOnly): ElementBuilderInterface
     {
@@ -85,7 +82,7 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
 
     /**
      * @param bool $isRequired
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsRequired(bool $isRequired): ElementBuilderInterface
     {
@@ -104,7 +101,7 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
 
     /**
      * @param bool $isWriteOnly
-     * @return $this|ElementBuilderInterface
+     * @return ElementBuilderInterface
      */
     public function setIsWriteOnly(bool $isWriteOnly): ElementBuilderInterface
     {

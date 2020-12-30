@@ -1,12 +1,12 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces;
 
 interface CallableInterface
 {
     /**
-     * @return string
+     * @return string|null
      */
-    public function getReadFunction(): ?string ;
+    public function getReadFunction(): ?string;
 
     /**
      * @param string $callable
@@ -14,9 +14,9 @@ interface CallableInterface
     public function setReadFunction(string $callable): void;
 
     /**
-     * @return array
+     * @return array|null
      */
-    public function getReadValues(): ?array ;
+    public function getReadValues(): ?array;
 
     /**
      * @param array $values

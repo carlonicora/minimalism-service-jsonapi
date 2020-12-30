@@ -1,7 +1,7 @@
 <?php
-namespace CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Facades;
+namespace CarloNicora\Minimalism\Services\JsonApi\Builders\Facades;
 
-use CarloNicora\Minimalism\Services\JsonDataMapper\Builders\Interfaces\LinkBuilderInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\LinkBuilderInterface;
 
 class LinkBuilder implements LinkBuilderInterface
 {
