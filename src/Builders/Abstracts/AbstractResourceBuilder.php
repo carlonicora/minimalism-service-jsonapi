@@ -15,7 +15,6 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\ResourceBuilderI
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\LinkBuilderTrait;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Traits\ReadFunctionTrait;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
-use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
 use RuntimeException;
@@ -450,6 +449,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param ElementBuilderInterface $element
      * @param array $data
      * @return mixed
+     * @throws Exception
      */
     private function getElementValue(ElementBuilderInterface $element, array $data): mixed
     {
@@ -462,10 +462,7 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
                 );
             }
         } elseif ($element->getTransformationClass() !== null && $element->getTransformationMethod() !== null) {
-            $transformatorClass = $element->getTransformationClass();
-
-            /** @var TransformatorInterface $transformator */
-            $transformator = new $transformatorClass();
+            $transformator = $this->servicesProxy->getBuilderTransformator($element->getTransformationClass());
             $response = $transformator->transform(
                 $element->getTransformationMethod(),
                 $data,

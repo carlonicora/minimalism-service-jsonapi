@@ -7,13 +7,19 @@ use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
 use CarloNicora\Minimalism\Services\Path;
+use Exception;
+use ReflectionClass;
+use RuntimeException;
 
 class ServicesProxy
 {
-
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
+
+    /** @var array  */
+    private array $builderTransformators=[];
 
     /**
      * ServicesProxy constructor.
@@ -97,5 +103,29 @@ class ServicesProxy
     public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
+    }
+
+    /**
+     * @param TransformatorInterface $transformator
+     * @throws Exception
+     */
+    public function addBuilderTransformator(TransformatorInterface $transformator): void
+    {
+        $class = new ReflectionClass($transformator);
+        $this->builderTransformators[$class->getName()] = $transformator;
+    }
+
+    /**
+     * @param string $transformatorClass
+     * @return TransformatorInterface
+     * @throws Exception
+     */
+    public function getBuilderTransformator(string $transformatorClass): TransformatorInterface
+    {
+        if (!array_key_exists($transformatorClass, $this->builderTransformators)){
+            throw new RuntimeException('Builder transformator missing', 500);
+        }
+
+        return $this->builderTransformators[$transformatorClass];
     }
 }

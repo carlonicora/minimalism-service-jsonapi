@@ -18,6 +18,7 @@ use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilder
 use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceReader;
 use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceWriter;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
+use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use CarloNicora\Minimalism\Services\Path;
 use Exception;
@@ -73,6 +74,15 @@ class JsonApi implements ServiceInterface
             buildersFolder:  $buildersFolder,
             cacheFactory: $cacheFactory,
         );
+    }
+
+    /**
+     * @param TransformatorInterface $transformator
+     * @throws Exception
+     */
+    public function addBuilderTransformator(TransformatorInterface $transformator): void
+    {
+        $this->servicesProxy->addBuilderTransformator($transformator);
     }
 
     /**
