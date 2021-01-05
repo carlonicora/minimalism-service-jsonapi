@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Interfaces;
 
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Proxies\ServicesProxy;
 use Exception;
@@ -21,7 +22,7 @@ interface DataReaderInterface
 
     /**
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function getSingle() : array;
 

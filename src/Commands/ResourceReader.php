@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
@@ -39,7 +40,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
@@ -119,7 +120,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
@@ -220,7 +221,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     private function generateResourceObject(
         ResourceBuilderInterface $resourceBuilder,
@@ -249,7 +250,7 @@ class ResourceReader
      * @param FunctionFacade $function
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function readResourceObjectData(
         FunctionFacade $function,

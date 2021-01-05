@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\JsonApi;
 
 use CarloNicora\JsonApi\Document;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
@@ -10,6 +11,7 @@ use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
+use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ResourceBuildersPreLoader;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Interfaces\AttributeBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Commands\ResourceReader;
@@ -53,6 +55,16 @@ class JsonApi implements ServiceInterface
     }
 
     /**
+     * @return ResourceBuildersPreLoader
+     */
+    public function getPreLoader(): ResourceBuildersPreLoader
+    {
+        return new ResourceBuildersPreLoader(
+            servicesProxy: $this->servicesProxy
+        );
+    }
+
+    /**
      * @param string $builderName
      * @param CacheBuilderInterface|null $cache
      * @param AttributeBuilderInterface $attribute
@@ -61,7 +73,7 @@ class JsonApi implements ServiceInterface
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
@@ -92,7 +104,7 @@ class JsonApi implements ServiceInterface
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
@@ -145,7 +157,7 @@ class JsonApi implements ServiceInterface
     /**
      * @param FunctionFacade $function
      * @return array
-     * @throws Exception
+     * @throws Exception|RecordNotFoundException
      */
     public function readData(
         FunctionFacade $function
