@@ -28,7 +28,10 @@ class ResourceBuildersPreLoader
      * @param CacheBuilderFactoryInterface $cacheFactory
      * @throws Exception
      */
-    public function preLoad(string $buildersFolder, CacheBuilderFactoryInterface $cacheFactory): void
+    public function preLoad(
+        string $buildersFolder,
+        CacheBuilderFactoryInterface $cacheFactory
+    ): void
     {
         $builderFactory = new ResourceBuilderFactory(
             servicesProxy: $this->servicesProxy

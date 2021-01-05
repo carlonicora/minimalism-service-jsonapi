@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonApi;
 
 use CarloNicora\JsonApi\Document;
 use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
@@ -55,12 +56,22 @@ class JsonApi implements ServiceInterface
     }
 
     /**
-     * @return ResourceBuildersPreLoader
+     * @param string $buildersFolder
+     * @param CacheBuilderFactoryInterface $cacheFactory
+     * @throws Exception
      */
-    public function getPreLoader(): ResourceBuildersPreLoader
+    public function preLoadBuilders(
+        string $buildersFolder,
+        CacheBuilderFactoryInterface $cacheFactory
+    ): void
     {
-        return new ResourceBuildersPreLoader(
+        $resourceBuilderPreLoader = new ResourceBuildersPreLoader(
             servicesProxy: $this->servicesProxy
+        );
+
+        $resourceBuilderPreLoader->preLoad(
+            buildersFolder:  $buildersFolder,
+            cacheFactory: $cacheFactory,
         );
     }
 
