@@ -29,22 +29,22 @@ class RelationshipBuilderInterfaceFactory
      */
     public function create(int $relationshipType, string $name): RelationshipBuilderInterface
     {
-        if ($relationshipType === RelationshipTypeInterface::ONE_TO_ONE){
+        if ($relationshipType === RelationshipTypeInterface::ONE_TO_ONE) {
             return new OneToOneRelationshipBuilder(
-                ServicesProxy: $this->servicesProxy,
+                servicesProxy: $this->servicesProxy,
                 name: $name,
             );
         }
 
         if ($relationshipType === RelationshipTypeInterface::ONE_TO_MANY){
             return new OneToManyRelationshipBuilder(
-                ServicesProxy: $this->servicesProxy,
+                servicesProxy: $this->servicesProxy,
                 name: $name
             );
         }
 
         return new ManyToManyRelationshipBuilder(
-            ServicesProxy: $this->servicesProxy,
+            servicesProxy: $this->servicesProxy,
             name: $name
         );
     }

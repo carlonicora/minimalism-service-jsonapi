@@ -54,6 +54,8 @@ class JsonApi implements ServiceInterface
             path: $path,
             cacheFacade: new CacheFacade()
         );
+        $this->resourceReader = new ResourceReader(servicesProxy: $this->servicesProxy);
+        $this->resourceWriter = new ResourceWriter(servicesProxy: $this->servicesProxy);
     }
 
     /**
