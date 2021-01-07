@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-jsonapi",
   "description": "jsonapi translates {json-api} document to database structures and vice versa",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "homepage": "https://carlonicora.com",
   "time": "2020-05-30",
   "license": "MIT",

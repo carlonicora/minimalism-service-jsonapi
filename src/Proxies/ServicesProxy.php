@@ -1,10 +1,10 @@
 <?php
-
 namespace CarloNicora\Minimalism\Services\JsonApi\Proxies;
 
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
@@ -17,6 +17,9 @@ class ServicesProxy
 {
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
+
+    /** @var ServiceInterface|null  */
+    private ?ServiceInterface $service=null;
 
     /** @var array  */
     private array $builderTransformators=[];
@@ -127,5 +130,21 @@ class ServicesProxy
         }
 
         return $this->builderTransformators[$transformatorClass];
+    }
+
+    /**
+     * @return ServiceInterface|null
+     */
+    public function getService(): ?ServiceInterface
+    {
+        return $this->service;
+    }
+
+    /**
+     * @param ServiceInterface $service
+     */
+    public function setService(ServiceInterface $service): void
+    {
+        $this->service = $service;
     }
 }

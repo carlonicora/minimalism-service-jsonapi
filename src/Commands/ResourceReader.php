@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
 use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
+use CarloNicora\Minimalism\Interfaces\DataLoaderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\FunctionFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
@@ -266,8 +267,11 @@ class ResourceReader
 
         if ($function->getType() === FunctionFacade::LOADER){
             $loaderClassName = $function->getLoaderClassName();
+            /** @var DataLoaderInterface $loader */
             $loader = new $loaderClassName(
-                $this->servicesProxy
+                $this->servicesProxy->getDataProvider(),
+                $this->servicesProxy->getCacheProvider(),
+                $this->servicesProxy->getService()
             );
 
             $response = $loader->{$function->getFunctionName()}(...$parameters);
@@ -279,10 +283,14 @@ class ResourceReader
             );
 
             if ($function->isSingleRead()) {
-                $response = [$reader->getSingle()];
+                $response = $reader->getSingle();
             } else {
                 $response = $reader->getList();
             }
+        }
+        
+        if ($response !== [] && !array_key_exists(0, $response)){
+            $response = [$response];
         }
 
         return $response;

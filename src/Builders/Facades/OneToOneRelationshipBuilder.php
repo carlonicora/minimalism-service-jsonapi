@@ -36,7 +36,7 @@ class OneToOneRelationshipBuilder extends AbstractRelationshipBuilder
             $this->resourceBuilderName,
             $cache,
             $this->targetBuilderAttribute,
-            $data[$this->targetBuilderAttribute->getDatabaseFieldRelationship()],
+            [$data[$this->targetBuilderAttribute->getDatabaseFieldRelationship()]],
             $loadRelationshipLevel,
             $relationshipParameters,
             $positionInRelationship

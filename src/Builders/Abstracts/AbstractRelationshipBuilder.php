@@ -362,7 +362,11 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
             } elseif ($this->function->getType() === FunctionFacade::LOADER) {
                 $loaderClass = new ReflectionClass($this->function->getLoaderClassName());
                 /** @var DataLoaderInterface $loader */
-                $loader = $loaderClass->newInstanceArgs();
+                $loader = $loaderClass->newInstanceArgs([
+                    $this->servicesProxy->getDataProvider(),
+                    $this->servicesProxy->getCacheProvider(),
+                    $this->servicesProxy->getService()
+                ]);
 
                 $data = $loader->{$this->function->getFunctionName()}(...$this->function->getParameters());
 

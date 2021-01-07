@@ -26,10 +26,10 @@ use Exception;
 class JsonApi implements ServiceInterface
 {
     /** @var ResourceReader|null  */
-    private ?ResourceReader $resourceReader=null;
+    private ?ResourceReader $resourceReader;
 
     /** @var ResourceWriter|null  */
-    private ?ResourceWriter $resourceWriter=null;
+    private ?ResourceWriter $resourceWriter;
 
     /** @var ServicesProxy  */
     private ServicesProxy $servicesProxy;
@@ -56,6 +56,8 @@ class JsonApi implements ServiceInterface
         );
         $this->resourceReader = new ResourceReader(servicesProxy: $this->servicesProxy);
         $this->resourceWriter = new ResourceWriter(servicesProxy: $this->servicesProxy);
+
+        $this->initialise();
     }
 
     /**
@@ -85,6 +87,14 @@ class JsonApi implements ServiceInterface
     public function addBuilderTransformator(TransformatorInterface $transformator): void
     {
         $this->servicesProxy->addBuilderTransformator($transformator);
+    }
+
+    /**
+     * @param ServiceInterface $service
+     */
+    public function setActiveService(ServiceInterface $service): void
+    {
+        $this->servicesProxy->setService($service);
     }
 
     /**
@@ -221,6 +231,9 @@ class JsonApi implements ServiceInterface
         $this->servicesProxy->setLinkBuilder($linkBuilder);
     }
 
+    /**
+     *
+     */
     public function initialise(): void
     {
         FunctionFactory::initialise($this->servicesProxy);
