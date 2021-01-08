@@ -26,21 +26,27 @@ class ResourceBuildersPreLoader
     /**
      * @param string $buildersFolder
      * @param CacheBuilderFactoryInterface $cacheFactory
+     * @return array
      * @throws Exception
      */
     public function preLoad(
         string $buildersFolder,
         CacheBuilderFactoryInterface $cacheFactory
-    ): void
+    ): array
     {
         $builderFactory = new ResourceBuilderFactory(
             servicesProxy: $this->servicesProxy
         );
+
+        if(!is_dir($buildersFolder)){
+            return [];
+        }
+
         $files = scandir($buildersFolder);
 
         $builders = [];
 
-        foreach ($files as $file){
+        foreach ($files ?? []as $file){
             if (!is_dir($file) && pathinfo($file, PATHINFO_EXTENSION) === 'php'){
                 $fullPath = $buildersFolder . DIRECTORY_SEPARATOR . $file;
                 $namespace = $this->extract_namespace($fullPath);
@@ -58,6 +64,8 @@ class ResourceBuildersPreLoader
         foreach ($builders as $builder){
             $builder->initialiseRelationships();
         }
+        
+        return $builders;
     }
 
     /**

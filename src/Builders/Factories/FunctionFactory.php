@@ -13,7 +13,7 @@ class FunctionFactory
     /**
      * @var DataInterface
      */
-    private static DataInterface $dataProvider;
+    public static DataInterface $dataProvider;
 
     /**
      * @param ServicesProxy $servicesProxy

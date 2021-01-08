@@ -33,6 +33,9 @@ class JsonApi implements ServiceInterface
 
     /** @var ServicesProxy  */
     private ServicesProxy $servicesProxy;
+    
+    /** @var array  */
+    private array $builders = [];
 
     /**
      * abstractApiCaller constructor.
@@ -54,9 +57,7 @@ class JsonApi implements ServiceInterface
             path: $path,
             cacheFacade: new CacheFacade()
         );
-        $this->resourceReader = new ResourceReader(servicesProxy: $this->servicesProxy);
-        $this->resourceWriter = new ResourceWriter(servicesProxy: $this->servicesProxy);
-
+        
         $this->initialise();
     }
 
@@ -74,10 +75,21 @@ class JsonApi implements ServiceInterface
             servicesProxy: $this->servicesProxy
         );
 
-        $resourceBuilderPreLoader->preLoad(
-            buildersFolder:  $buildersFolder,
-            cacheFactory: $cacheFactory,
+        $this->builders = array_merge(
+            $this->builders, 
+            $resourceBuilderPreLoader->preLoad(
+                buildersFolder:  $buildersFolder,
+                cacheFactory: $cacheFactory,
+            )
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function areBuildersPreLoaded(): bool
+    {
+        return $this->builders !== [];
     }
 
     /**
