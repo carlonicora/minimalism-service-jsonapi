@@ -63,12 +63,12 @@ class JsonApi implements ServiceInterface
 
     /**
      * @param string $buildersFolder
-     * @param CacheBuilderFactoryInterface $cacheFactory
+     * @param CacheBuilderFactoryInterface|null $cacheFactory
      * @throws Exception
      */
     public function preLoadBuilders(
         string $buildersFolder,
-        CacheBuilderFactoryInterface $cacheFactory
+        ?CacheBuilderFactoryInterface $cacheFactory=null,
     ): void
     {
         $resourceBuilderPreLoader = new ResourceBuildersPreLoader(

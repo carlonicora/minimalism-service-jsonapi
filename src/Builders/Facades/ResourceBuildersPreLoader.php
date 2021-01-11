@@ -25,13 +25,13 @@ class ResourceBuildersPreLoader
 
     /**
      * @param string $buildersFolder
-     * @param CacheBuilderFactoryInterface $cacheFactory
+     * @param CacheBuilderFactoryInterface|null $cacheFactory
      * @return array
      * @throws Exception
      */
     public function preLoad(
         string $buildersFolder,
-        CacheBuilderFactoryInterface $cacheFactory
+        ?CacheBuilderFactoryInterface $cacheFactory=null,
     ): array
     {
         $builderFactory = new ResourceBuilderFactory(
