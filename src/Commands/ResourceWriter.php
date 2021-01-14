@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
@@ -274,6 +275,8 @@ class ResourceWriter
                             $resourceObject->attributes->add($attributeName, $attributeValue);
                         }
                     }
+                } catch (RecordNotFoundException $exception) {
+                    throw $exception;
                 } catch (Throwable) {
                 }
             }
