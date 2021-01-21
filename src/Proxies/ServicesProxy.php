@@ -3,8 +3,9 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Proxies;
 
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
+use CarloNicora\Minimalism\Interfaces\DefaultServiceInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
-use CarloNicora\Minimalism\Interfaces\ServiceInterface;
+use CarloNicora\Minimalism\Interfaces\LoaderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
@@ -18,8 +19,11 @@ class ServicesProxy
     /** @var LinkCreatorInterface|null  */
     private ?LinkCreatorInterface $linkBuilder=null;
 
-    /** @var ServiceInterface|null  */
-    private ?ServiceInterface $service=null;
+    /** @var DefaultServiceInterface|null  */
+    private ?DefaultServiceInterface $service=null;
+
+    /** @var LoaderInterface|null  */
+    private ?LoaderInterface $loader=null;
 
     /** @var array  */
     private array $builderTransformators=[];
@@ -133,18 +137,37 @@ class ServicesProxy
     }
 
     /**
-     * @return ServiceInterface|null
+     * @return DefaultServiceInterface|null
      */
-    public function getService(): ?ServiceInterface
+    public function getService(): ?DefaultServiceInterface
     {
         return $this->service;
     }
 
     /**
-     * @param ServiceInterface $service
+     * @param DefaultServiceInterface $service
      */
-    public function setService(ServiceInterface $service): void
+    public function setService(DefaultServiceInterface $service): void
     {
         $this->service = $service;
+    }
+
+    /**
+     * @return LoaderInterface
+     */
+    public function getLoaderInterface(): LoaderInterface
+    {
+        if ($this->loader === null){
+            throw new RuntimeException('Loader Interface not defined', 500);
+        }
+        return $this->loader;
+    }
+
+    /**
+     * @param LoaderInterface $loader
+     */
+    public function setLoaderInterface(LoaderInterface $loader): void
+    {
+        $this->loader = $loader;
     }
 }

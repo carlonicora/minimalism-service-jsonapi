@@ -269,9 +269,8 @@ class ResourceReader
             $loaderClassName = $function->getLoaderClassName();
             /** @var DataLoaderInterface $loader */
             $loader = new $loaderClassName(
+                $this->servicesProxy->getLoaderInterface(),
                 $this->servicesProxy->getDataProvider(),
-                $this->servicesProxy->getCacheProvider(),
-                $this->servicesProxy->getService()
             );
 
             $response = $loader->{$function->getFunctionName()}(...$parameters);

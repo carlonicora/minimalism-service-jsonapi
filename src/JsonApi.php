@@ -7,7 +7,9 @@ use CarloNicora\Minimalism\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
+use CarloNicora\Minimalism\Interfaces\DefaultServiceInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
+use CarloNicora\Minimalism\Interfaces\LoaderInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Abstracts\AbstractResourceBuilder;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
@@ -102,11 +104,19 @@ class JsonApi implements ServiceInterface
     }
 
     /**
-     * @param ServiceInterface $service
+     * @param DefaultServiceInterface $service
      */
-    public function setActiveService(ServiceInterface $service): void
+    public function setActiveService(DefaultServiceInterface $service): void
     {
         $this->servicesProxy->setService($service);
+    }
+
+    /**
+     * @param LoaderInterface $loader
+     */
+    public function setLoaderInterface(LoaderInterface $loader): void
+    {
+        $this->servicesProxy->setLoaderInterface($loader);
     }
 
     /**
