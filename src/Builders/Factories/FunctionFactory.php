@@ -79,6 +79,24 @@ class FunctionFactory
     }
 
     /**
+     * @param string $serviceInterfaceName
+     * @param string $serviceInterfaceFunctionName
+     * @param array $parameters
+     * @return FunctionFacade
+     */
+    public static function buildFromServiceInterface(
+        string $serviceInterfaceName,
+        string $serviceInterfaceFunctionName,
+        array $parameters
+    ): FunctionFacade
+    {
+        $response = self::initialiseFunctionFacade($serviceInterfaceFunctionName, $parameters);
+        $response->setServiceInterfaceName($serviceInterfaceName);
+
+        return $response;
+    }
+
+    /**
      * @param ResourceBuilderInterface $resourceBuilder
      * @param string $functionName
      * @param array $parameters
@@ -96,6 +114,12 @@ class FunctionFactory
         return $response;
     }
 
+    /**
+     * @param string $loaderClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @return FunctionFacade
+     */
     public static function buildFromLoaderName(
         string $loaderClassName,
         string $functionName,

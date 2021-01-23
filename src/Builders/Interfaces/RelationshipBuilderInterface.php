@@ -65,6 +65,19 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
         array $parameters
     ): RelationshipBuilderInterface;
 
+    /**
+     * @param string $serviceInterfaceName
+     * @param string|null $resourceBuilderClass
+     * @param string $serviceInterfaceFunctionName
+     * @param array $parameters
+     * @return RelationshipBuilderInterface
+     */
+    public function withServiceInterfaceFunction(
+        string $serviceInterfaceName,
+        ?string $resourceBuilderClass,
+        string $serviceInterfaceFunctionName,
+        array $parameters
+    ): RelationshipBuilderInterface;
 
     /**
      * @param CacheBuilderInterface $cacheBuilder
@@ -78,7 +91,7 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @return RelationshipBuilderInterface
      */
     public function withoutChildren(): RelationshipBuilderInterface;
-    
+
     /**
      * @return string
      */

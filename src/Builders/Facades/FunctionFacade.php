@@ -11,6 +11,7 @@ class FunctionFacade
     public const LOADER=1;
     public const TABLE=2;
     public const BUILDER=3;
+    public const SERVICE=4;
 
     /** @var TableInterface|null  */
     private ?TableInterface $tableInterface=null;
@@ -23,6 +24,9 @@ class FunctionFacade
 
     /** @var string|null  */
     private ?string $targetResourceBuilderClass=null;
+
+    /** @var string|null  */
+    private ?string $serviceInterfaceName=null;
 
     /** @var string  */
     private string $functionName;
@@ -55,6 +59,9 @@ class FunctionFacade
         $this->isSingleRead = $isSingleRead;
     }
 
+    /**
+     * @return int
+     */
     public function getType(): int
     {
         if ($this->loaderClassName !== null){
@@ -63,6 +70,10 @@ class FunctionFacade
 
         if ($this->resourceBuilder !== null){
             return self::BUILDER;
+        }
+
+        if ($this->serviceInterfaceName !== null){
+            return self::SERVICE;
         }
 
         return self::TABLE;
@@ -149,6 +160,22 @@ class FunctionFacade
         }
 
         return $this->loaderClassName;
+    }
+
+    /**
+     * @param string $serviceInterfaceName
+     */
+    public function setServiceInterfaceName(string $serviceInterfaceName): void
+    {
+        $this->serviceInterfaceName = $serviceInterfaceName;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getServiceInterfaceName(): ?string
+    {
+        return $this->serviceInterfaceName;
     }
 
     /**

@@ -286,6 +286,9 @@ class ResourceReader
             } else {
                 $response = $reader->getList();
             }
+        } elseif ($function->getType() === FunctionFacade::SERVICE){
+            $loader = $this->servicesProxy->getBuilderService($function->getServiceInterfaceName());
+            $response = $loader->{$function->getFunctionName()}(...$parameters);
         }
         
         if ($response !== [] && !array_key_exists(0, $response)){

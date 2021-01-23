@@ -95,6 +95,14 @@ class JsonApi implements ServiceInterface
     }
 
     /**
+     * @param ServiceInterface $service
+     */
+    public function addBuilderService(ServiceInterface $service): void
+    {
+        $this->servicesProxy->addBuilderService($service);
+    }
+
+    /**
      * @param TransformatorInterface $transformator
      * @throws Exception
      */

@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\DefaultServiceInterface;
 use CarloNicora\Minimalism\Interfaces\EncrypterInterface;
 use CarloNicora\Minimalism\Interfaces\LoaderInterface;
+use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\CacheFacade;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\LinkCreatorInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Interfaces\TransformatorInterface;
@@ -24,6 +25,9 @@ class ServicesProxy
 
     /** @var LoaderInterface|null  */
     private ?LoaderInterface $loader=null;
+
+    /** @var array  */
+    private array $builderServices=[];
 
     /** @var array  */
     private array $builderTransformators=[];
@@ -110,6 +114,28 @@ class ServicesProxy
     public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
     {
         $this->linkBuilder = $linkBuilder;
+    }
+
+    /**
+     * @param ServiceInterface $service
+     */
+    public function addBuilderService(ServiceInterface $service): void
+    {
+        $this->builderServices[get_class($service)] = $service;
+    }
+
+    /**
+     * @param string $serviceName
+     * @return ServiceInterface
+     * @throws Exception
+     */
+    public function getBuilderService(string $serviceName): ServiceInterface
+    {
+        if (!array_key_exists($serviceName, $this->builderServices)){
+            throw new RuntimeException('Configuration error: Service not initialised in minimalism-service-jsonapi', 500);
+        }
+
+        return $this->builderServices[$serviceName];
     }
 
     /**

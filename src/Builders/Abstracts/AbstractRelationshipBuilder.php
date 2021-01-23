@@ -147,6 +147,32 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
     }
 
     /**
+     * @param string $serviceInterfaceName
+     * @param string|null $resourceBuilderClass
+     * @param string $serviceInterfaceFunctionName
+     * @param array $parameters
+     * @return RelationshipBuilderInterface
+     * @throws Exception
+     */
+    public function withServiceInterfaceFunction(
+        string $serviceInterfaceName,
+        ?string $resourceBuilderClass,
+        string $serviceInterfaceFunctionName,
+        array $parameters
+    ): RelationshipBuilderInterface
+    {
+        $this->function = FunctionFactory::buildFromServiceInterface(
+            $serviceInterfaceName,
+            $serviceInterfaceFunctionName,
+            $parameters
+        )->withTargetResourceBuilderClass(
+            $resourceBuilderClass
+        );
+
+        return $this;
+    }
+
+    /**
      * @param string $loaderClassName
      * @param string|null $resourceBuilderClass
      * @param string $loaderFunction
