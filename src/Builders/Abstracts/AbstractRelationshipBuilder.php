@@ -376,7 +376,7 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
 
             $response = [];
 
-            if ($this->function->getType() === FunctionFacade::TABLE) {
+            if (in_array($this->function->getType(), [FunctionFacade::TABLE, FunctionFacade::SERVICE], true)) {
                 $response = $this->resourceReader->generateResourceObjectsByFunction(
                     $this->resourceBuilderName ?? $this->function->getTargetResourceBuilderClass(),
                     $cache,
