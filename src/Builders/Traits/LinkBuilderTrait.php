@@ -24,7 +24,10 @@ trait LinkBuilderTrait
      * @param string $link
      * @return LinkBuilderInterface
      */
-    final protected function generateLink(string $name, string $link) : LinkBuilderInterface
+    final protected function generateLink(
+        string $name,
+        string $link
+    ) : LinkBuilderInterface
     {
         $response = new LinkBuilder($name, $link);
 
@@ -36,7 +39,9 @@ trait LinkBuilderTrait
     /**
      * @param LinkBuilder $link
      */
-    public function addLink(LinkBuilder $link): void
+    public function addLink(
+        LinkBuilder $link
+    ): void
     {
         $this->links[$link->getName()] = $link;
     }
@@ -57,7 +62,13 @@ trait LinkBuilderTrait
      * @param ResourceObject|null $resourceObject
      * @throws Exception
      */
-    private function buildLinks(BuilderLinksInterface $builder, ResourceBuilderInterface $resourceBuilder, Links $links, array $data, ResourceObject $resourceObject=null): void
+    private function buildLinks(
+        BuilderLinksInterface $builder,
+        ResourceBuilderInterface $resourceBuilder,
+        Links $links,
+        array $data,
+        ResourceObject $resourceObject=null
+    ): void
     {
         foreach ($builder->getLinks() as $link) {
             $url = $this->buildLink($link->getLink(), $resourceBuilder, $data, $resourceObject);

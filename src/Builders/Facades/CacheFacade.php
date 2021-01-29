@@ -18,7 +18,9 @@ class CacheFacade
      * @param string $resourceBuilderName
      * @return ResourceBuilderInterface|null
      */
-    public function getResourceBuilder(string $resourceBuilderName): ?ResourceBuilderInterface
+    public function getResourceBuilder(
+        string $resourceBuilderName
+    ): ?ResourceBuilderInterface
     {
         return $this->cache['resources'][$resourceBuilderName] ?? null;
     }
@@ -26,7 +28,9 @@ class CacheFacade
     /**
      * @param ResourceBuilderInterface $resourceBuilder
      */
-    public function setResourceBuilder(ResourceBuilderInterface $resourceBuilder): void
+    public function setResourceBuilder(
+        ResourceBuilderInterface $resourceBuilder
+    ): void
     {
         $this->cache['resources'][get_class($resourceBuilder)] = $resourceBuilder;
     }
@@ -36,7 +40,10 @@ class CacheFacade
      * @param string $attributeBuilderName
      * @return AttributeBuilderInterface|null
      */
-    public function getAttributeBuilder(string $resourceBuilderName, string $attributeBuilderName): ?AttributeBuilderInterface
+    public function getAttributeBuilder(
+        string $resourceBuilderName,
+        string $attributeBuilderName
+    ): ?AttributeBuilderInterface
     {
         return $this->cache['attributes'][$resourceBuilderName][$attributeBuilderName] ?? null;
     }
@@ -44,7 +51,9 @@ class CacheFacade
     /**
      * @param AttributeBuilderInterface $attributeBuilder
      */
-    public function setAttributeBuilder(AttributeBuilderInterface $attributeBuilder): void
+    public function setAttributeBuilder(
+        AttributeBuilderInterface $attributeBuilder
+    ): void
     {
         $this->cache['attributes'][get_class($attributeBuilder->getResourceBuilder())][$attributeBuilder->getName()] = $attributeBuilder;
     }
@@ -53,7 +62,9 @@ class CacheFacade
     /**
      * @param MetaBuilderInterface $metaBuilder
      */
-    public function setMetaBuilder(MetaBuilderInterface $metaBuilder): void
+    public function setMetaBuilder(
+        MetaBuilderInterface $metaBuilder
+    ): void
     {
         $this->cache['meta'][get_class($metaBuilder->getResourceBuilder())][$metaBuilder->getName()] = $metaBuilder;
     }

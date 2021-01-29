@@ -15,9 +15,6 @@ class DataWrapper
     /** @var array|null  */
     private ?array $parameters=null;
 
-    /** @var bool  */
-    private bool $isSingle=false;
-
     /**
      * Parameter constructor.
      * @param ServicesProxy $servicesProxy
@@ -42,19 +39,16 @@ class DataWrapper
                 $this->function->getFunctionName()),
             $this->parameters
         );
-        if ($this->isSingle) {
-            $response = $function->getSingle();
-        } else {
-            $response = $function->getList();
-        }
 
-        return $response;
+        return $function->getList();
     }
 
     /**
      * @param FunctionFacade $function
      */
-    public function setFunction(FunctionFacade $function): void
+    public function setFunction(
+        FunctionFacade $function
+    ): void
     {
         $this->function = $function;
     }
@@ -62,16 +56,10 @@ class DataWrapper
     /**
      * @param array|null $parameters
      */
-    public function setParameters(?array $parameters): void
+    public function setParameters(
+        ?array $parameters
+    ): void
     {
         $this->parameters = $parameters;
-    }
-
-    /**
-     * @param bool $isSingle
-     */
-    public function setIsSingle(bool $isSingle): void
-    {
-        $this->isSingle = $isSingle;
     }
 }

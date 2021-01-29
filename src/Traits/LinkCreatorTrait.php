@@ -18,7 +18,12 @@ trait LinkCreatorTrait
      * @param ResourceObject|null $resourceObject
      * @return string
      */
-    public function buildLink(string $url, ResourceBuilderInterface $resource, array $data, ResourceObject $resourceObject=null) : string
+    public function buildLink(
+        string $url,
+        ResourceBuilderInterface $resource,
+        array $data,
+        ResourceObject $resourceObject=null
+    ) : string
     {
         if ($url[0] !== '%'){
             $url = $this->servicesProxy->getPath()->getUrl() . $url;

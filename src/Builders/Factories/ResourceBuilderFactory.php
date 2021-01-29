@@ -20,7 +20,9 @@ class ResourceBuilderFactory
      * @return ResourceBuilderInterface
      * @throws Exception
      */
-    public function createResourceBuilder(string $builderName) : ResourceBuilderInterface
+    public function createResourceBuilder(
+        string $builderName
+    ) : ResourceBuilderInterface
     {
         if (($response = $this->servicesProxy->getCacheFacade()->getResourceBuilder($builderName)) === null) {
             /** @var ResourceBuilderInterface $response */

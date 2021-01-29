@@ -31,9 +31,6 @@ class FunctionFacade
     /** @var string  */
     private string $functionName;
 
-    /** @var bool  */
-    private bool $isSingleRead;
-    
     /** @var CacheBuilderInterface|null  */
     private ?CacheBuilderInterface $cacheBuilder=null;
 
@@ -46,17 +43,14 @@ class FunctionFacade
      * FunctionFacade constructor.
      * @param string $functionName
      * @param array $parameters
-     * @param bool $isSingleRead
      */
     public function __construct(
         string $functionName,
         array $parameters=[],
-        bool $isSingleRead=false
     )
     {
         $this->functionName = $functionName;
         $this->parameters = $parameters;
-        $this->isSingleRead = $isSingleRead;
     }
 
     /**
@@ -83,7 +77,9 @@ class FunctionFacade
      * @param string|null $targetResourceBuilderClass
      * @return FunctionFacade
      */
-    public function withTargetResourceBuilderClass(?string $targetResourceBuilderClass): FunctionFacade
+    public function withTargetResourceBuilderClass(
+        ?string $targetResourceBuilderClass
+    ): FunctionFacade
     {
         $this->targetResourceBuilderClass = $targetResourceBuilderClass;
 
@@ -96,14 +92,6 @@ class FunctionFacade
     public function getFunction(): array
     {
         return [$this->tableInterface, $this->functionName];
-    }
-
-    /**
-     * @return bool
-     */
-    public function isSingleRead(): bool
-    {
-        return $this->isSingleRead;
     }
 
     /**
@@ -125,7 +113,9 @@ class FunctionFacade
     /**
      * @param ResourceBuilderInterface $resourceBuilder
      */
-    public function setResourceBuilder(ResourceBuilderInterface $resourceBuilder): void
+    public function setResourceBuilder(
+        ResourceBuilderInterface $resourceBuilder
+    ): void
     {
         $this->resourceBuilder = $resourceBuilder;
     }
@@ -145,7 +135,9 @@ class FunctionFacade
     /**
      * @param string $loaderClassName
      */
-    public function setLoaderClassName(string $loaderClassName): void
+    public function setLoaderClassName(
+        string $loaderClassName
+    ): void
     {
         $this->loaderClassName = $loaderClassName;
     }
@@ -165,7 +157,9 @@ class FunctionFacade
     /**
      * @param string $serviceInterfaceName
      */
-    public function setServiceInterfaceName(string $serviceInterfaceName): void
+    public function setServiceInterfaceName(
+        string $serviceInterfaceName
+    ): void
     {
         $this->serviceInterfaceName = $serviceInterfaceName;
     }
@@ -189,7 +183,9 @@ class FunctionFacade
     /**
      * @param TableInterface $tableInterface
      */
-    public function setTableInterface(TableInterface $tableInterface): void
+    public function setTableInterface(
+        TableInterface $tableInterface
+    ): void
     {
         $this->tableInterface = $tableInterface;
     }
@@ -246,7 +242,9 @@ class FunctionFacade
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return FunctionFacade
      */
-    public function withCacheBuilder(?CacheBuilderInterface $cacheBuilder): FunctionFacade
+    public function withCacheBuilder(
+        ?CacheBuilderInterface $cacheBuilder
+    ): FunctionFacade
     {
         $this->cacheBuilder = $cacheBuilder;
         

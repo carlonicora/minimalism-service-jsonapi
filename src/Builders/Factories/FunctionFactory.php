@@ -18,7 +18,9 @@ class FunctionFactory
     /**
      * @param ServicesProxy $servicesProxy
      */
-    public static function initialise(ServicesProxy $servicesProxy): void
+    public static function initialise(
+        ServicesProxy $servicesProxy
+    ): void
     {
         self::$dataProvider = $servicesProxy->getDataProvider();
     }
@@ -26,33 +28,35 @@ class FunctionFactory
     /**
      * @param string $functionName
      * @param array $parameters
-     * @param bool $isSingleRead
      * @return FunctionFacade
      */
     private static function initialiseFunctionFacade(
         string $functionName,
         array $parameters=[],
-        bool $isSingleRead=false
     ): FunctionFacade
     {
-        return new FunctionFacade($functionName, $parameters, $isSingleRead);
+        return new FunctionFacade(
+            $functionName,
+            $parameters
+        );
     }
 
     /**
      * @param TableInterface $tableInterface
      * @param string $functionName
      * @param array $parameters
-     * @param bool $isSingleRead
      * @return FunctionFacade
      */
     public static function buildFromTableInterface(
         TableInterface $tableInterface,
         string $functionName,
         array $parameters=[],
-        bool $isSingleRead=false
     ): FunctionFacade
     {
-        $response = self::initialiseFunctionFacade($functionName, $parameters, $isSingleRead);
+        $response = self::initialiseFunctionFacade(
+            $functionName,
+            $parameters,
+        );
         $response->setTableInterface($tableInterface);
 
         return $response;
@@ -62,7 +66,6 @@ class FunctionFactory
      * @param string $tableClassName
      * @param string $functionName
      * @param array $parameters
-     * @param bool $isSingleRead
      * @return FunctionFacade
      * @throws Exception
      */
@@ -70,12 +73,15 @@ class FunctionFactory
         string $tableClassName,
         string $functionName,
         array $parameters=[],
-        bool $isSingleRead=false
     ): FunctionFacade
     {
         $tableInterface = self::$dataProvider->create($tableClassName);
 
-        return self::buildFromTableInterface($tableInterface, $functionName, $parameters, $isSingleRead);
+        return self::buildFromTableInterface(
+            $tableInterface,
+            $functionName,
+            $parameters,
+        );
     }
 
     /**

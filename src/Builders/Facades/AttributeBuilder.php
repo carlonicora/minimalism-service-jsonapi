@@ -27,7 +27,10 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
      * @param ResourceBuilderInterface $parent
      * @param string $name
      */
-    public function __construct(ResourceBuilderInterface $parent, string $name)
+    public function __construct(
+        ResourceBuilderInterface $parent,
+        string $name
+    )
     {
         $this->name = $name;
         $this->databaseFieldName = $name;
@@ -46,7 +49,9 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
      * @param string|null $databaseFieldRelationship
      * @return ElementBuilderInterface
      */
-    public function setDatabaseFieldRelationship(?string $databaseFieldRelationship): ElementBuilderInterface
+    public function setDatabaseFieldRelationship(
+        ?string $databaseFieldRelationship
+    ): ElementBuilderInterface
     {
         $this->databaseFieldRelationship = $databaseFieldRelationship;
 
@@ -65,7 +70,9 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
      * @param bool $isReadOnly
      * @return ElementBuilderInterface
      */
-    public function setIsReadOnly(bool $isReadOnly): ElementBuilderInterface
+    public function setIsReadOnly(
+        bool $isReadOnly
+    ): ElementBuilderInterface
     {
         $this->isReadOnly = $isReadOnly;
 
@@ -84,7 +91,9 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
      * @param bool $isRequired
      * @return ElementBuilderInterface
      */
-    public function setIsRequired(bool $isRequired): ElementBuilderInterface
+    public function setIsRequired(
+        bool $isRequired
+    ): ElementBuilderInterface
     {
         $this->isRequired = $isRequired;
 
@@ -103,7 +112,9 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
      * @param bool $isWriteOnly
      * @return ElementBuilderInterface
      */
-    public function setIsWriteOnly(bool $isWriteOnly): ElementBuilderInterface
+    public function setIsWriteOnly(
+        bool $isWriteOnly
+    ): ElementBuilderInterface
     {
         $this->isWriteOnly = $isWriteOnly;
 
@@ -113,7 +124,9 @@ class AttributeBuilder extends ElementBuilder implements AttributeBuilderInterfa
     /**
      * @param ResourceBuilderInterface $resource
      */
-    public function setRelationshipResource(ResourceBuilderInterface $resource): void
+    public function setRelationshipResource(
+        ResourceBuilderInterface $resource
+    ): void
     {
         $this->relationship = $resource;
     }

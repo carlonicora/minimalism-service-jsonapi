@@ -267,7 +267,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string $relationshipName
      * @return RelationshipBuilderInterface|null
      */
-    public function getRelationship(string $relationshipName): ?RelationshipBuilderInterface
+    public function getRelationship(
+        string $relationshipName
+    ): ?RelationshipBuilderInterface
     {
         return $this->relationships[$relationshipName] ?? null;
     }
@@ -276,7 +278,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string $attributeName
      * @return AttributeBuilderInterface|null
      */
-    public function getAttribute(string $attributeName): ?AttributeBuilderInterface
+    public function getAttribute(
+        string $attributeName
+    ): ?AttributeBuilderInterface
     {
         if (array_key_exists($attributeName, $this->attributes)){
             return $this->attributes[$attributeName];
@@ -293,7 +297,9 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param string $attributeName
      * @return AttributeBuilderInterface
      */
-    final protected function generateAttribute(string $attributeName): AttributeBuilderInterface
+    final protected function generateAttribute(
+        string $attributeName
+    ): AttributeBuilderInterface
     {
         $response = $this->attributeBuilderFactory->create($attributeName);
 
@@ -307,7 +313,10 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param int $positioning
      * @return ElementBuilderInterface
      */
-    final protected function generateMeta(string $metaName, int $positioning): ElementBuilderInterface
+    final protected function generateMeta(
+        string $metaName,
+        int $positioning
+    ): ElementBuilderInterface
     {
         $response = $this->metaBuilderFactory->create($metaName, $positioning);
 
@@ -404,7 +413,10 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param array $data
      * @throws Exception
      */
-    private function buildAttributes(ResourceObject $response, array $data): void
+    private function buildAttributes(
+        ResourceObject $response,
+        array $data
+    ): void
     {
         foreach ($this->attributes as $attribute) {
             if (!$attribute->isWriteOnly()){
@@ -426,7 +438,11 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @param bool $isResource
      * @throws Exception
      */
-    private function buildMeta(ResourceObject $response, array $data, bool $isResource): void
+    private function buildMeta(
+        ResourceObject $response,
+        array $data,
+        bool $isResource
+    ): void
     {
         /** @var MetaBuilderInterface $meta */
         foreach ($this->meta as $meta) {
@@ -451,7 +467,10 @@ abstract class AbstractResourceBuilder implements ResourceBuilderInterface, Link
      * @return mixed
      * @throws Exception
      */
-    private function getElementValue(ElementBuilderInterface $element, array $data): mixed
+    private function getElementValue(
+        ElementBuilderInterface $element,
+        array $data
+    ): mixed
     {
         $response = $element->getStaticValue() ?? $data[$element->getDatabaseFieldName()] ?? null;
 

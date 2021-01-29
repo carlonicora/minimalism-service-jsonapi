@@ -2,7 +2,6 @@
 namespace CarloNicora\Minimalism\Services\JsonApi;
 
 use CarloNicora\JsonApi\Document;
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
@@ -97,7 +96,9 @@ class JsonApi implements ServiceInterface
     /**
      * @param ServiceInterface $service
      */
-    public function addBuilderService(ServiceInterface $service): void
+    public function addBuilderService(
+        ServiceInterface $service
+    ): void
     {
         $this->servicesProxy->addBuilderService($service);
     }
@@ -106,7 +107,9 @@ class JsonApi implements ServiceInterface
      * @param TransformatorInterface $transformator
      * @throws Exception
      */
-    public function addBuilderTransformator(TransformatorInterface $transformator): void
+    public function addBuilderTransformator(
+        TransformatorInterface $transformator
+    ): void
     {
         $this->servicesProxy->addBuilderTransformator($transformator);
     }
@@ -114,7 +117,9 @@ class JsonApi implements ServiceInterface
     /**
      * @param DefaultServiceInterface $service
      */
-    public function setActiveService(DefaultServiceInterface $service): void
+    public function setActiveService(
+        DefaultServiceInterface $service
+    ): void
     {
         $this->servicesProxy->setService($service);
     }
@@ -122,7 +127,9 @@ class JsonApi implements ServiceInterface
     /**
      * @param LoaderInterface $loader
      */
-    public function setLoaderInterface(LoaderInterface $loader): void
+    public function setLoaderInterface(
+        LoaderInterface $loader
+    ): void
     {
         $this->servicesProxy->setLoaderInterface($loader);
     }
@@ -136,7 +143,7 @@ class JsonApi implements ServiceInterface
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
@@ -167,7 +174,7 @@ class JsonApi implements ServiceInterface
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
@@ -220,7 +227,7 @@ class JsonApi implements ServiceInterface
     /**
      * @param FunctionFacade $function
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function readData(
         FunctionFacade $function
@@ -256,7 +263,9 @@ class JsonApi implements ServiceInterface
     /**
      * @param LinkCreatorInterface|null $linkBuilder
      */
-    public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
+    public function setLinkBuilder(
+        ?LinkCreatorInterface $linkBuilder
+    ): void
     {
         $this->servicesProxy->setLinkBuilder($linkBuilder);
     }

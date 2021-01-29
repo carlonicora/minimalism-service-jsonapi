@@ -14,5 +14,9 @@ interface MetaBuilderInterface extends ElementBuilderInterface
      * @param string $name
      * @param int $positioning
      */
-    public function __construct(ResourceBuilderInterface $parent, string $name, int $positioning);
+    public function __construct(
+        ResourceBuilderInterface $parent,
+        string $name,
+        int $positioning
+    );
 }

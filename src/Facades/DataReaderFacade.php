@@ -31,32 +31,6 @@ class DataReaderFacade implements DataReaderInterface
     }
 
     /**
-     * @return array
-     * @throws Exception
-     * @noinspection PhpDocRedundantThrowsInspection
-     */
-    public function getSingle() : array
-    {
-        if ($this->function->getCacheBuilder() !== null && $this->servicesProxy->useCache()) {
-            $response = $this->servicesProxy->getCacheProvider()
-                ? $this->servicesProxy->getCacheProvider()->readArray($this->function->getCacheBuilder(), CacheBuilderInterface::DATA)
-                : null;
-            if ($response === null){
-                $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
-                if (is_array($response)) {
-                    $this->servicesProxy->getCacheProvider()?->saveArray($this->function->getCacheBuilder(), $response, CacheBuilderInterface::DATA);
-                } else {
-                    $this->servicesProxy->getCacheProvider()->save($this->function->getCacheBuilder(), (string)$response, CacheBuilderInterface::DATA);
-                }
-            }
-        } else {
-            $response = call_user_func($this->function->getFunction(), ...$this->functionParameters);
-        }
-
-        return $response;
-    }
-
-    /**
      * @return array|null
      * @throws Exception
      */

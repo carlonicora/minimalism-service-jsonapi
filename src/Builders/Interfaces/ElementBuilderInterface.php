@@ -17,7 +17,9 @@ interface ElementBuilderInterface
      * @param string $name
      * @return ElementBuilderInterface
      */
-    public function setName(string $name): ElementBuilderInterface;
+    public function setName(
+        string $name
+    ): ElementBuilderInterface;
 
     /**
      * @return string|null
@@ -28,7 +30,9 @@ interface ElementBuilderInterface
      * @param string|null $databaseFieldName
      * @return $this|ElementBuilderInterface
      */
-    public function setDatabaseFieldName(?string $databaseFieldName): ElementBuilderInterface;
+    public function setDatabaseFieldName(
+        ?string $databaseFieldName
+    ): ElementBuilderInterface;
 
     /**
      * @return string|null
@@ -39,7 +43,9 @@ interface ElementBuilderInterface
      * @param string|null $databaseFieldRelationship
      * @return $this|ElementBuilderInterface
      */
-    public function setDatabaseFieldRelationship(?string $databaseFieldRelationship): ElementBuilderInterface;
+    public function setDatabaseFieldRelationship(
+        ?string $databaseFieldRelationship
+    ): ElementBuilderInterface;
 
     /**
      * @return bool
@@ -50,7 +56,9 @@ interface ElementBuilderInterface
      * @param bool $isEncrypted
      * @return $this|ElementBuilderInterface
      */
-    public function setIsEncrypted(bool $isEncrypted): ElementBuilderInterface;
+    public function setIsEncrypted(
+        bool $isEncrypted
+    ): ElementBuilderInterface;
 
     /**
      * @return bool
@@ -61,7 +69,9 @@ interface ElementBuilderInterface
      * @param bool $isReadOnly
      * @return $this|ElementBuilderInterface
      */
-    public function setIsReadOnly(bool $isReadOnly): ElementBuilderInterface;
+    public function setIsReadOnly(
+        bool $isReadOnly
+    ): ElementBuilderInterface;
 
     /**
      * @return bool
@@ -72,7 +82,9 @@ interface ElementBuilderInterface
      * @param bool $isRequired
      * @return $this|ElementBuilderInterface
      */
-    public function setIsRequired(bool $isRequired): ElementBuilderInterface;
+    public function setIsRequired(
+        bool $isRequired
+    ): ElementBuilderInterface;
 
     /**
      * @return bool
@@ -83,7 +95,9 @@ interface ElementBuilderInterface
      * @param bool $isWriteOnly
      * @return $this|ElementBuilderInterface
      */
-    public function setIsWriteOnly(bool $isWriteOnly): ElementBuilderInterface;
+    public function setIsWriteOnly(
+        bool $isWriteOnly
+    ): ElementBuilderInterface;
 
     /**
      * @return string|null
@@ -94,7 +108,9 @@ interface ElementBuilderInterface
      * @param string|null $transformationClass
      * @return $this|ElementBuilderInterface
      */
-    public function setTransformationClass(?string $transformationClass): ElementBuilderInterface;
+    public function setTransformationClass(
+        ?string $transformationClass
+    ): ElementBuilderInterface;
 
     /**
      * @return string|null
@@ -105,7 +121,9 @@ interface ElementBuilderInterface
      * @param string|null $transformationMethod
      * @return $this|ElementBuilderInterface
      */
-    public function setTransformationMethod(?string $transformationMethod): ElementBuilderInterface;
+    public function setTransformationMethod(
+        ?string $transformationMethod
+    ): ElementBuilderInterface;
 
     /**
      * @return string|null
@@ -116,7 +134,9 @@ interface ElementBuilderInterface
      * @param string|null $validator
      * @return $this|ElementBuilderInterface
      */
-    public function setValidator(?string $validator): ElementBuilderInterface;
+    public function setValidator(
+        ?string $validator
+    ): ElementBuilderInterface;
 
     /**
      * @return ResourceBuilderInterface
@@ -126,7 +146,9 @@ interface ElementBuilderInterface
     /**
      * @param ResourceBuilderInterface $resource
      */
-    public function setRelationshipResource(ResourceBuilderInterface $resource): void;
+    public function setRelationshipResource(
+        ResourceBuilderInterface $resource
+    ): void;
 
     /**
      * @return ResourceBuilderInterface|null
@@ -137,7 +159,9 @@ interface ElementBuilderInterface
      * @param $value
      * @return $this|ElementBuilderInterface
      */
-    public function setStaticValue($value): ElementBuilderInterface;
+    public function setStaticValue(
+        $value
+    ): ElementBuilderInterface;
 
     /**
      * @return mixed
@@ -153,5 +177,7 @@ interface ElementBuilderInterface
      * @param int $positioning
      * @return ElementBuilderInterface
      */
-    public function setPositioning(int $positioning): ElementBuilderInterface;
+    public function setPositioning(
+        int $positioning
+    ): ElementBuilderInterface;
 }

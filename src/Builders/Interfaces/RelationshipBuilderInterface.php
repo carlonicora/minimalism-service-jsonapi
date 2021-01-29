@@ -111,7 +111,9 @@ interface RelationshipBuilderInterface extends CallableInterface, BuilderLinksIn
      * @param LinkBuilder $link
      * @return RelationshipBuilderInterface
      */
-    public function withLink(LinkBuilder $link): RelationshipBuilderInterface;
+    public function withLink(
+        LinkBuilder $link
+    ): RelationshipBuilderInterface;
 
     /**
      * @param array $data

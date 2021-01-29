@@ -16,7 +16,11 @@ class MetaBuilder extends ElementBuilder implements MetaBuilderInterface
      * @param string $name
      * @param int $positioning
      */
-    public function __construct(ResourceBuilderInterface $parent, string $name, int $positioning)
+    public function __construct(
+        ResourceBuilderInterface $parent,
+        string $name,
+        int $positioning
+    )
     {
         $this->name = $name;
         $this->positioning = $positioning;
@@ -36,7 +40,9 @@ class MetaBuilder extends ElementBuilder implements MetaBuilderInterface
      * @param int $positioning
      * @return ElementBuilderInterface
      */
-    public function setPositioning(int $positioning): ElementBuilderInterface
+    public function setPositioning(
+        int $positioning
+    ): ElementBuilderInterface
     {
         $this->positioning = $positioning;
 

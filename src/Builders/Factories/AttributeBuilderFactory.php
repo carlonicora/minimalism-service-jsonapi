@@ -19,7 +19,9 @@ class AttributeBuilderFactory
      * @param string $attributeName
      * @return AttributeBuilderInterface
      */
-    public function create(string $attributeName) : AttributeBuilderInterface
+    public function create(
+        string $attributeName
+    ) : AttributeBuilderInterface
     {
         return new AttributeBuilder($this->parent, $attributeName);
     }

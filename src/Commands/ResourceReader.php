@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\DataLoaderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Facades\ParametersFacade;
@@ -41,7 +40,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectByFieldValue(
         string $builderName,
@@ -82,9 +81,8 @@ class ResourceReader
                     $resourceBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
-                        'loadById',
+                        'byId',
                         $values,
-                        true
                     ),
                     $loadRelationshipsLevel,
                     $relationshipParameters,
@@ -96,7 +94,7 @@ class ResourceReader
                     $resourceBuilder,
                     FunctionFactory::buildFromTableName(
                         $tableName,
-                        'loadByField',
+                        'byField',
                         [$fieldName => $values[0]]
                     ),
                     $loadRelationshipsLevel,
@@ -121,7 +119,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function generateResourceObjectsByFunction(
         string $builderName,
@@ -222,7 +220,7 @@ class ResourceReader
      * @param array $relationshipParameters
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     private function generateResourceObject(
         ResourceBuilderInterface $resourceBuilder,
@@ -251,7 +249,7 @@ class ResourceReader
      * @param FunctionFacade $function
      * @param array $positionInRelationship
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      */
     public function readResourceObjectData(
         FunctionFacade $function,
@@ -281,11 +279,7 @@ class ResourceReader
                 $parameters
             );
 
-            if ($function->isSingleRead()) {
-                $response = $reader->getSingle();
-            } else {
-                $response = $reader->getList();
-            }
+            $response = $reader->getList();
         } elseif ($function->getType() === FunctionFacade::SERVICE){
             $loader = $this->servicesProxy->getBuilderService($function->getServiceInterfaceName());
             $response = $loader->{$function->getFunctionName()}(...$parameters);

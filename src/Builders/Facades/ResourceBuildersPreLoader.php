@@ -72,7 +72,9 @@ class ResourceBuildersPreLoader
      * @param $file
      * @return string
      */
-    private function extract_namespace($file): string
+    private function extract_namespace(
+        $file
+    ): string
     {
         $ns = NULL;
         $handle = fopen($file, 'rb');
@@ -93,7 +95,9 @@ class ResourceBuildersPreLoader
      * @param $filename
      * @return string
      */
-    private function getClassname($filename): string
+    private function getClassname(
+        $filename
+    ): string
     {
         $directoriesAndFilename = explode('/', $filename);
         $filename = array_pop($directoriesAndFilename);

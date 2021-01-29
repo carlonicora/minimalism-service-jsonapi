@@ -8,7 +8,10 @@ interface LinkBuilderInterface
      * @param string $name
      * @param string $link
      */
-    public function __construct(string $name, string $link);
+    public function __construct(
+        string $name,
+        string $link
+    );
 
     /**
      * @return string

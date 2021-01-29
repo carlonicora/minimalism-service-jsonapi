@@ -111,7 +111,9 @@ class ServicesProxy
     /**
      * @param LinkCreatorInterface|null $linkBuilder
      */
-    public function setLinkBuilder(?LinkCreatorInterface $linkBuilder): void
+    public function setLinkBuilder(
+        ?LinkCreatorInterface $linkBuilder
+    ): void
     {
         $this->linkBuilder = $linkBuilder;
     }
@@ -119,7 +121,9 @@ class ServicesProxy
     /**
      * @param ServiceInterface $service
      */
-    public function addBuilderService(ServiceInterface $service): void
+    public function addBuilderService(
+        ServiceInterface $service
+    ): void
     {
         $this->builderServices[get_class($service)] = $service;
     }
@@ -129,7 +133,9 @@ class ServicesProxy
      * @return ServiceInterface
      * @throws Exception
      */
-    public function getBuilderService(string $serviceName): ServiceInterface
+    public function getBuilderService(
+        string $serviceName
+    ): ServiceInterface
     {
         if (!array_key_exists($serviceName, $this->builderServices)){
             throw new RuntimeException('Configuration error: Service not initialised in minimalism-service-jsonapi', 500);
@@ -142,7 +148,9 @@ class ServicesProxy
      * @param TransformatorInterface $transformator
      * @throws Exception
      */
-    public function addBuilderTransformator(TransformatorInterface $transformator): void
+    public function addBuilderTransformator(
+        TransformatorInterface $transformator
+    ): void
     {
         $class = new ReflectionClass($transformator);
         $this->builderTransformators[$class->getName()] = $transformator;
@@ -153,7 +161,9 @@ class ServicesProxy
      * @return TransformatorInterface
      * @throws Exception
      */
-    public function getBuilderTransformator(string $transformatorClass): TransformatorInterface
+    public function getBuilderTransformator(
+        string $transformatorClass
+    ): TransformatorInterface
     {
         if (!array_key_exists($transformatorClass, $this->builderTransformators)){
             throw new RuntimeException('Builder transformator missing', 500);
@@ -192,7 +202,9 @@ class ServicesProxy
     /**
      * @param LoaderInterface $loader
      */
-    public function setLoaderInterface(LoaderInterface $loader): void
+    public function setLoaderInterface(
+        LoaderInterface $loader
+    ): void
     {
         $this->loader = $loader;
     }

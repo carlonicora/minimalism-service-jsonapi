@@ -44,7 +44,9 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
      * @param string $attributeName
      * @return AttributeBuilderInterface|null
      */
-    public function getAttribute(string $attributeName) : ?AttributeBuilderInterface;
+    public function getAttribute(
+        string $attributeName
+    ) : ?AttributeBuilderInterface;
 
     /**
      * @return array
@@ -60,12 +62,16 @@ interface ResourceBuilderInterface extends CallableInterface, BuilderLinksInterf
      * @param string $relationshipName
      * @return RelationshipBuilderInterface|null
      */
-    public function getRelationship(string $relationshipName) : ?RelationshipBuilderInterface;
+    public function getRelationship(
+        string $relationshipName
+    ) : ?RelationshipBuilderInterface;
 
     /**
      * @param CacheBuilderFactoryInterface $cacheFactory
      */
-    public function setCacheFactoryInterface(CacheBuilderFactoryInterface $cacheFactory): void;
+    public function setCacheFactoryInterface(
+        CacheBuilderFactoryInterface $cacheFactory
+    ): void;
 
     /**
      * @return array

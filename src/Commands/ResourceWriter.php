@@ -4,7 +4,6 @@ namespace CarloNicora\Minimalism\Services\JsonApi\Commands;
 use CarloNicora\JsonApi\Document;
 use CarloNicora\JsonApi\Objects\Attributes;
 use CarloNicora\JsonApi\Objects\ResourceObject;
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\FunctionFactory;
 use CarloNicora\Minimalism\Services\JsonApi\Builders\Factories\ResourceBuilderFactory;
@@ -141,7 +140,7 @@ class ResourceWriter
             $newRelationshipsId = [];
 
             if ($resourceObject->id !== null && ($id = $resourceBuilder->getAttribute('id')) !== null) {
-                $currentRelationshipArray = $table->loadByField($id->getDatabaseFieldRelationship() ?? $id->getDatabaseFieldName(), $resourceObject->id);
+                $currentRelationshipArray = $table->byField($id->getDatabaseFieldRelationship() ?? $id->getDatabaseFieldName(), $resourceObject->id);
             }
 
             foreach ($relationship->resourceLinkage->resources ?? [] as $singleResourceObject) {
@@ -194,9 +193,8 @@ class ResourceWriter
                 $response = $this->resourceReader->readResourceObjectData(
                     FunctionFactory::buildFromTableName(
                         $resourceBuilder->getTableName(),
-                        'loadById',
+                        'byId',
                         [$resourceObject->id],
-                        true
                     )
                 )[0];
             } catch (Exception) {
@@ -275,8 +273,6 @@ class ResourceWriter
                             $resourceObject->attributes->add($attributeName, $attributeValue);
                         }
                     }
-                } catch (RecordNotFoundException $exception) {
-                    throw $exception;
                 } catch (Throwable) {
                 }
             }

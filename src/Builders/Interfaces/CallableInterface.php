@@ -11,7 +11,9 @@ interface CallableInterface
     /**
      * @param string $callable
      */
-    public function setReadFunction(string $callable): void;
+    public function setReadFunction(
+        string $callable
+    ): void;
 
     /**
      * @return array|null
@@ -21,5 +23,7 @@ interface CallableInterface
     /**
      * @param array $values
      */
-    public function setReadValues(array $values): void;
+    public function setReadValues(
+        array $values
+    ): void;
 }

@@ -27,7 +27,10 @@ class RelationshipBuilderInterfaceFactory
      * @return RelationshipBuilderInterface
      * @throws Exception
      */
-    public function create(int $relationshipType, string $name): RelationshipBuilderInterface
+    public function create(
+        int $relationshipType,
+        string $name
+    ): RelationshipBuilderInterface
     {
         if ($relationshipType === RelationshipTypeInterface::ONE_TO_ONE) {
             return new OneToOneRelationshipBuilder(

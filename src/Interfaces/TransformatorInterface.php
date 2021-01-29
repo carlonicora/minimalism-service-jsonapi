@@ -9,5 +9,9 @@ interface TransformatorInterface
      * @param string|null $fieldName
      * @return mixed
      */
-    public function transform(string $transformationFunction, array $data, ?string $fieldName): mixed;
+    public function transform(
+        string $transformationFunction,
+        array $data,
+        ?string $fieldName
+    ): mixed;
 }

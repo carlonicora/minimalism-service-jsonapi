@@ -53,7 +53,10 @@ class ParametersFacade
      * @param bool $limitToDataField
      * @return array
      */
-    private static function prepareResponse(array $selectedParameters, bool $limitToDataField): array
+    private static function prepareResponse(
+        array $selectedParameters,
+        bool $limitToDataField
+    ): array
     {
         $response = [];
         foreach($selectedParameters as $parameterKey=>$parameter){

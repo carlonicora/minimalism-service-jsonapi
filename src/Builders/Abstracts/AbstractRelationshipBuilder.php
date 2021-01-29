@@ -214,7 +214,9 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param LinkBuilder $link
      * @return RelationshipBuilderInterface
      */
-    public function withLink(LinkBuilder $link): RelationshipBuilderInterface
+    public function withLink(
+        LinkBuilder $link
+    ): RelationshipBuilderInterface
     {
         $this->addLink($link);
 
@@ -292,7 +294,10 @@ abstract class AbstractRelationshipBuilder implements RelationshipBuilderInterfa
      * @param array $parameters
      * @return CacheBuilderInterface|null
      */
-    protected function getCache(array $data, array $parameters): ?CacheBuilderInterface
+    protected function getCache(
+        array $data,
+        array $parameters
+    ): ?CacheBuilderInterface
     {
         if ($this->cacheBuilder === null){
             return null;

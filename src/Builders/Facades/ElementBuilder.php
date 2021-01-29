@@ -51,7 +51,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string $name
      * @return ElementBuilderInterface
      */
-    public function setName(string $name): ElementBuilderInterface
+    public function setName(
+        string $name
+    ): ElementBuilderInterface
     {
         $this->name = $name;
 
@@ -70,7 +72,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string|null $databaseFieldName
      * @return ElementBuilderInterface
      */
-    public function setDatabaseFieldName(?string $databaseFieldName): ElementBuilderInterface
+    public function setDatabaseFieldName(
+        ?string $databaseFieldName
+    ): ElementBuilderInterface
     {
         $this->databaseFieldName = $databaseFieldName;
 
@@ -89,7 +93,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string|null $databaseFieldRelationship
      * @return ElementBuilderInterface
      */
-    public function setDatabaseFieldRelationship(?string $databaseFieldRelationship): ElementBuilderInterface
+    public function setDatabaseFieldRelationship(
+        ?string $databaseFieldRelationship
+    ): ElementBuilderInterface
     {
         return $this;
     }
@@ -98,7 +104,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param $value
      * @return ElementBuilderInterface
      */
-    public function setStaticValue($value): ElementBuilderInterface
+    public function setStaticValue(
+        $value
+    ): ElementBuilderInterface
     {
         $this->staticValue = $value;
 
@@ -125,7 +133,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param bool $isEncrypted
      * @return ElementBuilderInterface
      */
-    public function setIsEncrypted(bool $isEncrypted): ElementBuilderInterface
+    public function setIsEncrypted(
+        bool $isEncrypted
+    ): ElementBuilderInterface
     {
         $this->isEncrypted = $isEncrypted;
 
@@ -144,7 +154,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param bool $isReadOnly
      * @return ElementBuilderInterface
      */
-    public function setIsReadOnly(bool $isReadOnly): ElementBuilderInterface
+    public function setIsReadOnly(
+        bool $isReadOnly
+    ): ElementBuilderInterface
     {
         return $this;
     }
@@ -161,7 +173,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param bool $isRequired
      * @return ElementBuilderInterface
      */
-    public function setIsRequired(bool $isRequired): ElementBuilderInterface
+    public function setIsRequired(
+        bool $isRequired
+    ): ElementBuilderInterface
     {
         return $this;
     }
@@ -178,7 +192,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param bool $isWriteOnly
      * @return ElementBuilderInterface
      */
-    public function setIsWriteOnly(bool $isWriteOnly): ElementBuilderInterface
+    public function setIsWriteOnly(
+        bool $isWriteOnly
+    ): ElementBuilderInterface
     {
         return $this;
     }
@@ -195,7 +211,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string|null $transformationClass
      * @return ElementBuilderInterface
      */
-    public function setTransformationClass(?string $transformationClass): ElementBuilderInterface
+    public function setTransformationClass(
+        ?string $transformationClass
+    ): ElementBuilderInterface
     {
         $this->transformationClass = $transformationClass;
 
@@ -214,7 +232,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string|null $transformationMethod
      * @return ElementBuilderInterface
      */
-    public function setTransformationMethod(?string $transformationMethod): ElementBuilderInterface
+    public function setTransformationMethod(
+        ?string $transformationMethod
+    ): ElementBuilderInterface
     {
         $this->transformationMethod = $transformationMethod;
 
@@ -233,7 +253,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param string|null $validator
      * @return ElementBuilderInterface
      */
-    public function setValidator(?string $validator): ElementBuilderInterface
+    public function setValidator(
+        ?string $validator
+    ): ElementBuilderInterface
     {
         $this->validator = $validator;
 
@@ -251,7 +273,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
     /**
      * @param ResourceBuilderInterface $resource
      */
-    public function setRelationshipResource(ResourceBuilderInterface $resource): void
+    public function setRelationshipResource(
+        ResourceBuilderInterface $resource
+    ): void
     {
     }
 
@@ -275,7 +299,9 @@ abstract class ElementBuilder implements ElementBuilderInterface
      * @param int $positioning
      * @return ElementBuilderInterface
      */
-    public function setPositioning(int $positioning): ElementBuilderInterface
+    public function setPositioning(
+        int $positioning
+    ): ElementBuilderInterface
     {
         return $this;
     }

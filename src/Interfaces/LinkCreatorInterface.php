@@ -22,5 +22,10 @@ interface LinkCreatorInterface
      * @param ResourceObject|null $resourceObject
      * @return string
      */
-    public function buildLink(string $url, ResourceBuilderInterface $resource, array $data, ResourceObject $resourceObject=null) : string;
+    public function buildLink(
+        string $url,
+        ResourceBuilderInterface $resource,
+        array $data,
+        ResourceObject $resourceObject=null
+    ) : string;
 }
