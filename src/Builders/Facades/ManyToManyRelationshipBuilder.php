@@ -38,7 +38,7 @@ class ManyToManyRelationshipBuilder extends AbstractRelationshipBuilder
         $this->manyToManyRelationshipTableClass = $tableInterfaceClass;
 
         $table = $this->servicesProxy->getDataProvider()->create($tableInterfaceClass);
-        $this->manyToManyRelationshipTableName = $table->getTableName();
+        $this->manyToManyRelationshipTableName = $table::getTableName();
 
         return $this;
     }

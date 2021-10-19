@@ -195,7 +195,7 @@ class FunctionFacade
      */
     public function getTableName(): string
     {
-        return $this->tableInterface->getTableName();
+        return $this->tableInterface::getTableName();
     }
 
     /**
